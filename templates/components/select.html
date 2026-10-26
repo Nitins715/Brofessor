@@ -1,0 +1,28 @@
+{# Reusable Select Component #}
+{# Props: name, id, label, required, help_text, error, extra_classes, disabled #}
+<div class="w-full space-y-1.5 {{ extra_classes }}">
+  {% if label %}
+    <label for="{{ id|default:name }}" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      {{ label }}{% if required %}<span class="text-red-500 ml-0.5">*</span>{% endif %}
+    </label>
+  {% endif %}
+  <div class="relative rounded-lg shadow-sm">
+    <select name="{{ name }}"
+            id="{{ id|default:name }}"
+            {% if required %}required{% endif %}
+            {% if disabled %}disabled{% endif %}
+            class="block w-full appearance-none rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 text-sm py-2 pl-3 pr-8 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-smooth disabled:bg-zinc-100 dark:disabled:bg-zinc-800/50 {% if error %}border-red-500 dark:border-red-500{% endif %}">
+      {{ options|safe }}
+    </select>
+    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+      </svg>
+    </div>
+  </div>
+  {% if error %}
+    <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+  {% elif help_text %}
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{{ help_text }}</p>
+  {% endif %}
+</div>

@@ -1,0 +1,96 @@
+{# Reusable Recommendation Card Component #}
+{# Parameters: rec (Recommendation model instance or dictionary), compact (optional boolean) #}
+
+<div class="p-4 sm:p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth flex flex-col justify-between gap-3 group">
+  <div class="space-y-2">
+    {# Header: Priority badge + Action Type + Estimated Effort #}
+    <div class="flex items-center justify-between gap-2 flex-wrap">
+      <div class="flex items-center gap-1.5">
+        <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+          {% if rec.priority == 'urgent' or rec.priority == 'high' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+          {% elif rec.priority == 'medium' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+          {% else %}bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300{% endif %}">
+          {{ rec.priority }}
+        </span>
+        <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-zinc-50 dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 border border-zinc-200/60 dark:border-zinc-800">
+          {% if rec.action_type == 'revise_topic' %}Revise Topic
+          {% elif rec.action_type == 'study_concept' %}Study Concept
+          {% elif rec.action_type == 'read_source' %}Study Source
+          {% elif rec.action_type == 'practice_questions' %}Practice Questions
+          {% elif rec.action_type == 'build_project' %}Practice Project
+          {% elif rec.action_type == 'reassess_skill' %}Reassess Skill
+          {% else %}{{ rec.action_type|default:"Action" }}{% endif %}
+        </span>
+      </div>
+
+      {# Estimated effort #}
+      <span class="text-[11px] font-mono text-zinc-400 flex items-center gap-1">
+        <svg class="w-3 h-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        {% if rec.action_type == 'reassess_skill' or rec.action_type == 'practice_questions' %}15 mins
+        {% elif rec.action_type == 'read_source' %}20 mins
+        {% elif rec.action_type == 'build_project' %}45 mins
+        {% else %}10 mins{% endif %}
+      </span>
+    </div>
+
+    {# Title: What to do #}
+    <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-smooth">
+      {{ rec.title }}
+    </h4>
+
+    {# Description: Why it is recommended #}
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed line-clamp-2">
+      {{ rec.description }}
+    </p>
+
+    {# Related Skill context if available #}
+    {% if rec.skill %}
+      <div class="pt-1 flex items-center gap-2 text-[11px]">
+        <span class="text-zinc-400">Related Skill:</span>
+        <a href="{% url 'web-skill-detail' rec.skill.id %}" class="font-medium text-zinc-700 dark:text-zinc-300 hover:underline">
+          {{ rec.skill.name }}
+        </a>
+      </div>
+    {% elif rec.topic %}
+      <div class="pt-1 flex items-center gap-2 text-[11px]">
+        <span class="text-zinc-400">Related Topic:</span>
+        <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ rec.topic.name }}</span>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Action Button #}
+  <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between gap-2">
+    <span class="text-[10px] text-zinc-400 font-mono">Suggested Step</span>
+    
+    {% if rec.action_type == 'reassess_skill' or rec.action_type == 'practice_questions' %}
+      {% if rec.assessment %}
+        <a href="{% url 'web-assessment-take' rec.assessment.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+          Take Assessment &rarr;
+        </a>
+      {% elif rec.skill and rec.skill.assessments.exists %}
+        <a href="{% url 'web-assessment-take' rec.skill.assessments.first.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+          Take Assessment &rarr;
+        </a>
+      {% else %}
+        <a href="{% url 'web-assessments' %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+          Assessments &rarr;
+        </a>
+      {% endif %}
+    {% elif rec.action_type == 'read_source' and rec.source %}
+      <a href="{% url 'web-source-detail' rec.source.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+        Study Source &rarr;
+      </a>
+    {% elif rec.action_type == 'revise_topic' and rec.skill %}
+      <a href="{% url 'web-skill-detail' rec.skill.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+        Revise Skill &rarr;
+      </a>
+    {% else %}
+      <a href="{% url 'web-chat' %}?context={{ rec.title|urlencode }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+        Practice Concept &rarr;
+      </a>
+    {% endif %}
+  </div>
+</div>

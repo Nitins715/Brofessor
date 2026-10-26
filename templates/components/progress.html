@@ -1,0 +1,22 @@
+{# Reusable Progress Indicator Component #}
+{# Props: value (0-100), label, show_percentage, color, height, extra_classes #}
+<div class="w-full space-y-1.5 {{ extra_classes }}">
+  {% if label or show_percentage %}
+    <div class="flex items-center justify-between text-xs font-medium">
+      {% if label %}
+        <span class="text-zinc-600 dark:text-zinc-400">{{ label }}</span>
+      {% endif %}
+      {% if show_percentage %}
+        <span class="text-zinc-900 dark:text-zinc-200 font-mono">{{ value|default:0 }}%</span>
+      {% endif %}
+    </div>
+  {% endif %}
+  <div class="w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden {% if height %}{{ height }}{% else %}h-2{% endif %}">
+    <div class="h-full rounded-full transition-all duration-300
+      {% if color == 'emerald' %}bg-emerald-500
+      {% elif color == 'amber' %}bg-amber-500
+      {% elif color == 'rose' %}bg-rose-500
+      {% else %}bg-indigo-600 dark:bg-indigo-500{% endif %}"
+      style="width: {{ value|default:0 }}%;"></div>
+  </div>
+</div>

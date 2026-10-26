@@ -1,0 +1,573 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Dashboard | Brofessor{% endblock %}
+{% block page_title %}Dashboard & Analytics{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# 1. EMPTY STATE (For a new user with insufficient data) #}
+  {% if is_empty_state %}
+    <div class="p-8 sm:p-12 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm text-center max-w-3xl mx-auto space-y-6">
+      <div class="w-14 h-14 rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center mx-auto shadow-md font-bold text-xl">
+        B
+      </div>
+
+      <div class="space-y-2">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Welcome to Your Personal Knowledge Workspace
+        </h2>
+        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-lg mx-auto">
+          Brofessor needs a small amount of initial context to calibrate your Personal Knowledge Model, compute mastery scores, and track your topic and skill progression.
+        </p>
+      </div>
+
+      {# 3 Starter Steps #}
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left pt-2">
+        <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-2">
+          <span class="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-xs flex items-center justify-center">1</span>
+          <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Set Domain Focus</h4>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Choose a structured curriculum like AI & ML or Data Science.</p>
+        </div>
+        <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-2">
+          <span class="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-xs flex items-center justify-center">2</span>
+          <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Declare Skills</h4>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Select topics you already know to seed your baseline coverage score.</p>
+        </div>
+        <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-2">
+          <span class="w-6 h-6 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-mono font-bold text-xs flex items-center justify-center">3</span>
+          <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Ingest Evidence</h4>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Add notes, PDFs, or take assessments to verify your mastery.</p>
+        </div>
+      </div>
+
+      {# CTA Buttons #}
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+        <a href="{% url 'web-onboarding' %}"
+           class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium shadow-sm transition-smooth flex items-center justify-center gap-2">
+          Launch Guided Onboarding &rarr;
+        </a>
+        <a href="{% url 'web-sources' %}"
+           class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-smooth">
+          Add Knowledge Source
+        </a>
+      </div>
+    </div>
+
+  {% else %}
+
+    {# 2. HIGHLIGHTED RECOMMENDED NEXT ACTION #}
+    {% if recommended_action %}
+      <div class="p-5 sm:p-6 rounded-2xl bg-zinc-900 text-white dark:bg-zinc-900/90 dark:border dark:border-zinc-800/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-mono uppercase tracking-wide">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+            Recommended Next Action
+          </div>
+          <h2 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            <span>&gt;</span> {{ recommended_action.title }}
+          </h2>
+          <p class="text-xs text-zinc-400 max-w-xl">
+            {{ recommended_action.description }}
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <a href="{{ recommended_action.action_url }}"
+             class="px-4 py-2.5 rounded-xl bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-white dark:text-zinc-950 font-medium text-xs shadow-sm transition-smooth flex items-center gap-1.5 shrink-0">
+            {{ recommended_action.action_text }}
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    {# 3. UNIFIED ANALYTICS KPI CARDS #}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      {# Card 1: Knowledge Coverage #}
+      <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Knowledge Coverage</span>
+          <span class="p-1 rounded-md bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+            </svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 font-mono">
+            {{ overall_knowledge_score }}%
+          </span>
+          <span class="text-[11px] text-zinc-400 font-mono">mastery avg</span>
+        </div>
+        <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+          <div class="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full transition-all duration-300" style="width: {{ overall_knowledge_score }}%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
+          <span>{{ evidence_count }} evidence items</span>
+          <span>{{ active_domain.name|default:"General Domain" }}</span>
+        </div>
+      </div>
+
+      {# Card 2: Topics Covered vs Remaining #}
+      <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Topics Covered</span>
+          <span class="p-1 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 font-mono">
+            {{ topics_covered_count }}<span class="text-zinc-400 text-lg">/{{ total_topics_count }}</span>
+          </span>
+          <span class="text-[11px] text-zinc-400 font-mono">({{ topics_coverage_percentage }}%)</span>
+        </div>
+        <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+          <div class="h-full bg-blue-600 dark:bg-blue-500 rounded-full transition-all duration-300" style="width: {{ topics_coverage_percentage }}%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
+          <span>{{ total_topics_count|add:"-topics_covered_count" }} remaining</span>
+          <a href="{% url 'web-roadmap' %}" class="text-blue-600 dark:text-blue-400 hover:underline">Roadmap &rarr;</a>
+        </div>
+      </div>
+
+      {# Card 3: Skill Set Progression #}
+      <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Skillset Progress</span>
+          <span class="p-1 rounded-md bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 font-mono">
+            {{ skills_analytics.completed|add:skills_analytics.mastered }}<span class="text-zinc-400 text-lg">/{{ skills_analytics.total }}</span>
+          </span>
+          <span class="text-[11px] text-zinc-400 font-mono">skills</span>
+        </div>
+        <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden flex">
+          <div class="h-full bg-emerald-500" style="width: {{ skills_analytics.mastered_pct }}%;"></div>
+          <div class="h-full bg-teal-400" style="width: {{ skills_analytics.completed_pct }}%;"></div>
+          <div class="h-full bg-amber-400" style="width: {{ skills_analytics.in_progress_pct }}%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
+          <span class="text-emerald-600 dark:text-emerald-400 font-semibold">{{ skills_analytics.mastered }} Mastered</span>
+          <span>{{ skills_analytics.in_progress }} In Progress</span>
+        </div>
+      </div>
+
+      {# Card 4: Assessment Performance #}
+      <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Past Performance</span>
+          <span class="p-1 rounded-md bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 font-mono">
+            {{ performance_analytics.avg_score }}%
+          </span>
+          <span class="text-[11px] text-zinc-400 font-mono">avg score</span>
+        </div>
+        <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+          <div class="h-full {% if performance_analytics.avg_score >= 70 %}bg-purple-600 dark:bg-purple-500{% else %}bg-amber-500{% endif %} rounded-full"
+               style="width: {{ performance_analytics.avg_score }}%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
+          <span>{{ performance_analytics.total_attempts }} attempts</span>
+          <span class="text-purple-600 dark:text-purple-400">{{ performance_analytics.pass_rate }}% pass rate</span>
+        </div>
+      </div>
+
+    </div>
+
+    {# 4. DETAILED ANALYTICS GRID: TOPICS COVERAGE & SKILLSET BREAKDOWN #}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      {# SECTION A: TOPICS COVERED VS REMAINING #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Topics Covered & Progress</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-semibold">
+                {{ topics_covered_count }} of {{ total_topics_count }} Covered
+              </span>
+            </div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Curriculum progression across domain topic modules.</p>
+          </div>
+          <a href="{% url 'web-roadmap' %}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+            Full Roadmap &rarr;
+          </a>
+        </div>
+
+        {# Topic Items List #}
+        <div class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
+          {% for topic in topics_analytics %}
+            <div class="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/70 bg-zinc-50/40 dark:bg-zinc-950/30 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="text-[9px] font-mono px-1.5 py-0.5 rounded font-bold uppercase
+                    {% if topic.priority == 'P0' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+                    {% elif topic.priority == 'P1' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+                    {% else %}bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                    {{ topic.priority }}
+                  </span>
+                  <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                    {{ topic.name }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-semibold
+                    {% if topic.status == 'Mastered' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+                    {% elif topic.status == 'In Progress' %}bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400
+                    {% else %}bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                    {{ topic.status }}
+                  </span>
+                  <span class="text-xs font-mono font-bold text-zinc-800 dark:text-zinc-200 w-10 text-right">
+                    {{ topic.percentage }}%
+                  </span>
+                </div>
+              </div>
+
+              {# Progress Bar #}
+              <div class="w-full bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-300
+                  {% if topic.percentage >= 100 %}bg-emerald-500
+                  {% elif topic.percentage > 0 %}bg-blue-500
+                  {% else %}bg-transparent{% endif %}"
+                  style="width: {{ topic.percentage }}%;"></div>
+              </div>
+
+              <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                <span>{{ topic.completed_skills }} of {{ topic.total_skills }} skills completed</span>
+                {% if topic.in_progress_skills > 0 %}
+                  <span class="text-amber-600 dark:text-amber-400">{{ topic.in_progress_skills }} in progress</span>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-6">No topics found in active domain.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# SECTION B: SKILLSET BREAKDOWN #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div class="space-y-0.5">
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Skillset Breakdown</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Distribution across mastery and completion tiers.</p>
+          </div>
+          <span class="text-[10px] font-mono text-zinc-400">{{ skills_analytics.total }} Total Skills</span>
+        </div>
+
+        {# 4-Tier Distribution Cards #}
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div class="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 text-center space-y-1">
+            <span class="block text-lg font-bold font-mono text-emerald-700 dark:text-emerald-400">{{ skills_analytics.mastered }}</span>
+            <span class="text-[10px] uppercase font-mono font-semibold text-emerald-700 dark:text-emerald-400 block">Mastered</span>
+            <span class="text-[9px] font-mono text-zinc-400">{{ skills_analytics.mastered_pct }}%</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900/50 text-center space-y-1">
+            <span class="block text-lg font-bold font-mono text-teal-700 dark:text-teal-400">{{ skills_analytics.completed }}</span>
+            <span class="text-[10px] uppercase font-mono font-semibold text-teal-700 dark:text-teal-400 block">Completed</span>
+            <span class="text-[9px] font-mono text-zinc-400">{{ skills_analytics.completed_pct }}%</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 text-center space-y-1">
+            <span class="block text-lg font-bold font-mono text-amber-700 dark:text-amber-400">{{ skills_analytics.in_progress }}</span>
+            <span class="text-[10px] uppercase font-mono font-semibold text-amber-700 dark:text-amber-400 block">In Progress</span>
+            <span class="text-[9px] font-mono text-zinc-400">{{ skills_analytics.in_progress_pct }}%</span>
+          </div>
+
+          <div class="p-3 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/50 border border-zinc-200/60 dark:border-zinc-700/50 text-center space-y-1">
+            <span class="block text-lg font-bold font-mono text-zinc-600 dark:text-zinc-300">{{ skills_analytics.not_started }}</span>
+            <span class="text-[10px] uppercase font-mono font-semibold text-zinc-600 dark:text-zinc-300 block">Not Started</span>
+            <span class="text-[9px] font-mono text-zinc-400">{{ skills_analytics.not_started_pct }}%</span>
+          </div>
+        </div>
+
+        {# Skills Overview (Primary evaluated skills) #}
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between pb-1">
+            <h4 class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">Skills Overview</h4>
+            <a href="{% url 'web-knowledge' %}" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline">View All &rarr;</a>
+          </div>
+
+          <div class="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+            {% for skill in skills_overview %}
+              <div class="p-2.5 rounded-xl border border-zinc-100 dark:border-zinc-800/70 bg-zinc-50/40 dark:bg-zinc-950/30 flex items-center justify-between gap-3 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth">
+                <div class="space-y-0.5 min-w-0">
+                  <a href="/knowledge/skills/{{ skill.id }}/" class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:underline truncate block">
+                    {{ skill.name }}
+                  </a>
+                  <span class="text-[10px] text-zinc-400 font-mono">{{ skill.topic_name }}</span>
+                </div>
+
+                <div class="flex items-center gap-3 shrink-0">
+                  <span class="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded font-semibold
+                    {% if skill.mastery_level == 'Expert' or skill.mastery_level == 'Advanced' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+                    {% elif skill.mastery_level == 'Intermediate' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+                    {% else %}bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                    {{ skill.mastery_level }}
+                  </span>
+
+                  <div class="w-16 hidden sm:block bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+                    <div class="h-full rounded-full
+                      {% if skill.percentage >= 70 %}bg-emerald-500
+                      {% elif skill.percentage >= 40 %}bg-amber-500
+                      {% else %}bg-indigo-500{% endif %}"
+                      style="width: {{ skill.percentage }}%;"></div>
+                  </div>
+
+                  <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100 w-9 text-right">
+                    {{ skill.percentage }}%
+                  </span>
+                </div>
+              </div>
+            {% empty %}
+              <p class="text-xs text-zinc-400 italic text-center py-4">No skills evaluated yet.</p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    {# 5. PAST PERFORMANCE & ASSESSMENT HISTORY + LEARNING ACTIONS GRID #}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      {# LEFT 2 COLS: PAST ASSESSMENT PERFORMANCE & KNOWLEDGE GAPS #}
+      <div class="lg:col-span-2 space-y-6">
+
+        {# PAST PERFORMANCE HISTORY #}
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+            <div class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Past Performance & Assessments</h3>
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 font-semibold">
+                  {{ performance_analytics.total_attempts }} Completed
+                </span>
+              </div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Diagnostic history, evaluation scores, and feedback.</p>
+            </div>
+            <a href="{% url 'web-assessments' %}" class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium transition-smooth">
+              Take Diagnostic &rarr;
+            </a>
+          </div>
+
+          <div class="space-y-3">
+            {% for att in performance_analytics.recent_attempts %}
+              <div class="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800/70 bg-zinc-50/40 dark:bg-zinc-950/30 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth space-y-1.5">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="space-y-0.5 min-w-0">
+                    <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                      {{ att.title }}
+                    </h4>
+                    <div class="flex items-center gap-2 text-[10px] font-mono text-zinc-400">
+                      <span>{{ att.topic_name }}</span>
+                      <span>&bull;</span>
+                      <span class="uppercase font-medium text-zinc-500">{{ att.difficulty }}</span>
+                      <span>&bull;</span>
+                      <span>{{ att.completed_at|date:"M d, Y" }}</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2.5 shrink-0">
+                    <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-bold
+                      {% if att.passed %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+                      {% else %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400{% endif %}">
+                      {% if att.passed %}Passed{% else %}Needs Review{% endif %}
+                    </span>
+                    <span class="text-sm font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                      {{ att.score }}%
+                    </span>
+                  </div>
+                </div>
+
+                {% if att.feedback %}
+                  <p class="text-[11px] text-zinc-500 dark:text-zinc-400 italic bg-white dark:bg-zinc-900/60 p-2 rounded-lg border border-zinc-100 dark:border-zinc-800">
+                    "{{ att.feedback }}"
+                  </p>
+                {% endif %}
+              </div>
+            {% empty %}
+              <div class="text-center py-8 space-y-3">
+                <p class="text-xs text-zinc-400 italic">No assessment attempts recorded yet.</p>
+                <a href="{% url 'web-assessments' %}" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-xs font-medium text-zinc-800 dark:text-zinc-200 transition-smooth">
+                  Start your first diagnostic assessment &rarr;
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# Current Focus Card #}
+        {% if current_focus %}
+          <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                Current Learning Focus
+              </span>
+              <span class="text-[10px] font-mono text-zinc-400 uppercase">Topic: {{ current_focus.topic.name }}</span>
+            </div>
+
+            <div class="p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="space-y-1">
+                <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">{{ current_focus.skill.name }}</h4>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ current_focus.reason }}</p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <a href="/knowledge/skills/{{ current_focus.skill.id }}/"
+                   class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium transition-smooth">
+                  Skill Details &rarr;
+                </a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {# Knowledge Gaps Overview #}
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+            <div class="space-y-0.5">
+              <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Knowledge Gaps</h3>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">High-priority deficiencies requiring evidence or assessment.</p>
+            </div>
+            <a href="{% url 'web-gaps' %}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+              All Gaps &rarr;
+            </a>
+          </div>
+
+          <div class="space-y-2.5">
+            {% for gap in top_gaps %}
+              <div class="p-3.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 flex items-start justify-between gap-3">
+                <div class="space-y-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded font-semibold
+                      {% if gap.severity == 'critical' or gap.severity == 'high' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+                      {% else %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400{% endif %}">
+                      {{ gap.severity }}
+                    </span>
+                    <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{{ gap.title }}</h4>
+                  </div>
+                  {% if gap.description %}
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">{{ gap.description }}</p>
+                  {% endif %}
+                </div>
+                <span class="text-[11px] font-mono text-zinc-400 text-nowrap">
+                  {{ gap.current_score }}% / {{ gap.target_score }}%
+                </span>
+              </div>
+            {% empty %}
+              <div class="text-center py-4 text-xs text-zinc-400 italic">No critical knowledge gaps detected!</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# Recommendations Section #}
+        {% if top_recommendations %}
+          <div class="space-y-3">
+            <div class="flex items-center justify-between pb-1">
+              <div>
+                <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recommended Next Steps</h3>
+                <p class="text-xs text-zinc-500 dark:text-zinc-400">Targeted actions to remediate knowledge gaps.</p>
+              </div>
+              <a href="{% url 'web-gaps' %}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-medium">
+                View All &rarr;
+              </a>
+            </div>
+            <div class="space-y-3">
+              {% for rec in top_recommendations %}
+                {% include "components/recommendation_card.html" with rec=rec %}
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+      </div>
+
+      {# RIGHT 1 COL: Recent Activity Feed & Fast Tools #}
+      <div class="space-y-6">
+
+        {# Recent Activity Feed #}
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+            <div class="space-y-0.5">
+              <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recent Activity</h3>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400">Sources, assessments & updates</p>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            {% for act in recent_activity %}
+              <a href="{{ act.url }}" class="block p-3 rounded-xl border border-zinc-100 dark:border-zinc-800/70 bg-zinc-50/40 dark:bg-zinc-950/30 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth">
+                <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400 mb-1">
+                  <span class="uppercase font-semibold text-zinc-600 dark:text-zinc-400">[{{ act.badge }}]</span>
+                  <span>{{ act.timestamp|date:"M d, H:i" }}</span>
+                </div>
+                <h4 class="text-xs font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ act.title }}</h4>
+              </a>
+            {% empty %}
+              <p class="text-xs text-zinc-400 italic text-center py-6">No recent activity logged.</p>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# Fast Action Card #}
+        <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/70 dark:bg-zinc-900/60 space-y-3">
+          <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Quick Actions</h4>
+          <div class="space-y-2">
+            <a href="{% url 'web-sources' %}" class="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 transition-smooth">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                Ingest New Source
+              </span>
+              <span class="text-zinc-400">&rarr;</span>
+            </a>
+            <a href="{% url 'web-assessments' %}" class="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 transition-smooth">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Take Diagnostic
+              </span>
+              <span class="text-zinc-400">&rarr;</span>
+            </a>
+            <a href="{% url 'web-roadmap' %}" class="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 transition-smooth">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                Curriculum Roadmap
+              </span>
+              <span class="text-zinc-400">&rarr;</span>
+            </a>
+            <a href="{% url 'web-chat' %}" class="flex items-center justify-between p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:border-zinc-400 transition-smooth">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                Ask Assistant
+              </span>
+              <span class="text-zinc-400">&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  {% endif %}
+
+</div>
+{% endblock %}

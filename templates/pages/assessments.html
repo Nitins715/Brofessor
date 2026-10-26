@@ -1,0 +1,232 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Assessments | Brofessor{% endblock %}
+{% block page_title %}Diagnostic Assessments{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Header #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Skill Diagnostics & Benchmarks
+      </h2>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+        Calibrate your Personal Knowledge Model and test conceptual boundaries with focused assessments.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button"
+              onclick="document.getElementById('start-assessment-modal').classList.remove('hidden')"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-semibold shadow-sm transition-smooth">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>Take an Assessment</span>
+      </button>
+    </div>
+  </div>
+
+  {# Assessments Grid #}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for a in assessments_data %}
+      <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-4 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth">
+        <div class="space-y-2.5">
+          {# Badges row #}
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+                {% if a.difficulty_level == 'advanced' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+                {% elif a.difficulty_level == 'intermediate' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+                {% else %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400{% endif %}">
+                {{ a.difficulty_level }}
+              </span>
+              {% if a.skill_name %}
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                  {{ a.skill_name }}
+                </span>
+              {% endif %}
+            </div>
+
+            {# Performance trend #}
+            <div class="flex items-center gap-1.5 text-[11px] font-mono">
+              {% if a.trend == 'improving' %}
+                <span class="text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 font-bold">
+                  &uarr; Improving
+                </span>
+              {% elif a.trend == 'declining' %}
+                <span class="text-rose-600 dark:text-rose-400 flex items-center gap-0.5 font-bold">
+                  &darr; Declining
+                </span>
+              {% elif a.trend == 'consistent' %}
+                <span class="text-zinc-400 flex items-center gap-0.5">
+                  &sim; Steady
+                </span>
+              {% else %}
+                <span class="text-zinc-400">New</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ a.title }}</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-relaxed">{{ a.description }}</p>
+
+          {# Stats Line #}
+          <div class="grid grid-cols-3 gap-2 pt-2 border-t border-zinc-100 dark:border-zinc-800/60 text-[11px] font-mono">
+            <div>
+              <span class="text-zinc-400 block text-[10px]">Questions</span>
+              <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ a.questions_count }}</span>
+            </div>
+            <div>
+              <span class="text-zinc-400 block text-[10px]">Attempts</span>
+              <span class="font-medium text-zinc-800 dark:text-zinc-200">{{ a.attempts_count }}</span>
+            </div>
+            <div>
+              <span class="text-zinc-400 block text-[10px]">Latest Score</span>
+              <span class="font-bold {% if a.latest_score is not None and a.latest_score >= a.passing_score %}text-emerald-600 dark:text-emerald-400{% elif a.latest_score is not None %}text-amber-600 dark:text-amber-400{% else %}text-zinc-400{% endif %}">
+                {% if a.latest_score is not None %}{{ a.latest_score }}%{% else %}--{% endif %}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {# Footer Action #}
+        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between">
+          <span class="text-[11px] font-mono text-zinc-400">Pass: {{ a.passing_score }}%</span>
+          <a href="{% url 'web-assessment-take' a.id %}"
+             class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+            Take Assessment &rarr;
+          </a>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-span-full p-8 rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-800 text-center space-y-3 bg-white/50 dark:bg-zinc-900/40">
+        <div class="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">No active assessments in progress</h3>
+          <p class="text-xs text-zinc-500 max-w-sm mx-auto">
+            Pick any curriculum skill to dynamically generate an interactive diagnostic assessment.
+          </p>
+        </div>
+        <button type="button"
+                onclick="document.getElementById('start-assessment-modal').classList.remove('hidden')"
+                class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-semibold shadow-sm transition-smooth">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Choose a Skill to Assess</span>
+        </button>
+      </div>
+    {% endfor %}
+  </div>
+
+  {# Past Attempts History #}
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/40 flex items-center justify-between text-xs">
+      <span class="font-semibold text-zinc-800 dark:text-zinc-200">Past Assessment Attempts</span>
+      <span class="text-zinc-400 font-mono">{{ past_attempts.count }} recorded</span>
+    </div>
+    
+    <div class="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+      {% for att in past_attempts %}
+        <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-smooth">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2">
+              <h4 class="font-medium text-zinc-900 dark:text-zinc-100">{{ att.assessment.title }}</h4>
+              {% if att.assessment.skill %}
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                  {{ att.assessment.skill.name }}
+                </span>
+              {% endif %}
+            </div>
+            <span class="text-[11px] font-mono text-zinc-400">Completed: {{ att.completed_at|date:"M d, Y · H:i" }}</span>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="font-mono font-bold text-zinc-900 dark:text-zinc-100">{{ att.score|default:"0" }}%</span>
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-semibold
+              {% if att.passed %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+              {% else %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400{% endif %}">
+              {% if att.passed %}Passed{% else %}Review{% endif %}
+            </span>
+            <a href="{% url 'web-assessment-result' att.id %}"
+               class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-[11px] font-medium transition-smooth">
+              Results &rarr;
+            </a>
+          </div>
+        </div>
+      {% empty %}
+        <p class="p-6 text-xs text-zinc-400 italic text-center">No completed assessment attempts yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# Modal: Start Assessment for Any Skill #}
+  <div id="start-assessment-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-xl space-y-5">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+        <div>
+          <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">Take a Skill Assessment</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Select any skill and your desired difficulty level.</p>
+        </div>
+        <button type="button"
+                onclick="document.getElementById('start-assessment-modal').classList.add('hidden')"
+                class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 text-lg p-1">
+          &times;
+        </button>
+      </div>
+
+      <form method="POST" action="{% url 'web-assessment-start-post' %}" class="space-y-4">
+        {% csrf_token %}
+        <div class="space-y-1.5">
+          <label for="select-skill" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Target Skill</label>
+          <select name="skill_id" id="select-skill" required
+                  class="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-xs py-2.5 px-3 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-zinc-400">
+            {% for s in available_skills %}
+              <option value="{{ s.id }}">{{ s.topic.name }} &rsaquo; {{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Difficulty Tier</label>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="flex flex-col p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-zinc-400 transition-smooth">
+              <input type="radio" name="difficulty" value="easy" checked class="mb-1 text-zinc-900 focus:ring-0">
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Easy</span>
+              <span class="text-[10px] text-zinc-400 mt-0.5 font-mono">Local Ollama</span>
+            </label>
+            <label class="flex flex-col p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-zinc-400 transition-smooth">
+              <input type="radio" name="difficulty" value="intermediate" class="mb-1 text-zinc-900 focus:ring-0">
+              <span class="text-xs font-bold text-amber-600 dark:text-amber-400">Medium</span>
+              <span class="text-[10px] text-zinc-400 mt-0.5 font-mono">Cloud LLM</span>
+            </label>
+            <label class="flex flex-col p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 cursor-pointer hover:border-zinc-400 transition-smooth">
+              <input type="radio" name="difficulty" value="advanced" class="mb-1 text-zinc-900 focus:ring-0">
+              <span class="text-xs font-bold text-rose-600 dark:text-rose-400">Hard</span>
+              <span class="text-[10px] text-zinc-400 mt-0.5 font-mono">Cloud LLM</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+          <button type="button"
+                  onclick="document.getElementById('start-assessment-modal').classList.add('hidden')"
+                  class="px-4 py-2 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-semibold shadow-sm transition-smooth">
+            Begin Assessment &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

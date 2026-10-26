@@ -1,0 +1,32 @@
+# Core Django & DRF
+django>=5.1.0,<6.0.0
+djangorestframework>=3.15.2,<4.0.0
+django-cors-headers>=4.5.0
+python-dotenv>=1.0.1
+
+# Database & Vector Support
+psycopg[binary]>=3.2.3
+pgvector>=0.3.6
+
+# Cache & Task Queue
+redis>=5.2.0
+celery>=5.4.0
+
+# LLM & Graph Orchestration
+langchain>=0.3.7
+langgraph>=0.2.45
+ollama>=0.3.3
+
+# Content Ingestion & Document Processing
+pypdf>=5.1.0
+beautifulsoup4>=4.12.3
+youtube-transcript-api>=0.6.3
+requests>=2.32.3
+fastembed>=0.8.0
+
+
+# Utilities & Production Server
+gunicorn>=23.0.0
+whitenoise>=6.8.0
+drf-spectacular>=0.27.2
+

@@ -1,0 +1,465 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Assessment Result | {{ assessment.title }} | Brofessor{% endblock %}
+{% block page_title %}Assessment Evaluation{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-4xl mx-auto">
+
+  {# Navigation Header #}
+  <div class="flex items-center justify-between text-xs text-zinc-500">
+    <a href="{% url 'web-assessments' %}" class="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1.5 transition-smooth">
+      &larr; Back to Assessments
+    </a>
+    <div class="flex items-center gap-2">
+      <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300">
+        {{ assessment.difficulty_level|upper }}
+      </span>
+      <span class="font-mono text-zinc-400">Attempt ID: {{ attempt.id|stringformat:".8s" }}...</span>
+    </div>
+  </div>
+
+  {# Main Results Hero Card #}
+  <div class="p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+            {% if attempt.passed %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+            {% else %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400{% endif %}">
+            {% if attempt.passed %}PASSED{% else %}FAILED (NEEDS REVISION){% endif %}
+          </span>
+          <span class="text-[10px] font-mono text-zinc-400">
+            Passing Threshold: {{ assessment.passing_score }}%
+          </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          {{ assessment.title }}
+        </h2>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+          Completed on {{ attempt.completed_at|date:"F d, Y · H:i"|default:"Just now" }}
+          {% if assessment.provider_used %}
+            &bull; Generated with <span class="font-mono font-medium text-zinc-700 dark:text-zinc-300">{{ assessment.provider_used }}</span>
+          {% endif %}
+        </p>
+      </div>
+
+      {# Primary Action Buttons #}
+      <div class="flex items-center gap-2 shrink-0">
+        <a href="{% url 'web-assessment-take' assessment.id %}"
+           class="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-medium transition-smooth">
+          Retake Assessment
+        </a>
+        {% if next_difficulty and assessment.skill %}
+          <button type="button"
+                  onclick="startNextDifficulty('{{ next_difficulty }}')"
+                  class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-smooth shadow-sm">
+            Advance to {{ next_difficulty|capfirst }} &rarr;
+          </button>
+        {% elif next_skill %}
+          <button type="button"
+                  onclick="startNextSkill('{{ next_skill.id }}')"
+                  class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-smooth shadow-sm">
+            Next Skill: {{ next_skill.name }} &rarr;
+          </button>
+        {% elif assessment.skill %}
+          <a href="{% url 'web-skill-detail' assessment.skill.id %}"
+             class="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth">
+            View Skill Model &rarr;
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {# 4-Tile High-Level Score Grid #}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800/60 font-mono text-xs">
+      <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/50 space-y-1">
+        <span class="text-zinc-400 text-[10px] uppercase font-semibold">Final Score</span>
+        <div class="text-2xl font-black {% if attempt.passed %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+          {{ attempt.score|default:"0.00" }}%
+        </div>
+      </div>
+      <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/50 space-y-1">
+        <span class="text-zinc-400 text-[10px] uppercase font-semibold">Accuracy</span>
+        <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">
+          {{ accuracy_percentage }}%
+        </div>
+      </div>
+      <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/50 space-y-1">
+        <span class="text-zinc-400 text-[10px] uppercase font-semibold">Points Earned</span>
+        <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">
+          {{ attempt.total_points_awarded|default:"0" }} <span class="text-xs font-normal text-zinc-400">/ {{ attempt.total_points_possible|default:"0" }}</span>
+        </div>
+      </div>
+      <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/50 space-y-1">
+        <span class="text-zinc-400 text-[10px] uppercase font-semibold">Questions Correct</span>
+        <div class="text-2xl font-black text-zinc-900 dark:text-zinc-100">
+          {{ correct_count }} <span class="text-xs font-normal text-zinc-400">/ {{ total_questions_count }}</span>
+        </div>
+      </div>
+    </div>
+
+    {# Progression Banner #}
+    {% if attempt.passed %}
+      <div class="p-4 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="space-y-0.5">
+          <span class="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 uppercase font-bold">
+            Curriculum Progression Ready
+          </span>
+          {% if next_difficulty %}
+            <p class="font-medium text-emerald-950 dark:text-emerald-200">
+              You achieved passing score on <b>{{ assessment.difficulty_level|capfirst }}</b>. Next step: <b>{{ next_difficulty|capfirst }} Assessment</b> (generated with configured Cloud API).
+            </p>
+          {% elif next_skill %}
+            <p class="font-medium text-emerald-950 dark:text-emerald-200">
+              You have completed this skill! Proceed to the next skill in your roadmap: <b>{{ next_skill.name }}</b>.
+            </p>
+          {% else %}
+            <p class="font-medium text-emerald-950 dark:text-emerald-200">
+              Congratulations! All assessment tiers for this skill are fully mastered.
+            </p>
+          {% endif %}
+        </div>
+        <div class="shrink-0">
+          {% if next_difficulty %}
+            <button type="button"
+                    onclick="startNextDifficulty('{{ next_difficulty }}')"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-smooth shadow-sm">
+              Generate {{ next_difficulty|capfirst }} Assessment &rarr;
+            </button>
+          {% elif next_skill %}
+            <button type="button"
+                    onclick="startNextSkill('{{ next_skill.id }}')"
+                    class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-smooth shadow-sm">
+              Continue to {{ next_skill.name }} &rarr;
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+    {# Calibrated Skill Connection #}
+    {% if assessment.skill %}
+      <div class="p-4 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="space-y-0.5">
+          <span class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 uppercase font-semibold">
+            Calibrated Skill & Knowledge Model
+          </span>
+          <p class="font-medium text-zinc-900 dark:text-zinc-100">
+            This evaluation directly calibrates your mastery of <b>{{ assessment.skill.name }}</b>.
+          </p>
+          <p class="text-[11px] text-zinc-500">
+            Current calculated mastery: <span class="font-mono font-bold">{{ skill_mastery.mastery_level|default:"Beginner"|upper }} ({{ skill_mastery.mastery_score|default:"0" }}%)</span>
+          </p>
+        </div>
+        <a href="{% url 'web-chat' %}?skill_id={{ assessment.skill.id }}&context={{ assessment.skill.name|urlencode }}"
+           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-smooth shrink-0 shadow-sm">
+          Ask Brofessor about {{ assessment.skill.name }} &rarr;
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+  {# Concept-Level Performance Breakdown #}
+  {% if concept_scores %}
+    <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+            Performance by Tested Concept
+          </h3>
+          <p class="text-[11px] text-zinc-500 mt-0.5">Granular accuracy breakdown per concept tag tested in this session.</p>
+        </div>
+        <span class="text-[11px] font-mono text-zinc-400">{{ concept_scores|length }} Concepts</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-2">
+        {% for concept_name, stats in concept_scores.items %}
+          <div class="p-3.5 rounded-xl border {% if stats.accuracy >= 70.0 %}border-emerald-200/80 dark:border-emerald-900/40 bg-emerald-50/20 dark:bg-emerald-950/10{% else %}border-rose-200/80 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/10{% endif %} space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-semibold text-zinc-900 dark:text-zinc-100 truncate pr-2">{{ concept_name }}</span>
+              <span class="font-mono font-bold text-xs {% if stats.accuracy >= 70.0 %}text-emerald-600 dark:text-emerald-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                {{ stats.accuracy }}%
+              </span>
+            </div>
+            {# Visual Bar #}
+            <div class="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+              <div class="h-full {% if stats.accuracy >= 70.0 %}bg-emerald-500{% else %}bg-rose-500{% endif %}" style="width: {{ stats.accuracy }}%;"></div>
+            </div>
+            <div class="flex items-center justify-between text-[10px] font-mono text-zinc-400">
+              <span>{{ stats.correct }} / {{ stats.total }} questions</span>
+              <span>{{ stats.points_awarded|floatformat:1 }} / {{ stats.points_possible|floatformat:1 }} pts</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {# Weak Concepts & Curated Remediation Resources #}
+  {% if weak_concepts and verified_resources %}
+    <div class="p-6 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/30 dark:bg-rose-950/20 shadow-sm space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-rose-950 dark:text-rose-200">
+          Targeted Remediation: Curated Learning Resources
+        </h3>
+      </div>
+      <p class="text-xs text-zinc-600 dark:text-zinc-400">
+        You scored below passing threshold on: <b>{{ weak_concepts|join:", " }}</b>.
+        Review these curated learning resources mapped directly to <b>{{ assessment.skill.name }}</b> before retrying:
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        {% for mapping in verified_resources %}
+          <a href="{{ mapping.resource.url }}"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 hover:border-zinc-400 dark:hover:border-zinc-600 transition-smooth group flex flex-col justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-semibold
+                  {% if mapping.resource.resource_type == 'primary' %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400
+                  {% elif mapping.resource.resource_type == 'official_docs' %}bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400
+                  {% elif mapping.resource.resource_type == 'video' %}bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400
+                  {% else %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400{% endif %}">
+                  {{ mapping.resource.get_resource_type_display }}
+                </span>
+                {% if mapping.is_primary %}
+                  <span class="text-[10px] font-mono text-indigo-600 dark:text-indigo-400 font-bold">&star; PRIMARY</span>
+                {% endif %}
+              </div>
+              <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-smooth pt-1">
+                {{ mapping.resource.title }}
+              </h4>
+              <p class="text-[11px] text-zinc-500 line-clamp-2">
+                {{ mapping.resource.description|default:"Curated learning material for this skill." }}
+              </p>
+            </div>
+            <div class="pt-2 text-[10px] font-mono text-zinc-400 flex items-center justify-between">
+              <span>{{ mapping.resource.source }}</span>
+              <span class="group-hover:translate-x-0.5 transition-transform text-indigo-500 font-medium">Open &rarr;</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {# 2-Column Section: Strong Areas & Weak Areas #}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    
+    {# Strong Areas Card #}
+    <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+          Strong Conceptual Areas
+        </h3>
+      </div>
+      <p class="text-xs text-zinc-500">Concepts and criteria where you demonstrated firm command:</p>
+
+      {% if strong_areas %}
+        <ul class="space-y-2 pt-1">
+          {% for sa in strong_areas %}
+            <li class="p-2.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/80 dark:border-emerald-900/40 text-xs flex items-start gap-2">
+              <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              <div>
+                <span class="font-medium text-emerald-900 dark:text-emerald-200">{{ sa.title }}</span>
+                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{{ sa.description }}</p>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-xs text-zinc-400 italic p-3">No full-accuracy answers recorded in this session. Review foundational concepts below.</p>
+      {% endif %}
+    </div>
+
+    {# Weak Areas & Remediation Card #}
+    <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+          Identified Weak Areas & Gaps
+        </h3>
+      </div>
+      <p class="text-xs text-zinc-500">Topics requiring focused remediation or source review:</p>
+
+      {% if weak_areas %}
+        <ul class="space-y-2 pt-1">
+          {% for wa in weak_areas %}
+            <li class="p-2.5 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100/80 dark:border-rose-900/40 text-xs flex items-start gap-2">
+              <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <div>
+                <span class="font-medium text-rose-900 dark:text-rose-200">{{ wa.title }}</span>
+                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">{{ wa.description }}</p>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-xs text-emerald-600 dark:text-emerald-400 font-medium p-3">Excellent! No severe knowledge deficiencies detected in this attempt.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  {# Recommended Next Actions #}
+  {% if recommended_actions %}
+    <div class="space-y-3">
+      <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+        Recommended Next Actions
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for rec in recommended_actions %}
+          {% include "components/recommendation_card.html" with rec=rec %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  {# Question-by-Question Detailed Review #}
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm space-y-0">
+    <div class="p-4 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/40 flex items-center justify-between">
+      <div>
+        <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+          Question-by-Question Performance Breakdown
+        </h3>
+        <p class="text-[11px] text-zinc-500 mt-0.5">Inspect your responses alongside reference solutions and grading rubrics.</p>
+      </div>
+      <span class="text-xs font-mono text-zinc-400">{{ answers_breakdown|length }} Questions</span>
+    </div>
+
+    <div class="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+      {% for item in answers_breakdown %}
+        <div class="p-5 space-y-4">
+          {# Question Header #}
+          <div class="flex items-center justify-between gap-3 text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-md font-mono text-xs font-bold flex items-center justify-center shrink-0
+                {% if item.is_correct %}bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300
+                {% else %}bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300{% endif %}">
+                {{ item.order }}
+              </span>
+              <span class="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                {{ item.question_type }}
+              </span>
+              {% if item.concept %}
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400">
+                  {{ item.concept }}
+                </span>
+              {% endif %}
+              <span class="text-zinc-500">
+                {{ item.score_awarded }} / {{ item.points_possible }} pts
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2 font-mono">
+              <span class="text-xs font-bold
+                {% if item.is_correct %}text-emerald-600 dark:text-emerald-400
+                {% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                {% if item.is_correct %}Correct ({{ item.accuracy_pct }}%){% else %}Review ({{ item.accuracy_pct }}%){% endif %}
+              </span>
+            </div>
+          </div>
+
+          {# Prompt #}
+          <p class="text-xs sm:text-sm font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed whitespace-pre-line">
+            {{ item.prompt }}
+          </p>
+
+          {# User Response vs Reference #}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            
+            {# User Response #}
+            <div class="p-3.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/30 space-y-1.5">
+              <span class="text-[10px] uppercase font-mono text-zinc-400 font-semibold block">Your Response:</span>
+              <div class="font-mono text-xs text-zinc-800 dark:text-zinc-200 whitespace-pre-line leading-relaxed">
+                {% if item.user_response %}
+                  {{ item.user_response }}
+                {% else %}
+                  <span class="text-zinc-400 italic">No answer submitted</span>
+                {% endif %}
+              </div>
+            </div>
+
+            {# Reference / Rubric Solution #}
+            <div class="p-3.5 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/30 space-y-1.5">
+              <span class="text-[10px] uppercase font-mono text-zinc-400 font-semibold block">Reference Solution / Rubric:</span>
+              <div class="text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed">
+                {% if item.correct_answer %}
+                  <p class="font-mono font-medium text-zinc-900 dark:text-zinc-100">{{ item.correct_answer }}</p>
+                {% endif %}
+                {% if item.rubric_explanation %}
+                  <p class="text-[11px] text-zinc-500 mt-1">{{ item.rubric_explanation }}</p>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+
+          {# Evaluator Feedback #}
+          {% if item.feedback %}
+            <div class="p-3 rounded-xl bg-zinc-100/70 dark:bg-zinc-800/40 text-[11px] text-zinc-600 dark:text-zinc-400 flex items-start gap-2">
+              <span class="font-mono font-bold text-zinc-700 dark:text-zinc-300 uppercase shrink-0">Evaluator Note:</span>
+              <span>{{ item.feedback }}</span>
+            </div>
+          {% endif %}
+
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+async function startNextDifficulty(nextDiff) {
+  const skillId = "{{ assessment.skill.id }}";
+  try {
+    const res = await fetch(`/api/v1/assessments/skills/${skillId}/next-question/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: JSON.stringify({ difficulty: nextDiff })
+    });
+    const data = await res.json();
+    if (res.ok && data.assessment_id) {
+      window.location.href = `/assessments/${data.assessment_id}/take/`;
+    } else {
+      alert(data.message || 'Could not start next difficulty assessment.');
+    }
+  } catch (err) {
+    alert('Error connecting to assessment server: ' + err.message);
+  }
+}
+
+async function startNextSkill(nextSkillId) {
+  try {
+    const res = await fetch(`/api/v1/assessments/skills/${nextSkillId}/next-question/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: JSON.stringify({ difficulty: 'easy' })
+    });
+    const data = await res.json();
+    if (res.ok && data.assessment_id) {
+      window.location.href = `/assessments/${data.assessment_id}/take/`;
+    } else {
+      window.location.href = `/roadmap/skills/${nextSkillId}/`;
+    }
+  } catch (err) {
+    window.location.href = `/roadmap/skills/${nextSkillId}/`;
+  }
+}
+</script>
+{% endblock %}

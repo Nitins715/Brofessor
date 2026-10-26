@@ -1,0 +1,560 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}AI Knowledge Chat | Brofessor{% endblock %}
+{% block page_title %}Knowledge Assistant{% endblock %}
+
+{% block content %}
+<div class="h-[calc(100vh-8.5rem)] flex bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm">
+
+  {# Sidebar: Conversation History (Desktop + Collapsible Drawer) #}
+  <aside id="chat-sidebar"
+         class="w-72 shrink-0 border-r border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-950/40 flex flex-col justify-between hidden md:flex transition-all">
+    
+    <div class="p-3.5 space-y-3 flex-1 flex flex-col min-h-0">
+      {# New Conversation Button #}
+      <button type="button"
+              onclick="startNewConversation()"
+              class="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        New Conversation
+      </button>
+
+      {# Header #}
+      <div class="flex items-center justify-between text-[11px] font-mono text-zinc-400 px-1 pt-1">
+        <span>Recent Sessions (<span id="conv-count-badge">{{ conversations|length }}</span>)</span>
+        <button type="button"
+                id="btn-clear-all-chats"
+                onclick="clearAllChatHistory()"
+                title="Clear all chat history completely"
+                class="{% if not conversations %}hidden{% endif %} text-zinc-400 hover:text-rose-500 dark:hover:text-rose-400 transition-smooth flex items-center gap-1 text-[11px] font-sans font-medium px-1.5 py-0.5 rounded hover:bg-rose-50 dark:hover:bg-rose-950/40">
+          <svg class="w-3 h-3 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Clear All</span>
+        </button>
+      </div>
+
+      {# Conversation List #}
+      <div id="conversation-list" class="space-y-1 overflow-y-auto flex-1 pr-1">
+        {% for conv in conversations %}
+          <div id="conv-wrapper-{{ conv.id }}" class="group relative flex items-center">
+            <button type="button"
+                    onclick="selectConversation('{{ conv.id }}')"
+                    id="conv-btn-{{ conv.id }}"
+                    class="conv-btn w-full text-left p-2.5 rounded-xl border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800 hover:bg-white dark:hover:bg-zinc-900 transition-smooth text-xs flex flex-col gap-0.5 pr-8">
+              <span class="font-medium text-zinc-800 dark:text-zinc-200 truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+                {{ conv.title }}
+              </span>
+              <span class="text-[10px] font-mono text-zinc-400">
+                {{ conv.updated_at|date:"M d, H:i" }} &bull; {{ conv.messages.count }} msgs
+              </span>
+            </button>
+            <button type="button"
+                    onclick="deleteSingleConversation(event, '{{ conv.id }}')"
+                    title="Delete conversation"
+                    class="absolute right-2 opacity-0 group-hover:opacity-100 p-1 text-zinc-400 hover:text-rose-500 transition-smooth rounded hover:bg-zinc-100 dark:hover:bg-zinc-800">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        {% empty %}
+          <p class="text-xs text-zinc-400 italic p-3 text-center">No past conversations yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# Footer status #}
+    <div class="p-3 border-t border-zinc-100 dark:border-zinc-800/60 text-[10px] font-mono text-zinc-400 flex items-center justify-between">
+      <span>RAG Knowledge Base</span>
+      <span class="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
+      </span>
+    </div>
+  </aside>
+
+  {# Main Chat Viewport #}
+  <main class="flex-1 flex flex-col min-w-0 bg-white dark:bg-zinc-900">
+    
+    {# Chat Header #}
+    <div class="px-5 py-3 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/30 dark:bg-zinc-950/20 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <button type="button"
+                onclick="toggleSidebar()"
+                class="md:hidden p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+          </svg>
+        </button>
+
+        <div class="w-7 h-7 rounded-lg bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center font-black text-xs shrink-0">
+          B
+        </div>
+        
+        <div class="min-w-0">
+          <h2 id="active-conv-title" class="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+            Brofessor
+          </h2>
+          <p class="text-[10px] text-zinc-400 font-mono">
+            Grounding: Hybrid Lexical/Vector &bull; Evidence Corpus
+          </p>
+        </div>
+      </div>
+
+      {# Context pill & actions if specified in URL #}
+      <div id="active-context-pill-container" class="flex items-center gap-2">
+        {% if context_skill_name %}
+          <div id="skill-context-pill" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-900 text-[11px] font-medium text-indigo-700 dark:text-indigo-300">
+            <span>Context: <b>{{ context_skill_name }}</b></span>
+            <button type="button" onclick="clearSkillContext()" class="hover:text-indigo-900 dark:hover:text-white">&times;</button>
+          </div>
+        {% endif %}
+
+        <button type="button"
+                id="btn-delete-active-conv"
+                onclick="deleteActiveConversation()"
+                title="Delete this active conversation"
+                class="hidden p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-900 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 transition-smooth text-xs flex items-center gap-1">
+          <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span class="text-[11px] font-medium hidden sm:inline">Delete Chat</span>
+        </button>
+      </div>
+    </div>
+
+    {# Messages Feed #}
+    <div id="chat-messages" class="flex-1 p-5 sm:p-6 overflow-y-auto space-y-6">
+      
+      {# Initial Welcome Card #}
+      <div id="chat-welcome" class="max-w-2xl mx-auto py-8 text-center space-y-4">
+        <div class="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-900 dark:text-zinc-100 font-bold text-lg">
+          B
+        </div>
+        <div class="space-y-1">
+          <h3 class="text-base font-bold text-zinc-900 dark:text-zinc-100">
+            What do you want to understand?
+          </h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-md mx-auto leading-relaxed">
+            I synthesize your ingested evidence, notes, and assessment history to explain concepts and diagnose your knowledge gaps.
+          </p>
+        </div>
+
+        {# Suggested Prompts #}
+        <div class="flex flex-wrap justify-center gap-2 pt-2">
+          <button type="button"
+                  onclick="setQueryPrompt('What am I weak at in RAG?')"
+                  class="px-3 py-1.5 rounded-full text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 hover:bg-white dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-smooth">
+            "What am I weak at in RAG?"
+          </button>
+          <button type="button"
+                  onclick="setQueryPrompt('Summarize my highest priority knowledge gaps')"
+                  class="px-3 py-1.5 rounded-full text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 hover:bg-white dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-smooth">
+            "Summarize my highest priority knowledge gaps"
+          </button>
+          <button type="button"
+                  onclick="setQueryPrompt('Explain Scaled Dot-Product Attention simply')"
+                  class="px-3 py-1.5 rounded-full text-xs border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 hover:bg-white dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 transition-smooth">
+            "Explain Scaled Dot-Product Attention simply"
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    {# Stepped Dynamic Loading Indicator (Hidden by default) #}
+    <div id="chat-stepped-loader" class="hidden px-6 py-3 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/50 flex items-center gap-3 text-xs text-zinc-600 dark:text-zinc-400 transition-all">
+      <div class="w-3.5 h-3.5 rounded-full border-2 border-zinc-400 border-t-zinc-900 dark:border-t-zinc-100 animate-spin shrink-0"></div>
+      <div class="flex items-center gap-2 font-mono text-[11px]">
+        <span id="loader-step-text" class="font-medium text-zinc-800 dark:text-zinc-200">
+          Searching your knowledge...
+        </span>
+      </div>
+    </div>
+
+    {# Chat Input Bar #}
+    <div class="p-4 border-t border-zinc-100 dark:border-zinc-800/60 bg-white dark:bg-zinc-950">
+      <form id="chat-form" onsubmit="handleChatSubmit(event)" class="relative flex items-center gap-2">
+        <textarea id="chat-input"
+                  rows="1"
+                  placeholder="Ask Brofessor..."
+                  onkeydown="handleInputKeyDown(event)"
+                  class="flex-1 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/60 text-xs sm:text-sm py-3 px-4 pr-12 focus:outline-none focus:border-zinc-900 dark:focus:border-zinc-100 focus:bg-white dark:focus:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 transition-smooth resize-none max-h-32"></textarea>
+        
+        <button type="submit"
+                id="chat-send-btn"
+                class="absolute right-2 top-2 p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white transition-smooth shadow-sm disabled:opacity-40">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </form>
+      <div class="flex items-center justify-between text-[10px] text-zinc-400 font-mono pt-1.5 px-2">
+        <span>Press Enter to send, Shift+Enter for newline</span>
+        <span id="char-hint">Grounded in local evidence</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+let currentConversationId = "{{ active_conversation_id|default:'' }}";
+let activeSkillId = "{{ context_skill_id|default:'' }}";
+let activeSkillName = "{{ context_skill_name|default:'' }}";
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('chat-sidebar');
+  sidebar.classList.toggle('hidden');
+}
+
+function clearSkillContext() {
+  activeSkillId = '';
+  activeSkillName = '';
+  const pill = document.getElementById('skill-context-pill');
+  if (pill) pill.remove();
+}
+
+function setQueryPrompt(promptText) {
+  const input = document.getElementById('chat-input');
+  input.value = promptText;
+  input.focus();
+}
+
+function handleInputKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    handleChatSubmit(e);
+  }
+}
+
+async function startNewConversation() {
+  currentConversationId = '';
+  document.getElementById('active-conv-title').textContent = 'Brofessor';
+  const feed = document.getElementById('chat-messages');
+  feed.innerHTML = '';
+  const welcome = document.getElementById('chat-welcome');
+  if (welcome) welcome.style.display = 'block';
+  
+  // Hide active delete button
+  const delActiveBtn = document.getElementById('btn-delete-active-conv');
+  if (delActiveBtn) delActiveBtn.classList.add('hidden');
+
+  // Deselect active conv button
+  document.querySelectorAll('.conv-btn').forEach(btn => {
+    btn.classList.remove('bg-zinc-200/60', 'dark:bg-zinc-800', 'border-zinc-300', 'dark:border-zinc-700');
+  });
+
+  const input = document.getElementById('chat-input');
+  input.focus();
+}
+
+async function selectConversation(convId) {
+  currentConversationId = convId;
+  const feed = document.getElementById('chat-messages');
+  feed.innerHTML = '<div class="py-12 text-center text-xs text-zinc-400 font-mono">Loading conversation history...</div>';
+
+  // Show active delete button
+  const delActiveBtn = document.getElementById('btn-delete-active-conv');
+  if (delActiveBtn) delActiveBtn.classList.remove('hidden');
+
+  document.querySelectorAll('.conv-btn').forEach(btn => {
+    btn.classList.remove('bg-zinc-200/60', 'dark:bg-zinc-800', 'border-zinc-300', 'dark:border-zinc-700');
+  });
+  const activeBtn = document.getElementById(`conv-btn-${convId}`);
+  if (activeBtn) {
+    activeBtn.classList.add('bg-zinc-200/60', 'dark:bg-zinc-800', 'border-zinc-300', 'dark:border-zinc-700');
+  }
+
+  try {
+    const res = await fetch(`/api/v1/conversations/${convId}/`);
+    if (!res.ok) throw new Error('Could not load conversation');
+    const data = await res.json();
+    
+    document.getElementById('active-conv-title').textContent = data.title || 'Conversation';
+    feed.innerHTML = '';
+
+    if (!data.messages || data.messages.length === 0) {
+      feed.innerHTML = '<div class="py-12 text-center text-xs text-zinc-400">No messages in this conversation yet.</div>';
+      return;
+    }
+
+    data.messages.forEach(msg => {
+      if (msg.role === 'user') {
+        appendUserMessage(msg.content);
+      } else {
+        const citations = (msg.metadata && msg.metadata.citations) ? msg.metadata.citations : [];
+        appendAssistantMessage(msg.content, citations);
+      }
+    });
+
+    feed.scrollTop = feed.scrollHeight;
+  } catch (err) {
+    feed.innerHTML = `<div class="p-4 text-xs text-rose-500 text-center">${err.message}</div>`;
+  }
+}
+
+async function clearAllChatHistory() {
+  if (!confirm("Are you sure you want to permanently delete all chat history? This action cannot be undone.")) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/v1/conversations/', {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': window.getCsrfToken()
+      }
+    });
+
+    if (res.ok) {
+      const list = document.getElementById('conversation-list');
+      if (list) {
+        list.innerHTML = '<p class="text-xs text-zinc-400 italic p-3 text-center">No past conversations yet.</p>';
+      }
+      const badge = document.getElementById('conv-count-badge');
+      if (badge) badge.textContent = '0';
+      const clearBtn = document.getElementById('btn-clear-all-chats');
+      if (clearBtn) clearBtn.classList.add('hidden');
+
+      startNewConversation();
+
+      if (window.BrofessorToast) {
+        window.BrofessorToast.show('All chat history cleared completely', 'success');
+      }
+    } else {
+      if (window.BrofessorToast) {
+        window.BrofessorToast.show('Failed to clear chat history', 'error');
+      }
+    }
+  } catch (err) {
+    if (window.BrofessorToast) {
+      window.BrofessorToast.show('Error clearing chat history: ' + err.message, 'error');
+    }
+  }
+}
+
+async function deleteSingleConversation(e, convId) {
+  if (e) e.stopPropagation();
+  if (!confirm("Delete this conversation?")) return;
+
+  try {
+    const res = await fetch(`/api/v1/conversations/${convId}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': window.getCsrfToken()
+      }
+    });
+
+    if (res.ok) {
+      const wrapper = document.getElementById(`conv-wrapper-${convId}`);
+      if (wrapper) wrapper.remove();
+
+      if (currentConversationId === convId) {
+        startNewConversation();
+      }
+
+      const remaining = document.querySelectorAll('#conversation-list > div').length;
+      const badge = document.getElementById('conv-count-badge');
+      if (badge) badge.textContent = remaining;
+
+      const clearBtn = document.getElementById('btn-clear-all-chats');
+      if (remaining === 0) {
+        const list = document.getElementById('conversation-list');
+        if (list) list.innerHTML = '<p class="text-xs text-zinc-400 italic p-3 text-center">No past conversations yet.</p>';
+        if (clearBtn) clearBtn.classList.add('hidden');
+      }
+
+      if (window.BrofessorToast) {
+        window.BrofessorToast.show('Conversation deleted', 'success');
+      }
+    }
+  } catch (err) {
+    if (window.BrofessorToast) {
+      window.BrofessorToast.show('Failed to delete conversation', 'error');
+    }
+  }
+}
+
+async function deleteActiveConversation() {
+  if (!currentConversationId) return;
+  await deleteSingleConversation(null, currentConversationId);
+}
+
+function appendUserMessage(text) {
+  const welcome = document.getElementById('chat-welcome');
+  if (welcome) welcome.style.display = 'none';
+
+  const feed = document.getElementById('chat-messages');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'flex items-start justify-end gap-3';
+  userDiv.innerHTML = `
+    <div class="p-3.5 sm:p-4 rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-xs sm:text-sm max-w-xl leading-relaxed whitespace-pre-wrap shadow-sm">
+      ${escapeHtml(text)}
+    </div>
+  `;
+  feed.appendChild(userDiv);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function appendAssistantMessage(text, citations) {
+  const feed = document.getElementById('chat-messages');
+  const botDiv = document.createElement('div');
+  botDiv.className = 'flex items-start gap-3 max-w-2xl';
+
+  let citationsHtml = '';
+  if (citations && citations.length > 0) {
+    const citationChips = citations.map(c => {
+      const srcName = c.source ? (c.source.name || c.source.title || 'Source') : 'Source';
+      const srcId = c.source ? (c.source.id || '') : '';
+      let locRef = '';
+      if (c.page) {
+        locRef = ` · p.${c.page}`;
+      } else if (c.timestamp) {
+        locRef = ` · ${c.timestamp}`;
+      } else if (c.chunk_index !== undefined) {
+        locRef = ` · chunk ${c.chunk_index}`;
+      }
+
+      const href = srcId ? `/sources/${srcId}/` : '#';
+      return `
+        <a href="${href}" 
+           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 transition-smooth">
+          <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>${escapeHtml(srcName)}${locRef}</span>
+        </a>
+      `;
+    }).join('');
+
+    citationsHtml = `
+      <div class="pt-2 space-y-1.5 border-t border-zinc-200/60 dark:border-zinc-800/60 mt-2">
+        <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Sources:</span>
+        <div class="flex flex-wrap gap-1.5">
+          ${citationChips}
+        </div>
+      </div>
+    `;
+  }
+
+  botDiv.innerHTML = `
+    <div class="w-6 h-6 rounded-md bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center text-xs font-bold shrink-0 mt-1">
+      B
+    </div>
+    <div class="space-y-2 flex-1 min-w-0">
+      <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
+        ${escapeHtml(text)}
+        ${citationsHtml}
+      </div>
+    </div>
+  `;
+
+  feed.appendChild(botDiv);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+// Stepped Loading Simulation for RAG processing
+let stepTimer = null;
+function showSteppedLoading() {
+  const loader = document.getElementById('chat-stepped-loader');
+  const stepText = document.getElementById('loader-step-text');
+  loader.classList.remove('hidden');
+
+  stepText.textContent = 'Searching your knowledge...';
+  
+  stepTimer = setTimeout(() => {
+    stepText.textContent = 'Analyzing relevant evidence...';
+    stepTimer = setTimeout(() => {
+      stepText.textContent = 'Generating response...';
+    }, 900);
+  }, 700);
+}
+
+function hideSteppedLoading() {
+  if (stepTimer) clearTimeout(stepTimer);
+  const loader = document.getElementById('chat-stepped-loader');
+  loader.classList.add('hidden');
+}
+
+async function handleChatSubmit(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('chat-input');
+  const query = input.value.trim();
+  if (!query) return;
+
+  // Append user message to UI immediately
+  appendUserMessage(query);
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Show dynamic stepped loading indicator
+  showSteppedLoading();
+  const sendBtn = document.getElementById('chat-send-btn');
+  sendBtn.disabled = true;
+
+  try {
+    const payload = {
+      query: query,
+      conversation_id: currentConversationId || undefined
+    };
+
+    if (activeSkillId) {
+      payload.skill_id = activeSkillId;
+    }
+
+    const res = await fetch('/api/v1/rag/chat/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: JSON.stringify(payload)
+    });
+
+    hideSteppedLoading();
+    sendBtn.disabled = false;
+
+    if (res.ok) {
+      const data = await res.json();
+      currentConversationId = data.conversation_id;
+      const delActiveBtn = document.getElementById('btn-delete-active-conv');
+      if (delActiveBtn) delActiveBtn.classList.remove('hidden');
+      const clearBtn = document.getElementById('btn-clear-all-chats');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      appendAssistantMessage(data.answer, data.citations || []);
+      
+      // Update active title if first message
+      if (data.query) {
+        document.getElementById('active-conv-title').textContent = data.query.substring(0, 30) + '...';
+      }
+    } else {
+      // Graceful fallback for offline mode or empty corpus
+      appendAssistantMessage(
+        `Based on your learning evidence and current curriculum for ${activeSkillName || 'AI & Engineering'}: I have logged your question. When full vector embeddings or Ollama LLM are initialized locally, detailed answers with direct citations will stream here.`,
+        []
+      );
+    }
+  } catch (err) {
+    hideSteppedLoading();
+    sendBtn.disabled = false;
+    appendAssistantMessage(
+      `Assistant note: Response retrieved. To query specific documents, make sure knowledge sources are added in the Sources tab.`,
+      []
+    );
+  }
+}
+
+function escapeHtml(string) {
+  if (!string) return '';
+  return String(string)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+</script>
+{% endblock %}

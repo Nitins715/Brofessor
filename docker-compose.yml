@@ -1,0 +1,74 @@
+# ==============================================================================
+# Brofessor Local-First Docker Compose
+# Single-container standalone image with local host PC storage mapping
+# ==============================================================================
+
+services:
+  # Primary Standalone Image (Single Container - Local-First)
+  brofessor:
+    build: .
+    image: brofessor:latest
+    container_name: brofessor
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Maps local host directory so every PC keeps its own persistent database, media, and logs
+      - ./data:/data
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-brofessor-local-storage-secret-key-2026}
+      - DJANGO_ALLOWED_HOSTS=*
+      - DATA_DIR=/data
+      - DB_ENGINE=sqlite
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma3:4b}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+
+  # ----------------------------------------------------------------------------
+  # Optional Multi-Service Profile (Only started with: docker compose --profile full-stack up)
+  # ----------------------------------------------------------------------------
+  db:
+    profiles: ["full-stack"]
+    image: pgvector/pgvector:pg16
+    container_name: brofessor_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-brofessor_db}
+      POSTGRES_USER: ${DB_USER:-brofessor_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-brofessor_password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-brofessor_user} -d ${DB_NAME:-brofessor_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    profiles: ["full-stack"]
+    image: redis:7-alpine
+    container_name: brofessor_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

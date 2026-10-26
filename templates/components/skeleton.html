@@ -1,0 +1,49 @@
+{# Reusable Skeleton Loader Component #}
+{# Props: #}
+{#   type: 'card' | 'line' | 'table-row' | 'metric' (default: 'card') #}
+{#   count: number of elements to render (default: 1) #}
+{#   extra_classes: string (optional) #}
+
+{% if type == 'line' %}
+  <div class="space-y-2 animate-pulse {{ extra_classes }}">
+    <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-full"></div>
+    <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-4/5"></div>
+    <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
+  </div>
+
+{% elif type == 'metric' %}
+  <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse {{ extra_classes }}">
+    <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/3 mb-3"></div>
+    <div class="h-7 bg-zinc-200 dark:bg-zinc-800 rounded w-1/2 mb-2"></div>
+    <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded w-2/3"></div>
+  </div>
+
+{% elif type == 'table-row' %}
+  <div class="space-y-3 animate-pulse {{ extra_classes }}">
+    <div class="flex items-center gap-4 p-3 rounded-lg bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/60 dark:border-zinc-800/60">
+      <div class="w-8 h-8 rounded-lg bg-zinc-200 dark:bg-zinc-800 shrink-0"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/3"></div>
+        <div class="h-2.5 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
+      </div>
+      <div class="w-16 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+    </div>
+  </div>
+
+{% else %}
+  {# Default: Card skeleton #}
+  <div class="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 animate-pulse space-y-4 {{ extra_classes }}">
+    <div class="flex items-center justify-between">
+      <div class="h-4 bg-zinc-200 dark:bg-zinc-800 rounded w-1/3"></div>
+      <div class="w-12 h-5 bg-zinc-200 dark:bg-zinc-800 rounded-full"></div>
+    </div>
+    <div class="space-y-2">
+      <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-full"></div>
+      <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-5/6"></div>
+    </div>
+    <div class="pt-2 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800">
+      <div class="h-3 bg-zinc-200 dark:bg-zinc-800 rounded w-1/4"></div>
+      <div class="w-16 h-7 bg-zinc-200 dark:bg-zinc-800 rounded-lg"></div>
+    </div>
+  </div>
+{% endif %}

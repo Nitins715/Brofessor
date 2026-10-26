@@ -1,0 +1,514 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}{{ skill.name }} | Brofessor{% endblock %}
+{% block page_title %}{{ skill.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Breadcrumb & Back #}
+  <div class="flex items-center justify-between text-xs text-zinc-500">
+    <a href="{% url 'web-knowledge' %}" class="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1.5 transition-smooth">
+      &larr; Back to Knowledge Model
+    </a>
+    <span class="font-mono text-zinc-400">{{ skill.topic.domain.name }} / {{ skill.topic.name }}</span>
+  </div>
+
+  {# Skill Header Card #}
+  <div class="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+            {{ skill.difficulty_level }}
+          </span>
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+            {% if mastery and mastery.mastery_level == 'expert' or mastery.mastery_level == 'advanced' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+            {% elif mastery and mastery.mastery_level == 'intermediate' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+            {% else %}bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300{% endif %}">
+            Mastery: {{ mastery.mastery_level|default:"Beginner"|upper }}
+          </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          {{ skill.name }}
+        </h2>
+        {% if skill.description %}
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-2xl">{{ skill.description }}</p>
+        {% endif %}
+      </div>
+
+      {# Action buttons & Context Bridge #}
+      <div class="flex items-center gap-2 shrink-0 flex-wrap">
+        <a href="{% url 'web-chat' %}?skill_id={{ skill.id }}&context={{ skill.name|urlencode }}"
+           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-200 text-xs font-medium transition-smooth shadow-sm">
+          <span>{{ skill.name }} &rarr; Ask Brofessor</span>
+        </a>
+        <a href="{% url 'web-skill-assessment-start' skill.id %}"
+           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+          <span>Take Assessment</span>
+          <span>&rarr;</span>
+        </a>
+      </div>
+    </div>
+
+    {# Metrics Row #}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 font-mono text-xs">
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Mastery Score</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ mastery.mastery_score|default:"0" }}%</span>
+      </div>
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Knowledge Coverage</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ mastery.knowledge_coverage|default:"0" }}%</span>
+      </div>
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Confidence Metric</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ mastery.confidence_score|default:"0.0" }}</span>
+      </div>
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Evidence Artifacts</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ evidence_items.count }}</span>
+      </div>
+    </div>
+  </div>
+
+  {# 2-Column Grid: Evidence & Concepts vs Gaps & Assessments #}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {# LEFT 2 COLS: Learning Resources, Evidence & Concepts #}
+    <div class="lg:col-span-2 space-y-6">
+
+      {# Curated External Learning Resources Card #}
+      <div id="external-resources" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-5">
+        <div class="flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Curated External Learning Resources</h3>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded-full font-medium
+                {% if total_verified_resources > 0 %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40
+                {% else %}bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                {{ total_verified_resources }} verified
+              </span>
+            </div>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Curated official documentation, tutorials, practice challenges, and video walkthroughs mapped to this skill.
+            </p>
+          </div>
+        </div>
+
+        {# Independent Decoupling Notice (Requirement 9) #}
+        <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50 border border-zinc-200/70 dark:border-zinc-800/60 flex items-start gap-2.5 text-xs text-zinc-500 dark:text-zinc-400">
+          <svg class="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div class="text-[11px] leading-relaxed">
+            <span class="font-semibold text-zinc-700 dark:text-zinc-300">Self-Study Resources:</span>
+            External study and practice materials are provided for reference. External completion does not alter Brofessor assessment scores, roadmap progression, or verified mastery calculations.
+          </div>
+        </div>
+
+        {% if total_verified_resources == 0 %}
+          {# Empty State (Requirement 8) #}
+          <div class="py-10 px-4 text-center rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50/30 dark:bg-zinc-950/20 space-y-2">
+            <div class="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mx-auto text-zinc-400">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+            </div>
+            <h4 class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">No verified resources available yet</h4>
+            <p class="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-md mx-auto">
+              Curated links for this specific skill are undergoing verification or have not been added yet. Please use Brofessor internal notes and assessments.
+            </p>
+          </div>
+        {% else %}
+          {# Grouped Resource Lists #}
+          <div class="space-y-6">
+
+            {# 1. Primary Resources #}
+            {% if grouped_resources.primary %}
+              <div class="space-y-2.5">
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  <span class="text-amber-500">★</span>
+                  <span>Primary Tutorial & Study Guides</span>
+                  <span class="text-[10px] font-mono text-zinc-400 font-normal">({{ grouped_resources.primary|length }})</span>
+                </div>
+                <div class="space-y-2">
+                  {% for m in grouped_resources.primary %}
+                    <div class="p-3.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div class="space-y-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-emerald-100/70 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50">
+                            {{ m.source }}
+                          </span>
+                          {% if m.is_primary %}
+                            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50">
+                              Primary
+                            </span>
+                          {% endif %}
+                          {% if m.last_verified_date %}
+                            <span class="text-[10px] font-mono text-zinc-400">
+                              ✓ Verified {{ m.last_verified_date|date:"M Y" }}
+                            </span>
+                          {% endif %}
+                        </div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                          {{ m.title }}
+                        </h4>
+                        {% if m.description %}
+                          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                            {{ m.description }}
+                          </p>
+                        {% endif %}
+                      </div>
+                      <a href="{{ m.url }}"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-smooth shrink-0">
+                        <span>Open</span>
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# 2. Official Documentation #}
+            {% if grouped_resources.official_docs %}
+              <div class="space-y-2.5">
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  <span>Official Documentation & API References</span>
+                  <span class="text-[10px] font-mono text-zinc-400 font-normal">({{ grouped_resources.official_docs|length }})</span>
+                </div>
+                <div class="space-y-2">
+                  {% for m in grouped_resources.official_docs %}
+                    <div class="p-3.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div class="space-y-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-blue-100/70 text-blue-800 dark:bg-blue-950/70 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                            {{ m.source }}
+                          </span>
+                          {% if m.last_verified_date %}
+                            <span class="text-[10px] font-mono text-zinc-400">
+                              ✓ Verified {{ m.last_verified_date|date:"M Y" }}
+                            </span>
+                          {% endif %}
+                        </div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                          {{ m.title }}
+                        </h4>
+                        {% if m.description %}
+                          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                            {{ m.description }}
+                          </p>
+                        {% endif %}
+                      </div>
+                      <a href="{{ m.url }}"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-smooth shrink-0">
+                        <span>Docs</span>
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# 3. Practice & Interactive #}
+            {% if grouped_resources.practice %}
+              <div class="space-y-2.5">
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
+                  <span>Practice, Code & Interactive Repositories</span>
+                  <span class="text-[10px] font-mono text-zinc-400 font-normal">({{ grouped_resources.practice|length }})</span>
+                </div>
+                <div class="space-y-2">
+                  {% for m in grouped_resources.practice %}
+                    <div class="p-3.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div class="space-y-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-indigo-100/70 text-indigo-800 dark:bg-indigo-950/70 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/50">
+                            {{ m.source }}
+                          </span>
+                          {% if m.last_verified_date %}
+                            <span class="text-[10px] font-mono text-zinc-400">
+                              ✓ Verified {{ m.last_verified_date|date:"M Y" }}
+                            </span>
+                          {% endif %}
+                        </div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                          {{ m.title }}
+                        </h4>
+                        {% if m.description %}
+                          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                            {{ m.description }}
+                          </p>
+                        {% endif %}
+                      </div>
+                      <a href="{{ m.url }}"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-smooth shrink-0">
+                        <span>Practice</span>
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {# 4. Video Tutorials #}
+            {% if grouped_resources.video %}
+              <div class="space-y-2.5">
+                <div class="flex items-center gap-1.5 text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                  <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Video Lectures & Walkthroughs</span>
+                  <span class="text-[10px] font-mono text-zinc-400 font-normal">({{ grouped_resources.video|length }})</span>
+                </div>
+                <div class="space-y-2">
+                  {% for m in grouped_resources.video %}
+                    <div class="p-3.5 rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div class="space-y-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-rose-100/70 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 border border-rose-200 dark:border-rose-800/50">
+                            {{ m.source }}
+                          </span>
+                          {% if m.last_verified_date %}
+                            <span class="text-[10px] font-mono text-zinc-400">
+                              ✓ Verified {{ m.last_verified_date|date:"M Y" }}
+                            </span>
+                          {% endif %}
+                        </div>
+                        <h4 class="text-xs font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                          {{ m.title }}
+                        </h4>
+                        {% if m.description %}
+                          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">
+                            {{ m.description }}
+                          </p>
+                        {% endif %}
+                      </div>
+                      <a href="{{ m.url }}"
+                         target="_blank"
+                         rel="noopener noreferrer"
+                         class="inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-smooth shrink-0">
+                        <span>Watch</span>
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+          </div>
+        {% endif %}
+      </div>
+
+      {# Expandable Evidence Supporting the Skill #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Supporting Evidence Artifacts</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Expandable records driving this skill's calculated mastery.</p>
+          </div>
+          <span class="text-xs font-mono text-zinc-400">{{ evidence_items.count }} items</span>
+        </div>
+
+        <div class="space-y-3">
+          {% for ev in evidence_items %}
+            <div class="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/30 overflow-hidden transition-smooth">
+              {# Header click expands #}
+              <div onclick="toggleEvidenceDetail('ev-{{ ev.id }}')"
+                   class="p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-zinc-100/50 dark:hover:bg-zinc-900/60 transition-smooth">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded font-semibold shrink-0
+                    {% if ev.evidence_type == 'declared' %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400
+                    {% elif ev.evidence_type == 'assessment' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+                    {% elif ev.evidence_type == 'practical' %}bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400
+                    {% else %}bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300{% endif %}">
+                    {{ ev.evidence_type }}
+                  </span>
+                  <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">{{ ev.title }}</h4>
+                </div>
+                <div class="flex items-center gap-3 shrink-0 text-xs font-mono text-zinc-400">
+                  <span>weight: {{ ev.confidence_weight }}</span>
+                  <svg id="chevron-ev-{{ ev.id }}" class="w-3.5 h-3.5 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
+              </div>
+
+              {# Expandable details slot #}
+              <div id="ev-detail-ev-{{ ev.id }}" class="p-4 border-t border-zinc-100 dark:border-zinc-800/60 bg-white dark:bg-zinc-900/80 space-y-2 hidden text-xs">
+                {% if ev.description %}
+                  <p class="text-zinc-600 dark:text-zinc-300">{{ ev.description }}</p>
+                {% endif %}
+                <div class="flex flex-wrap gap-4 text-[11px] font-mono text-zinc-400 pt-1">
+                  {% if ev.source %}<span>Source: <a href="/sources/{{ ev.source.id }}/" class="text-indigo-600 hover:underline">{{ ev.source.name }}</a></span>{% endif %}
+                  {% if ev.concept %}<span>Concept: {{ ev.concept.name }}</span>{% endif %}
+                  <span>Recorded: {{ ev.recorded_at|date:"M d, Y H:i" }}</span>
+                </div>
+                {% if ev.raw_data %}
+                  <div class="pt-2">
+                    <span class="text-[10px] font-mono text-zinc-400 block mb-1">Payload metadata:</span>
+                    <pre class="p-2 rounded bg-zinc-100 dark:bg-zinc-950 font-mono text-[11px] overflow-x-auto text-zinc-700 dark:text-zinc-300">{{ ev.raw_data }}</pre>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-6">No evidence items supporting this skill yet. Add notes or take assessments to establish evidence.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Atomic Concepts #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Covered Concepts</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Underlying conceptual entities attached to this skill.</p>
+          </div>
+          <span class="text-xs font-mono text-zinc-400">{{ concepts.count }} concepts</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {% for concept in concepts %}
+            <div class="p-3 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/30 space-y-1">
+              <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{{ concept.name }}</h4>
+              {% if concept.description %}
+                <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-2">{{ concept.description }}</p>
+              {% endif %}
+            </div>
+          {% empty %}
+            <p class="col-span-full text-xs text-zinc-400 italic text-center py-4">No granular concepts linked yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    {# RIGHT 1 COL: Assessment History, Gaps, Recommendations, Sources #}
+    <div class="space-y-6">
+
+      {# Assessment History #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Assessment History</h3>
+          <span class="text-xs font-mono text-zinc-400">{{ assessment_attempts.count }} attempts</span>
+        </div>
+
+        <div class="space-y-2.5">
+          {% for att in assessment_attempts %}
+            <div class="p-3 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/30 flex items-center justify-between text-xs">
+              <div>
+                <span class="font-medium text-zinc-900 dark:text-zinc-100 block">{{ att.assessment.title }}</span>
+                <span class="text-[10px] font-mono text-zinc-400">{{ att.completed_at|date:"M d, Y" }}</span>
+              </div>
+              <div class="text-right">
+                <span class="font-mono font-bold text-zinc-900 dark:text-zinc-100">{{ att.score|default:"0" }}%</span>
+                <span class="block text-[10px] uppercase font-mono
+                  {% if att.passed %}text-emerald-500{% else %}text-rose-500{% endif %}">
+                  {% if att.passed %}Passed{% else %}Failed{% endif %}
+                </span>
+              </div>
+            </div>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-4">No assessment attempts recorded for this skill.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Knowledge Gaps on This Skill #}
+      {% if gaps %}
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Identified Gaps</h3>
+          <div class="space-y-2">
+            {% for gap in gaps %}
+              <div class="p-3 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/20 space-y-1">
+                <div class="flex items-center justify-between text-[10px] font-mono">
+                  <span class="uppercase text-rose-600 dark:text-rose-400 font-bold">{{ gap.severity }}</span>
+                  <span class="text-zinc-400">{{ gap.current_score }}% / {{ gap.target_score }}%</span>
+                </div>
+                <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{{ gap.title }}</h4>
+                {% if gap.description %}
+                  <p class="text-[11px] text-zinc-500">{{ gap.description }}</p>
+                {% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {# Recommendations #}
+      {% if recommendations %}
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Recommended Actions</h3>
+          <div class="space-y-2">
+            {% for rec in recommendations %}
+              <div class="p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-1">
+                <h4 class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{{ rec.title }}</h4>
+                <p class="text-[11px] text-zinc-500">{{ rec.description }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {# Linked Knowledge Sources #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Associated Sources</h3>
+        <div class="space-y-2">
+          {% for src in sources %}
+            <a href="/sources/{{ src.id }}/" class="p-2.5 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 flex items-center justify-between text-xs transition-smooth">
+              <span class="font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ src.name }}</span>
+              <span class="text-[10px] font-mono text-zinc-400 uppercase">[{{ src.source_type }}]</span>
+            </a>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-3">No direct sources associated yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function toggleEvidenceDetail(id) {
+  const detail = document.getElementById(`ev-detail-${id}`);
+  const chevron = document.getElementById(`chevron-${id}`);
+  if (!detail) return;
+  const isHidden = detail.classList.contains('hidden');
+  if (isHidden) {
+    detail.classList.remove('hidden');
+    if (chevron) chevron.classList.add('rotate-180');
+  } else {
+    detail.classList.add('hidden');
+    if (chevron) chevron.classList.remove('rotate-180');
+  }
+}
+</script>
+{% endblock %}

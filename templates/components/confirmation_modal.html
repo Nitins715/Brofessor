@@ -1,0 +1,62 @@
+{# Reusable Confirmation Dialog Modal #}
+{# Props: #}
+{#   modal_id: string (unique DOM id, e.g. "confirm-submit-modal") #}
+{#   title: string (e.g. "Confirm Assessment Submission") #}
+{#   message: string (e.g. "Are you sure you want to finalize your assessment? You cannot modify answers after submitting.") #}
+{#   confirm_text: string (e.g. "Confirm & Submit") #}
+{#   confirm_btn_id: string (optional button id) #}
+{#   confirm_onclick: string (optional javascript expression) #}
+{#   cancel_text: string (e.g. "Cancel") #}
+{#   is_danger: boolean (true for red/rose destructive button, false for primary dark button) #}
+
+<div id="{{ modal_id }}"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden transition-opacity"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="{{ modal_id }}-title">
+  
+  <div class="w-full max-w-md bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-6 transform transition-all">
+    <div class="flex items-start gap-4">
+      <div class="w-10 h-10 rounded-xl {% if is_danger %}bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40{% else %}bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-700{% endif %} flex items-center justify-center shrink-0">
+        {% if is_danger %}
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        {% else %}
+          <svg class="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        {% endif %}
+      </div>
+
+      <div class="flex-1 min-w-0">
+        <h3 id="{{ modal_id }}-title" class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          {{ title|default:"Are you sure?" }}
+        </h3>
+        <p class="text-xs text-zinc-600 dark:text-zinc-400 mt-2 leading-relaxed">
+          {{ message }}
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+      <button type="button"
+              onclick="document.getElementById('{{ modal_id }}').classList.add('hidden')"
+              class="px-3.5 py-2 text-xs font-medium rounded-lg text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+        {{ cancel_text|default:"Cancel" }}
+      </button>
+
+      <button type="button"
+              {% if confirm_btn_id %}id="{{ confirm_btn_id }}"{% endif %}
+              {% if confirm_onclick %}onclick="{{ confirm_onclick }}"{% endif %}
+              class="px-4 py-2 text-xs font-medium rounded-lg transition-smooth shadow-sm
+              {% if is_danger %}
+                bg-rose-600 hover:bg-rose-700 text-white
+              {% else %}
+                bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900
+              {% endif %}">
+        {{ confirm_text|default:"Confirm" }}
+      </button>
+    </div>
+  </div>
+</div>

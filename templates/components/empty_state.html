@@ -1,0 +1,30 @@
+{# Reusable Empty State Component #}
+{# Props: icon, title, description, action_text, action_href, action_onclick, extra_classes #}
+<div class="flex flex-col items-center justify-center text-center p-8 sm:p-12 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50/50 dark:bg-zinc-900/30 {{ extra_classes }}">
+  <div class="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-400 dark:text-zinc-500 mb-3 shadow-inner">
+    {% if icon %}
+      {{ icon|safe }}
+    {% else %}
+      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+      </svg>
+    {% endif %}
+  </div>
+  <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">{{ title }}</h4>
+  {% if description %}
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1 max-w-sm">{{ description }}</p>
+  {% endif %}
+  {% if action_text %}
+    <div class="mt-4">
+      {% if action_href %}
+        <a href="{{ action_href }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-smooth">
+          {{ action_text }}
+        </a>
+      {% elif action_onclick %}
+        <button type="button" onclick="{{ action_onclick }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm transition-smooth">
+          {{ action_text }}
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

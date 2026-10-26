@@ -1,0 +1,335 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Sources | Brofessor{% endblock %}
+{% block page_title %}Knowledge Sources{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Header #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+        Knowledge Library & Sources
+      </h2>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+        Raw documents, articles, PDFs, videos, and projects powering your Personal Knowledge Model.
+      </p>
+    </div>
+
+    {# Prominent + Add Source Action #}
+    <button type="button"
+            onclick="window.BrofessorModal.open('modal-add-source')"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white font-medium text-xs shadow-sm transition-smooth shrink-0 active:translate-y-px">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
+      + Add Source
+    </button>
+  </div>
+
+  {# Tabs / Filters: All, PDFs, Articles, YouTube, Notes, Projects #}
+  <div class="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-800 text-xs font-medium overflow-x-auto">
+    <a href="?tab=all"
+       class="py-2.5 px-3 border-b-2 transition-smooth whitespace-nowrap {% if active_tab == 'all' or not active_tab %}border-zinc-900 dark:border-white text-zinc-900 dark:text-white font-semibold{% else %}border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+      All Sources ({{ type_counts.all }})
+    </a>
+    <a href="?tab=pdf"
+       class="py-2.5 px-3 border-b-2 transition-smooth whitespace-nowrap {% if active_tab == 'pdf' %}border-zinc-900 dark:border-white text-zinc-900 dark:text-white font-semibold{% else %}border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+      PDFs ({{ type_counts.pdf }})
+    </a>
+    <a href="?tab=article"
+       class="py-2.5 px-3 border-b-2 transition-smooth whitespace-nowrap {% if active_tab == 'article' %}border-zinc-900 dark:border-white text-zinc-900 dark:text-white font-semibold{% else %}border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+      Articles ({{ type_counts.article }})
+    </a>
+    <a href="?tab=youtube"
+       class="py-2.5 px-3 border-b-2 transition-smooth whitespace-nowrap {% if active_tab == 'youtube' %}border-zinc-900 dark:border-white text-zinc-900 dark:text-white font-semibold{% else %}border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+      YouTube ({{ type_counts.youtube }})
+    </a>
+    <a href="?tab=note"
+       class="py-2.5 px-3 border-b-2 transition-smooth whitespace-nowrap {% if active_tab == 'note' %}border-zinc-900 dark:border-white text-zinc-900 dark:text-white font-semibold{% else %}border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+      Notes ({{ type_counts.note }})
+    </a>
+    <a href="?tab=project"
+       class="py-2.5 px-3 border-b-2 transition-smooth whitespace-nowrap {% if active_tab == 'project' %}border-zinc-900 dark:border-white text-zinc-900 dark:text-white font-semibold{% else %}border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+      Projects ({{ type_counts.project }})
+    </a>
+  </div>
+
+  {# Sources Library Listing #}
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm">
+    <div class="p-4 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/50 dark:bg-zinc-950/40 flex items-center justify-between text-xs text-zinc-500 font-medium">
+      <span>Source Information & Related Skills</span>
+      <span>Contribution & Status</span>
+    </div>
+
+    <div class="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+      {% for src in sources %}
+        <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-smooth">
+
+          {# Left: Title, Type Badge, URI, Skills #}
+          <div class="space-y-1.5 min-w-0">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+                {% if src.source_type == 'pdf' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+                {% elif src.source_type == 'youtube' %}bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400
+                {% elif src.source_type == 'article' %}bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400
+                {% elif src.source_type == 'note' %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400
+                {% else %}bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400{% endif %}">
+                {{ src.source_type }}
+              </span>
+              <a href="/sources/{{ src.id }}/"
+                 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-smooth truncate">
+                {{ src.name }}
+              </a>
+            </div>
+
+            {% if src.uri or src.file_path %}
+              <div class="flex items-center gap-2 text-[11px] font-mono text-zinc-400 truncate max-w-lg">
+                <span class="truncate">Location: {{ src.uri|default:src.file_path }}</span>
+              </div>
+            {% endif %}
+
+            {# Related skills tags #}
+            <div class="flex items-center gap-3 text-[11px] font-mono text-zinc-500 dark:text-zinc-400 pt-0.5">
+              <span>Added: {{ src.created_at|date:"M d, Y" }}</span>
+              {% if src.skills %}
+                <span class="text-zinc-300 dark:text-zinc-700">&bull;</span>
+                <span class="text-zinc-600 dark:text-zinc-300">
+                  Skills: {% for s in src.skills %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          {# Right: Knowledge contribution + status badge + detail link #}
+          <div class="flex items-center gap-4 shrink-0 self-end sm:self-center">
+            {# Contribution breakdown #}
+            <div class="text-right text-[11px] font-mono text-zinc-400">
+              <span class="block text-zinc-700 dark:text-zinc-300 font-semibold">{{ src.chunk_count }} chunks</span>
+              <span>{{ src.evidence_count }} evidence items</span>
+            </div>
+
+            {# Processing status #}
+            <span class="text-[11px] font-mono uppercase px-2.5 py-1 rounded-full font-semibold
+              {% if src.status == 'completed' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40
+              {% elif src.status == 'failed' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40
+              {% elif src.status == 'processing' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 animate-pulse
+              {% else %}bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+              {{ src.status }}
+            </span>
+
+            <a href="/sources/{{ src.id }}/"
+               class="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+              Details &rarr;
+            </a>
+          </div>
+
+        </div>
+      {% empty %}
+        {% include "components/empty_state.html" with title="No knowledge sources found in this category" description="Add notes, research papers, YouTube videos, or articles to expand your knowledge library." action_text="+ Add Source" action_onclick="window.BrofessorModal.open('modal-add-source')" %}
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+{# MODAL: + Add Source (Supports Text, PDF, Article, YouTube, Project) #}
+<div id="modal-add-source"
+     data-modal-dialog
+     class="fixed inset-0 z-50 hidden overflow-y-auto"
+     role="dialog"
+     aria-modal="true">
+  <div data-modal-backdrop
+       onclick="window.BrofessorModal.close('modal-add-source')"
+       class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-150 opacity-0"></div>
+
+  <div class="flex min-h-full items-center justify-center p-4">
+    <div data-modal-content
+         class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-left shadow-2xl transition-all duration-150 scale-95 opacity-0 w-full max-w-xl my-8 p-6 space-y-5">
+
+      {# Header #}
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+        <div>
+          <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">Add Knowledge Source</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Ingest material into Brofessor's vector and evidence store.</p>
+        </div>
+        <button type="button"
+                onclick="window.BrofessorModal.close('modal-add-source')"
+                class="p-1 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      {# Source Type Selector #}
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Source Type</label>
+          <select id="modal-src-type"
+                  onchange="switchModalFields(this.value)"
+                  class="w-full text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-2.5 px-3 focus:outline-none focus:border-indigo-500">
+            <option value="note">Text / Note (Raw markdown or notes)</option>
+            <option value="pdf">PDF Document (Papers, books, slides)</option>
+            <option value="article">Article / Blog URL (Web articles)</option>
+            <option value="youtube">YouTube Video URL (Transcripts)</option>
+            <option value="project">Project / GitHub (Practical repo experience)</option>
+          </select>
+        </div>
+
+        {# Title Input #}
+        <div>
+          <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Title</label>
+          <input type="text"
+                 id="modal-src-title"
+                 placeholder="e.g. Attention Mechanisms Deep Dive"
+                 class="w-full text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-2.5 px-3 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        {# URL Input (Article / YouTube / Project) #}
+        <div id="field-url" class="hidden">
+          <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Target URL</label>
+          <input type="url"
+                 id="modal-src-url"
+                 placeholder="https://..."
+                 class="w-full text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-2.5 px-3 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        {# PDF Upload Input #}
+        <div id="field-file" class="hidden">
+          <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Upload PDF File</label>
+          <input type="file"
+                 id="modal-src-file"
+                 accept=".pdf"
+                 class="w-full text-xs text-zinc-500 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-700 dark:file:text-zinc-300 hover:file:bg-zinc-200">
+        </div>
+
+        {# Content Textarea (Note / Project) #}
+        <div id="field-content">
+          <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">Content / Notes</label>
+          <textarea id="modal-src-content"
+                    rows="5"
+                    placeholder="Enter your notes, summary, or project takeaways..."
+                    class="w-full text-xs rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 py-2.5 px-3 focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+      </div>
+
+      {# Footer Actions #}
+      <div class="flex items-center justify-end gap-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+        <button type="button"
+                onclick="window.BrofessorModal.close('modal-add-source')"
+                class="px-3.5 py-2 text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+          Cancel
+        </button>
+        <button type="button"
+                id="btn-modal-submit"
+                onclick="submitNewSource()"
+                class="px-4 py-2 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90 shadow-sm transition-smooth flex items-center gap-1.5">
+          Ingest Source
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function switchModalFields(type) {
+  document.getElementById('field-url').classList.toggle('hidden', type !== 'article' && type !== 'youtube');
+  document.getElementById('field-file').classList.toggle('hidden', type !== 'pdf');
+  document.getElementById('field-content').classList.toggle('hidden', type === 'pdf' || type === 'article' || type === 'youtube');
+}
+
+async function submitNewSource() {
+  const type = document.getElementById('modal-src-type').value;
+  const title = document.getElementById('modal-src-title').value.trim();
+  const btn = document.getElementById('btn-modal-submit');
+  btn.disabled = true;
+  btn.textContent = 'Ingesting...';
+
+  try {
+    if (type === 'note') {
+      const content = document.getElementById('modal-src-content').value.trim();
+      if (!content) {
+        window.BrofessorToast.show('Note content cannot be empty', 'warning');
+        btn.disabled = false; btn.textContent = 'Ingest Source';
+        return;
+      }
+      const res = await fetch('/api/v1/sources/text/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.getCsrfToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title || 'Note', content: content, source_type: 'note', run_async: false })
+      });
+      if (res.ok) {
+        window.BrofessorToast.show('Note source created and processed!', 'success');
+        setTimeout(() => window.location.reload(), 400);
+      } else {
+        throw new Error('Failed to create note');
+      }
+    } else if (type === 'article' || type === 'youtube') {
+      const url = document.getElementById('modal-src-url').value.trim();
+      if (!url) {
+        window.BrofessorToast.show('URL is required', 'warning');
+        btn.disabled = false; btn.textContent = 'Ingest Source';
+        return;
+      }
+      const endpoint = type === 'article' ? '/api/v1/sources/article/' : '/api/v1/sources/youtube/';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.getCsrfToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title, url: url, run_async: false })
+      });
+      if (res.ok) {
+        window.BrofessorToast.show('Source ingested!', 'success');
+        setTimeout(() => window.location.reload(), 400);
+      } else {
+        throw new Error('Failed to ingest URL');
+      }
+    } else if (type === 'pdf') {
+      const file = document.getElementById('modal-src-file').files[0];
+      if (!file) {
+        window.BrofessorToast.show('PDF file is required', 'warning');
+        btn.disabled = false; btn.textContent = 'Ingest Source';
+        return;
+      }
+      const fd = new FormData();
+      fd.append('file', file);
+      if (title) fd.append('title', title);
+      fd.append('run_async', 'false');
+      const res = await fetch('/api/v1/sources/pdf/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.getCsrfToken() },
+        body: fd
+      });
+      if (res.ok) {
+        window.BrofessorToast.show('PDF uploaded and processed!', 'success');
+        setTimeout(() => window.location.reload(), 400);
+      } else {
+        throw new Error('Failed to upload PDF');
+      }
+    } else if (type === 'project') {
+      const content = document.getElementById('modal-src-content').value.trim();
+      if (!title) {
+        window.BrofessorToast.show('Project title is required', 'warning');
+        btn.disabled = false; btn.textContent = 'Ingest Source';
+        return;
+      }
+      const res = await fetch('/api/v1/sources/text/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.getCsrfToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title, content: content || title, source_type: 'manual', run_async: false })
+      });
+      if (res.ok) {
+        window.BrofessorToast.show('Project experience recorded!', 'success');
+        setTimeout(() => window.location.reload(), 400);
+      }
+    }
+  } catch (e) {
+    window.BrofessorToast.show(e.message || 'Ingestion error', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Ingest Source';
+  }
+}
+</script>
+{% endblock %}

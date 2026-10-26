@@ -1,0 +1,786 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Roadmap | Brofessor{% endblock %}
+{% block page_title %}Curriculum Roadmap{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Header #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          {{ active_domain.name|default:"Curriculum Roadmap" }}
+        </h2>
+        <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+          {{ domain_progress_pct }}% completed
+        </span>
+      </div>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+        Domain &rarr; Topic &rarr; Skill progression hierarchy. Clearly distinguishing roadmap progression from demonstrated mastery.
+      </p>
+    </div>
+
+    {# Domain Switcher, Add Topic, Import Roadmap & Tree Controls #}
+    <div class="flex items-center gap-2 flex-wrap">
+      <button type="button"
+              onclick="openImportCustomModal()"
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-smooth flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        Import Custom Roadmap
+      </button>
+      <button type="button"
+              onclick="openTopicModal()"
+              class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-smooth flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Topic
+      </button>
+      <button type="button"
+              onclick="toggleAllTopics(true)"
+              class="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+        Expand All
+      </button>
+      <button type="button"
+              onclick="toggleAllTopics(false)"
+              class="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+        Collapse All
+      </button>
+    </div>
+  </div>
+
+  {# Legend: Roadmap Completion vs Actual Mastery & Priority levels #}
+  <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800/80 bg-zinc-50/50 dark:bg-zinc-900/40 flex flex-wrap items-center justify-between gap-4 text-xs">
+    <div class="flex items-center gap-5 flex-wrap">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span class="text-zinc-600 dark:text-zinc-400 font-medium">Roadmap Status:</span>
+        <span class="text-zinc-500 text-[11px]">Workflow track (Not Started &bull; In Progress &bull; Completed)</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-500"></span>
+        <span class="text-zinc-600 dark:text-zinc-400 font-medium">Demonstrated Mastery:</span>
+        <span class="text-zinc-500 text-[11px]">Calculated from verified evidence & assessments</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400">P0 Core</span>
+        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-400">P1 Important</span>
+        <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">P2 Elective</span>
+      </div>
+    </div>
+    <span class="text-[11px] font-mono text-zinc-400">Click any skill to view knowledge detail</span>
+  </div>
+
+  {# Expandable Topics Hierarchy Tree #}
+  <div class="space-y-4">
+    {% for topic in topics_data %}
+      <div class="topic-card bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl overflow-hidden shadow-sm transition-smooth"
+           id="topic-card-{{ topic.id }}">
+
+        {# Topic Header with Expand/Collapse toggle and Action Controls #}
+        <div class="p-4 sm:p-5 border-b border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/60 dark:bg-zinc-950/40 flex items-center justify-between cursor-pointer select-none hover:bg-zinc-100/60 dark:hover:bg-zinc-900/80 transition-smooth">
+          <div onclick="toggleTopic('{{ topic.id }}')" class="flex items-center gap-3 flex-1 min-w-0">
+            <svg id="chevron-{{ topic.id }}"
+                 class="w-4 h-4 text-zinc-400 transform transition-transform duration-200 rotate-90 shrink-0"
+                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                  TOPIC #{{ topic.order|default:forloop.counter }}
+                </span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded
+                  {% if topic.priority == 'P0' %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400
+                  {% elif topic.priority == 'P1' %}bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-400
+                  {% else %}bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                  {{ topic.priority|default:"P0" }}
+                </span>
+                <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{{ topic.name }}</h3>
+              </div>
+              {% if topic.description %}
+                <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1">{{ topic.description }}</p>
+              {% endif %}
+            </div>
+          </div>
+
+          {# Topic Action Buttons (Add Skill, Edit Topic, Delete Topic) #}
+          <div class="flex items-center gap-2 shrink-0 ml-4" onclick="event.stopPropagation()">
+            <span class="text-xs font-mono text-zinc-400 mr-1 hidden sm:inline">{{ topic.skills_count }} skills</span>
+            <button type="button"
+                    title="Add Skill to Topic"
+                    onclick="openSkillModal(null, '{{ topic.id }}')"
+                    class="px-2 py-1 text-[11px] font-medium rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/60 dark:hover:text-indigo-400 text-zinc-600 dark:text-zinc-300 transition-smooth flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span>Skill</span>
+            </button>
+            <button type="button"
+                    title="Edit Topic"
+                    onclick="openTopicModal('{{ topic.id }}', '{{ topic.name|escapejs }}', '{{ topic.description|escapejs }}', '{{ topic.priority|default:'P0' }}', '{{ topic.order|default:0 }}')"
+                    class="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-200/60 dark:hover:bg-zinc-800 transition-smooth">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+            </button>
+            <button type="button"
+                    title="Delete Topic"
+                    onclick="deleteTopic('{{ topic.id }}', '{{ topic.name|escapejs }}')"
+                    class="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-smooth">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {# Skills Tree List (Expandable body) #}
+        <div id="topic-body-{{ topic.id }}" class="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+          {% for skill in topic.skills %}
+            <div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-smooth"
+                 id="skill-row-{{ skill.id }}">
+
+              {# Left: Tree Branch & Skill Identity #}
+              <div class="flex items-start gap-3 min-w-0">
+                <span class="text-zinc-300 dark:text-zinc-700 font-mono select-none mt-0.5">
+                  {% if forloop.last %}&#9492;&#9472;{% else %}&#9500;&#9472;{% endif %}
+                </span>
+                <div class="space-y-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <a href="/knowledge/skills/{{ skill.id }}/"
+                       class="text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-smooth">
+                      {{ skill.name }}
+                    </a>
+                    <span class="text-[10px] font-bold px-1.5 py-0.2 rounded
+                      {% if skill.priority == 'P0' %}bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400
+                      {% elif skill.priority == 'P1' %}bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-400
+                      {% else %}bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                      {{ skill.priority|default:"P0" }}
+                    </span>
+                    <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded
+                      {% if skill.difficulty_level == 'advanced' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+                      {% elif skill.difficulty_level == 'intermediate' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+                      {% else %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400{% endif %}">
+                      {{ skill.difficulty_level }}
+                    </span>
+                  </div>
+                  {% if skill.description %}
+                    <p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">{{ skill.description }}</p>
+                  {% endif %}
+                </div>
+              </div>
+
+              {# Right: Roadmap Completion vs Actual Demonstrated Mastery & CRUD Actions #}
+              <div class="flex items-center gap-4 shrink-0 self-end sm:self-center">
+                {# Mastery score #}
+                <div class="text-right">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-mono font-bold text-zinc-900 dark:text-zinc-100">
+                      {{ skill.mastery_score }}%
+                    </span>
+                    <span class="text-[10px] font-mono text-zinc-400 uppercase">
+                      [{{ skill.mastery_level }}]
+                    </span>
+                  </div>
+                  <div class="w-16 bg-zinc-100 dark:bg-zinc-800 h-1 rounded-full overflow-hidden mt-1 ml-auto">
+                    <div class="h-full bg-indigo-600 dark:bg-indigo-400 rounded-full" style="width: {{ skill.mastery_score }}%;"></div>
+                  </div>
+                </div>
+
+                {# Roadmap Completion Workflow Selector #}
+                <div class="flex items-center gap-1.5">
+                  <select onchange="updateRoadmapSkillStatus('{{ skill.id }}', this.value)"
+                          class="text-[11px] font-mono rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1 text-zinc-700 dark:text-zinc-300 focus:outline-none focus:border-indigo-500">
+                    <option value="not_started" {% if skill.progress_status == 'not_started' %}selected{% endif %}>Not Started</option>
+                    <option value="in_progress" {% if skill.progress_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if skill.progress_status == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="mastered" {% if skill.progress_status == 'mastered' %}selected{% endif %}>Mastered</option>
+                  </select>
+
+                  {# Skill Edit & Delete buttons #}
+                  <button type="button"
+                          title="Edit Skill"
+                          onclick="openSkillModal('{{ skill.id }}', '{{ topic.id }}', '{{ skill.name|escapejs }}', '{{ skill.description|escapejs }}', '{{ skill.difficulty_level }}', '{{ skill.priority|default:'P0' }}', '{{ skill.order|default:0 }}')"
+                          class="p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                    </svg>
+                  </button>
+                  <button type="button"
+                          title="Delete Skill"
+                          onclick="deleteSkill('{{ skill.id }}', '{{ skill.name|escapejs }}')"
+                          class="p-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 transition-smooth">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          {% empty %}
+            <div class="p-6 text-center text-xs text-zinc-400 space-y-2">
+              <p>No skills registered under this topic yet.</p>
+              <button type="button"
+                      onclick="openSkillModal(null, '{{ topic.id }}')"
+                      class="px-2.5 py-1 text-[11px] font-medium rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 transition-smooth">
+                + Add First Skill
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% empty %}
+      {% include "components/empty_state.html" with title="No roadmap topics found" description="Initialize canonical curriculum data using the management command or add a topic above." action_text="Add Topic" action_href="javascript:openTopicModal()" %}
+    {% endfor %}
+  </div>
+
+</div>
+
+{# Modal: Add / Edit Topic #}
+<div id="topicModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+    <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+      <h3 id="topicModalTitle" class="text-sm font-bold text-zinc-900 dark:text-zinc-100">Add New Topic</h3>
+      <button type="button" onclick="closeTopicModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <form id="topicForm" onsubmit="handleTopicSubmit(event)" class="p-5 space-y-4">
+      <input type="hidden" id="topicId" value="">
+      <div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Topic Name *</label>
+        <input type="text" id="topicName" required
+               placeholder="e.g. Deep Reinforcement Learning"
+               class="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Priority</label>
+          <select id="topicPriority"
+                  class="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+            <option value="P0">P0 - Core</option>
+            <option value="P1">P1 - Important</option>
+            <option value="P2">P2 - Elective</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Order Sequence</label>
+          <input type="number" id="topicOrder" min="0" value="0"
+                 class="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Description</label>
+        <textarea id="topicDescription" rows="3"
+                  placeholder="Overview of subject areas covered..."
+                  class="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"></textarea>
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" onclick="closeTopicModal()"
+                class="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+          Cancel
+        </button>
+        <button type="submit"
+                class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-smooth">
+          Save Topic
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{# Modal: Add / Edit Skill #}
+<div id="skillModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+    <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+      <h3 id="skillModalTitle" class="text-sm font-bold text-zinc-900 dark:text-zinc-100">Add New Skill</h3>
+      <button type="button" onclick="closeSkillModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <form id="skillForm" onsubmit="handleSkillSubmit(event)" class="p-5 space-y-4">
+      <input type="hidden" id="skillId" value="">
+      <input type="hidden" id="skillTopicId" value="">
+      <div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Skill Name *</label>
+        <input type="text" id="skillName" required
+               placeholder="e.g. Model Quantization and Pruning"
+               class="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Priority</label>
+          <select id="skillPriority"
+                  class="w-full text-xs px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+            <option value="P0">P0 - Core</option>
+            <option value="P1">P1 - Important</option>
+            <option value="P2">P2 - Elective</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Difficulty</label>
+          <select id="skillDifficulty"
+                  class="w-full text-xs px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Order</label>
+          <input type="number" id="skillOrder" min="0" value="0"
+                 class="w-full text-xs px-2.5 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300 mb-1">Description</label>
+        <textarea id="skillDescription" rows="3"
+                  placeholder="Measurable capability, subtopics, and evaluation criteria..."
+                  class="w-full text-xs px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"></textarea>
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button type="button" onclick="closeSkillModal()"
+                class="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+          Cancel
+        </button>
+        <button type="submit"
+                class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm transition-smooth">
+          Save Skill
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const activeDomainId = "{{ active_domain.id }}";
+
+function toggleTopic(topicId) {
+  const body = document.getElementById(`topic-body-${topicId}`);
+  const chevron = document.getElementById(`chevron-${topicId}`);
+  if (!body || !chevron) return;
+
+  const isHidden = body.classList.contains('hidden');
+  if (isHidden) {
+    body.classList.remove('hidden');
+    chevron.classList.add('rotate-90');
+  } else {
+    body.classList.add('hidden');
+    chevron.classList.remove('rotate-90');
+  }
+}
+
+function toggleAllTopics(expand) {
+  document.querySelectorAll('[id^="topic-body-"]').forEach(el => {
+    if (expand) el.classList.remove('hidden');
+    else el.classList.add('hidden');
+  });
+  document.querySelectorAll('[id^="chevron-"]').forEach(el => {
+    if (expand) el.classList.add('rotate-90');
+    else el.classList.remove('rotate-90');
+  });
+}
+
+async function updateRoadmapSkillStatus(skillId, newStatus) {
+  try {
+    const res = await fetch(`/roadmap/api/skills/${skillId}/status/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': window.getCsrfToken(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.BrofessorToast.show(`Roadmap status updated: ${newStatus}`, 'success');
+    } else {
+      window.BrofessorToast.show(data.error || 'Update failed', 'error');
+    }
+  } catch (e) {
+    window.BrofessorToast.show('Network error updating status', 'error');
+  }
+}
+
+// ================= TOPIC CRUD =================
+function openTopicModal(id = '', name = '', desc = '', priority = 'P0', order = 0) {
+  document.getElementById('topicId').value = id || '';
+  document.getElementById('topicName').value = name || '';
+  document.getElementById('topicDescription').value = desc || '';
+  document.getElementById('topicPriority').value = priority || 'P0';
+  document.getElementById('topicOrder').value = order || 0;
+  document.getElementById('topicModalTitle').innerText = id ? 'Edit Topic' : 'Add New Topic';
+  document.getElementById('topicModal').classList.remove('hidden');
+}
+
+function closeTopicModal() {
+  document.getElementById('topicModal').classList.add('hidden');
+}
+
+async function handleTopicSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('topicId').value;
+  const name = document.getElementById('topicName').value;
+  const description = document.getElementById('topicDescription').value;
+  const priority = document.getElementById('topicPriority').value;
+  const order = parseInt(document.getElementById('topicOrder').value) || 0;
+
+  const payload = { name, description, priority, order };
+  if (!id) payload.domain = activeDomainId;
+
+  const url = id ? `/api/roadmap/topics/${id}/` : `/api/roadmap/topics/`;
+  const method = id ? 'PATCH' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'X-CSRFToken': window.getCsrfToken(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      window.BrofessorToast.show(id ? 'Topic updated successfully!' : 'Topic created successfully!', 'success');
+      closeTopicModal();
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      const err = await res.json();
+      window.BrofessorToast.show(JSON.stringify(err) || 'Error saving topic', 'error');
+    }
+  } catch (err) {
+    window.BrofessorToast.show('Network error saving topic', 'error');
+  }
+}
+
+async function deleteTopic(id, name) {
+  if (!confirm(`Are you sure you want to delete topic "${name}" and all its skills?`)) return;
+
+  try {
+    const res = await fetch(`/api/roadmap/topics/${id}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': window.getCsrfToken()
+      }
+    });
+    if (res.ok) {
+      window.BrofessorToast.show(`Topic "${name}" deleted`, 'success');
+      const card = document.getElementById(`topic-card-${id}`);
+      if (card) card.remove();
+    } else {
+      window.BrofessorToast.show('Failed to delete topic', 'error');
+    }
+  } catch (err) {
+    window.BrofessorToast.show('Network error deleting topic', 'error');
+  }
+}
+
+// ================= SKILL CRUD =================
+function openSkillModal(id = '', topicId = '', name = '', desc = '', diff = 'beginner', priority = 'P0', order = 0) {
+  document.getElementById('skillId').value = id || '';
+  document.getElementById('skillTopicId').value = topicId || '';
+  document.getElementById('skillName').value = name || '';
+  document.getElementById('skillDescription').value = desc || '';
+  document.getElementById('skillDifficulty').value = diff || 'beginner';
+  document.getElementById('skillPriority').value = priority || 'P0';
+  document.getElementById('skillOrder').value = order || 0;
+  document.getElementById('skillModalTitle').innerText = id ? 'Edit Skill' : 'Add New Skill';
+  document.getElementById('skillModal').classList.remove('hidden');
+}
+
+function closeSkillModal() {
+  document.getElementById('skillModal').classList.add('hidden');
+}
+
+async function handleSkillSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('skillId').value;
+  const topicId = document.getElementById('skillTopicId').value;
+  const name = document.getElementById('skillName').value;
+  const description = document.getElementById('skillDescription').value;
+  const difficulty_level = document.getElementById('skillDifficulty').value;
+  const priority = document.getElementById('skillPriority').value;
+  const order = parseInt(document.getElementById('skillOrder').value) || 0;
+
+  const payload = { name, description, difficulty_level, priority, order };
+  if (!id) payload.topic = topicId;
+
+  const url = id ? `/api/roadmap/skills/${id}/` : `/api/roadmap/skills/`;
+  const method = id ? 'PATCH' : 'POST';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'X-CSRFToken': window.getCsrfToken(),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      window.BrofessorToast.show(id ? 'Skill updated successfully!' : 'Skill created successfully!', 'success');
+      closeSkillModal();
+      setTimeout(() => window.location.reload(), 400);
+    } else {
+      const err = await res.json();
+      window.BrofessorToast.show(JSON.stringify(err) || 'Error saving skill', 'error');
+    }
+  } catch (err) {
+    window.BrofessorToast.show('Network error saving skill', 'error');
+  }
+}
+
+async function deleteSkill(id, name) {
+  if (!confirm(`Are you sure you want to delete skill "${name}"?`)) return;
+
+  try {
+    const res = await fetch(`/api/roadmap/skills/${id}/`, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': window.getCsrfToken()
+      }
+    });
+    if (res.ok) {
+      window.BrofessorToast.show(`Skill "${name}" deleted`, 'success');
+      const row = document.getElementById(`skill-row-${id}`);
+      if (row) row.remove();
+    } else {
+      window.BrofessorToast.show('Failed to delete skill', 'error');
+    }
+  } catch (err) {
+    window.BrofessorToast.show('Network error deleting skill', 'error');
+  }
+}
+
+// ================= CUSTOM ROADMAP IMPORT =================
+function openImportCustomModal() {
+  document.getElementById('importCustomModal').classList.remove('hidden');
+  document.getElementById('importResultBox').classList.add('hidden');
+  document.getElementById('importSubmitBtn').disabled = false;
+  document.getElementById('importSubmitBtn').innerText = 'Inspect & Add to Roadmap';
+}
+
+function closeImportCustomModal() {
+  document.getElementById('importCustomModal').classList.add('hidden');
+}
+
+function switchImportTab(mode) {
+  const textSection = document.getElementById('importTextSection');
+  const fileSection = document.getElementById('importFileSection');
+  const tabText = document.getElementById('tabImportText');
+  const tabFile = document.getElementById('tabImportFile');
+
+  if (mode === 'text') {
+    textSection.classList.remove('hidden');
+    fileSection.classList.add('hidden');
+    tabText.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+    tabText.classList.remove('border-transparent', 'text-zinc-500');
+    tabFile.classList.add('border-transparent', 'text-zinc-500');
+    tabFile.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+  } else {
+    textSection.classList.add('hidden');
+    fileSection.classList.remove('hidden');
+    tabFile.classList.add('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+    tabFile.classList.remove('border-transparent', 'text-zinc-500');
+    tabText.classList.add('border-transparent', 'text-zinc-500');
+    tabText.classList.remove('border-indigo-600', 'text-indigo-600', 'dark:text-indigo-400');
+  }
+}
+
+async function handleImportCustomSubmit(e) {
+  e.preventDefault();
+  const text = document.getElementById('customRoadmapText').value.trim();
+  const fileInput = document.getElementById('customRoadmapFile');
+  const file = fileInput.files[0];
+
+  if (!text && !file) {
+    window.BrofessorToast.show('Please provide roadmap text or choose a document file', 'error');
+    return;
+  }
+
+  const submitBtn = document.getElementById('importSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="inline-block animate-spin mr-1">&#9696;</span> Analyzing & Comparing...';
+
+  const formData = new FormData();
+  formData.append('domain_id', activeDomainId);
+  if (text) formData.append('text', text);
+  if (file) formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/roadmap/import-custom/', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: formData
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      window.BrofessorToast.show(`Import complete: +${data.summary.added_skills_count} new skills added!`, 'success');
+
+      // Display results breakdown
+      const resultBox = document.getElementById('importResultBox');
+      resultBox.classList.remove('hidden');
+
+      let summaryHtml = `
+        <div class="p-3.5 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/70 dark:bg-emerald-950/40 text-xs space-y-2">
+          <div class="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Roadmap Integrated Successfully
+          </div>
+          <div class="grid grid-cols-3 gap-2 py-1 text-center font-mono">
+            <div class="p-2 rounded bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-emerald-900">
+              <span class="block text-base font-bold text-emerald-600 dark:text-emerald-400">${data.summary.added_topics_count}</span>
+              <span class="text-[10px] text-zinc-500">New Topics</span>
+            </div>
+            <div class="p-2 rounded bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-emerald-900">
+              <span class="block text-base font-bold text-emerald-600 dark:text-emerald-400">${data.summary.added_skills_count}</span>
+              <span class="text-[10px] text-zinc-500">New Skills Added</span>
+            </div>
+            <div class="p-2 rounded bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-emerald-900">
+              <span class="block text-base font-bold text-zinc-600 dark:text-zinc-400">${data.summary.existing_skills_count}</span>
+              <span class="text-[10px] text-zinc-500">Already in Roadmap</span>
+            </div>
+          </div>
+      `;
+
+      if (data.added_skills.length > 0) {
+        summaryHtml += `
+          <div class="mt-2 text-[11px] text-zinc-600 dark:text-zinc-400">
+            <span class="font-semibold text-zinc-800 dark:text-zinc-200">Newly Added Skills:</span>
+            <ul class="list-disc list-inside mt-1 space-y-0.5">
+              ${data.added_skills.slice(0, 8).map(s => `<li>${s.name} <span class="text-[9px] font-mono uppercase text-indigo-500">(${s.topic_name})</span></li>`).join('')}
+              ${data.added_skills.length > 8 ? `<li class="italic text-zinc-400">...and ${data.added_skills.length - 8} more</li>` : ''}
+            </ul>
+          </div>
+        `;
+      }
+
+      if (data.existing_skills.length > 0) {
+        summaryHtml += `
+          <p class="text-[10px] text-zinc-500 dark:text-zinc-400 italic">
+            ${data.existing_skills.length} skills were already in your curriculum roadmap and were preserved without duplicate records.
+          </p>
+        `;
+      }
+
+      summaryHtml += `
+          <button type="button" onclick="window.location.reload()"
+                  class="w-full mt-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-smooth">
+            Apply & View in Roadmap
+          </button>
+        </div>
+      `;
+
+      resultBox.innerHTML = summaryHtml;
+      submitBtn.innerText = 'Completed';
+    } else {
+      window.BrofessorToast.show(data.error || 'Import failed', 'error');
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Inspect & Add to Roadmap';
+    }
+  } catch (err) {
+    window.BrofessorToast.show('Network error uploading roadmap', 'error');
+    submitBtn.disabled = false;
+    submitBtn.innerText = 'Inspect & Add to Roadmap';
+  }
+}
+</script>
+
+{# Modal: Import Custom Roadmap #}
+<div id="importCustomModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+    <div class="p-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between shrink-0">
+      <div>
+        <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          Import / Text Roadmap
+        </h3>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Paste text or upload a syllabus. We'll check your current roadmap and add missing skills for you.
+        </p>
+      </div>
+      <button type="button" onclick="closeImportCustomModal()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    {# Mode Tabs #}
+    <div class="flex border-b border-zinc-100 dark:border-zinc-800 px-5 text-xs font-semibold shrink-0">
+      <button type="button" id="tabImportText" onclick="switchImportTab('text')"
+              class="py-2.5 px-3 border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition-smooth">
+        Text / Syllabus
+      </button>
+      <button type="button" id="tabImportFile" onclick="switchImportTab('file')"
+              class="py-2.5 px-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-smooth">
+        Upload Document (.pdf, .md, .txt)
+      </button>
+    </div>
+
+    <form id="customRoadmapForm" onsubmit="handleImportCustomSubmit(event)" class="p-5 space-y-4 overflow-y-auto">
+      {# Text Area Tab #}
+      <div id="importTextSection" class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            Roadmap Text or Syllabus
+          </label>
+          <span class="text-[10px] text-zinc-400">e.g. Agentic AI, LangGraph, etc.</span>
+        </div>
+        <textarea id="customRoadmapText" rows="6"
+                  placeholder="# Agentic AI Systems&#10;- Tool Calling & Structured Outputs&#10;- ReAct Decision Loops&#10;- Multi-Agent Orchestration (AutoGen & CrewAI)&#10;- Long-Term Memory and Vector Store Caching"
+                  class="w-full text-xs font-mono p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:border-indigo-500"></textarea>
+      </div>
+
+      {# File Upload Tab #}
+      <div id="importFileSection" class="hidden space-y-1.5">
+        <label class="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+          Upload Roadmap File
+        </label>
+        <div class="p-4 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-center space-y-2">
+          <svg class="w-8 h-8 mx-auto text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <div class="text-xs text-zinc-500">
+            Choose a PDF, Markdown, or text file
+          </div>
+          <input type="file" id="customRoadmapFile" accept=".pdf,.txt,.md,.json"
+                 class="text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-950 dark:file:text-indigo-300 hover:file:cursor-pointer">
+        </div>
+      </div>
+
+      {# Result Preview Container #}
+      <div id="importResultBox" class="hidden"></div>
+
+      <div class="pt-2 flex justify-end gap-2 shrink-0">
+        <button type="button" onclick="closeImportCustomModal()"
+                class="px-3 py-1.5 text-xs font-medium rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800">
+          Close
+        </button>
+        <button type="submit" id="importSubmitBtn"
+                class="px-4 py-1.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-smooth">
+          Inspect & Add to Roadmap
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+

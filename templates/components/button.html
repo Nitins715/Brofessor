@@ -1,0 +1,40 @@
+{# Reusable Button Component #}
+{# Props: variant (primary|accent|secondary|ghost|danger), size (xs|sm|md|lg), href, text, id, extra_classes, type, onclick, disabled, icon #}
+{% if href %}
+  <a href="{{ href }}"
+     {% if id %}id="{{ id }}"{% endif %}
+     {% if onclick %}onclick="{{ onclick }}"{% endif %}
+     class="inline-flex items-center justify-center font-medium transition-smooth rounded-lg select-none disabled:opacity-50 disabled:pointer-events-none
+     {% if size == 'xs' %}px-2.5 py-1 text-xs gap-1.5
+     {% elif size == 'sm' %}px-3 py-1.5 text-xs font-medium gap-1.5
+     {% elif size == 'lg' %}px-5 py-2.5 text-base gap-2.5
+     {% else %}px-4 py-2 text-sm gap-2{% endif %}
+     {% if variant == 'accent' %}bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-500/20 active:translate-y-px
+     {% elif variant == 'secondary' %}bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 shadow-sm active:translate-y-px
+     {% elif variant == 'ghost' %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50
+     {% elif variant == 'danger' %}bg-red-600 hover:bg-red-700 text-white shadow-sm active:translate-y-px
+     {% else %}bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm active:translate-y-px{% endif %}
+     {{ extra_classes }}">
+    {% if icon %}{{ icon|safe }}{% endif %}
+    {{ text }}
+  </a>
+{% else %}
+  <button type="{{ type|default:'button' }}"
+          {% if id %}id="{{ id }}"{% endif %}
+          {% if onclick %}onclick="{{ onclick }}"{% endif %}
+          {% if disabled %}disabled{% endif %}
+          class="inline-flex items-center justify-center font-medium transition-smooth rounded-lg select-none disabled:opacity-50 disabled:pointer-events-none
+          {% if size == 'xs' %}px-2.5 py-1 text-xs gap-1.5
+          {% elif size == 'sm' %}px-3 py-1.5 text-xs font-medium gap-1.5
+          {% elif size == 'lg' %}px-5 py-2.5 text-base gap-2.5
+          {% else %}px-4 py-2 text-sm gap-2{% endif %}
+          {% if variant == 'accent' %}bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm shadow-indigo-500/20 active:translate-y-px
+          {% elif variant == 'secondary' %}bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/60 shadow-sm active:translate-y-px
+          {% elif variant == 'ghost' %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50
+          {% elif variant == 'danger' %}bg-red-600 hover:bg-red-700 text-white shadow-sm active:translate-y-px
+          {% else %}bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white shadow-sm active:translate-y-px{% endif %}
+          {{ extra_classes }}">
+    {% if icon %}{{ icon|safe }}{% endif %}
+    {{ text }}
+  </button>
+{% endif %}

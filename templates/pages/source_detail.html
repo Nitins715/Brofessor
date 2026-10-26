@@ -1,0 +1,215 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}{{ source.name }} | Brofessor{% endblock %}
+{% block page_title %}{{ source.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Breadcrumb & Back #}
+  <div class="flex items-center justify-between text-xs text-zinc-500">
+    <a href="{% url 'web-sources' %}" class="hover:text-zinc-900 dark:hover:text-zinc-100 flex items-center gap-1.5 transition-smooth">
+      &larr; Back to Knowledge Library
+    </a>
+    <span class="font-mono text-zinc-400">Source: {{ source.id }}</span>
+  </div>
+
+  {# Source Overview Card #}
+  <div class="p-6 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="space-y-1.5 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+            {% if source.source_type == 'pdf' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+            {% elif source.source_type == 'youtube' %}bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-400
+            {% elif source.source_type == 'article' %}bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400
+            {% elif source.source_type == 'note' %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400
+            {% else %}bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400{% endif %}">
+            {{ source.source_type }}
+          </span>
+          <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full font-semibold
+            {% if source.status == 'completed' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40
+            {% elif source.status == 'failed' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40
+            {% elif source.status == 'processing' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 animate-pulse
+            {% else %}bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+            {{ source.status }}
+          </span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 truncate">
+          {{ source.name }}
+        </h2>
+        {% if source.uri or source.file_path %}
+          <p class="text-xs font-mono text-zinc-500 dark:text-zinc-400 break-all">
+            Target: {% if source.uri %}<a href="{{ source.uri }}" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">{{ source.uri }}</a>{% else %}{{ source.file_path }}{% endif %}
+          </p>
+        {% endif %}
+      </div>
+
+      {# Retry / Re-process Action #}
+      <div class="flex items-center gap-2 shrink-0">
+        <form action="{% url 'web-source-retry' source.id %}" method="post">
+          {% csrf_token %}
+          <button type="submit"
+                  class="px-3.5 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-smooth flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Retry / Re-index
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {# Metadata & Stats Bar #}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 font-mono text-xs">
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Indexed Chunks</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ chunks.count }}</span>
+      </div>
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Evidence Generated</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ evidence_items.count }}</span>
+      </div>
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Extracted Concepts</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ concepts.count }}</span>
+      </div>
+      <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
+        <span class="block text-zinc-400 text-[10px]">Date Added</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ source.created_at|date:"M d, Y" }}</span>
+      </div>
+    </div>
+  </div>
+
+  {# 2-Column Layout: Chunks & Content vs Related Concepts/Skills #}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    {# LEFT 2 COLS: Chunks with PDF Pages / YouTube Timestamps & Extracted Text #}
+    <div class="lg:col-span-2 space-y-6">
+
+      {# Document Chunks Section #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Document Chunks & Vector Representations</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Semantic segments with vector embedding and source locations.</p>
+          </div>
+          <span class="text-xs font-mono text-zinc-400">{{ chunks.count }} chunks</span>
+        </div>
+
+        <div class="space-y-3">
+          {% for chunk in chunks %}
+            <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/30 space-y-2">
+              <div class="flex items-center justify-between text-xs font-mono">
+                <span class="font-bold text-zinc-700 dark:text-zinc-300">Chunk #{{ chunk.chunk_index }}</span>
+                <div class="flex items-center gap-3">
+                  {# PDF Page or YouTube Timestamp Info where available #}
+                  {% if chunk.metadata.page %}
+                    <span class="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300">
+                      Page {{ chunk.metadata.page }}
+                    </span>
+                  {% elif chunk.metadata.timestamp %}
+                    <span class="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300">
+                      {{ chunk.metadata.timestamp }}
+                    </span>
+                  {% elif chunk.metadata.start_time %}
+                    <span class="px-2 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[10px] text-zinc-700 dark:text-zinc-300">
+                      {{ chunk.metadata.start_time }}s - {{ chunk.metadata.end_time }}s
+                    </span>
+                  {% endif %}
+
+                  <span class="text-[10px] text-zinc-400">
+                    {% if chunk.embedding %}Dense Vector (384d){% else %}Pending Vector{% endif %}
+                  </span>
+                </div>
+              </div>
+
+              {# Content Snippet #}
+              <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-sans line-clamp-4">
+                {{ chunk.content }}
+              </p>
+            </div>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-6">No chunks created yet for this source.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Knowledge Evidence Items Generated from this Source #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/60 pb-3">
+          <div>
+            <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Evidence Generated from this Source</h3>
+            <p class="text-xs text-zinc-500 dark:text-zinc-400">Evidence artifacts mapped into your knowledge model.</p>
+          </div>
+          <span class="text-xs font-mono text-zinc-400">{{ evidence_items.count }} items</span>
+        </div>
+
+        <div class="space-y-2.5">
+          {% for ev in evidence_items %}
+            <div class="p-3.5 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/40 dark:bg-zinc-950/30 flex items-center justify-between text-xs">
+              <div class="space-y-0.5 min-w-0">
+                <span class="font-medium text-zinc-900 dark:text-zinc-100 truncate block">{{ ev.title }}</span>
+                {% if ev.skill %}<span class="text-[10px] font-mono text-zinc-400">Skill: {{ ev.skill.name }}</span>{% endif %}
+              </div>
+              <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">
+                {{ ev.evidence_type }}
+              </span>
+            </div>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-4">No direct evidence items derived yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+
+    {# RIGHT 1 COL: Related Skills, Topics & Concepts #}
+    <div class="space-y-6">
+
+      {# Related Skills #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Related Skills</h3>
+        <div class="space-y-2">
+          {% for sk in skills %}
+            <a href="/knowledge/skills/{{ sk.id }}/" class="p-2.5 rounded-xl border border-zinc-100 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 flex items-center justify-between text-xs transition-smooth">
+              <span class="font-medium text-zinc-900 dark:text-zinc-100 truncate">{{ sk.name }}</span>
+              <span class="text-[10px] font-mono text-zinc-400 uppercase">[{{ sk.difficulty_level }}]</span>
+            </a>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-3">No mapped skills detected yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Extracted Concepts #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Extracted Concepts</h3>
+        <div class="space-y-2">
+          {% for c in concepts %}
+            <div class="p-2.5 rounded-xl border border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 text-xs space-y-1">
+              <h4 class="font-semibold text-zinc-900 dark:text-zinc-100">{{ c.name }}</h4>
+              {% if c.description %}
+                <p class="text-[11px] text-zinc-500 line-clamp-2">{{ c.description }}</p>
+              {% endif %}
+            </div>
+          {% empty %}
+            <p class="text-xs text-zinc-400 italic text-center py-3">No atomic concepts extracted yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      {# Raw Metadata Inspector #}
+      {% if source.metadata %}
+        <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-2">
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Source Metadata</h3>
+          <pre class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 font-mono text-[11px] text-zinc-600 dark:text-zinc-400 overflow-x-auto">{{ source.metadata }}</pre>
+        </div>
+      {% endif %}
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

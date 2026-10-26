@@ -1,0 +1,81 @@
+{# Reusable Status Alert Component (Error, Success, Warning, Info, Disabled) #}
+{# Props: #}
+{#   type: 'error' | 'success' | 'warning' | 'info' | 'disabled' (default 'info') #}
+{#   title: string (optional) #}
+{#   message: string #}
+{#   action_text: string (optional) #}
+{#   action_url: string (optional) #}
+{#   dismissible: boolean (optional) #}
+{#   extra_classes: string (optional) #}
+
+<div class="rounded-xl border p-4 text-xs transition-smooth select-none {{ extra_classes }}
+  {% if type == 'error' or type == 'danger' %}
+    border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/20 text-rose-900 dark:text-rose-200
+  {% elif type == 'success' %}
+    border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/70 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200
+  {% elif type == 'warning' %}
+    border-amber-200 dark:border-amber-900/60 bg-amber-50/70 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200
+  {% elif type == 'disabled' %}
+    border-zinc-200 dark:border-zinc-800 bg-zinc-100/60 dark:bg-zinc-900/40 text-zinc-400 dark:text-zinc-500 opacity-75
+  {% else %}
+    border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/40 text-zinc-800 dark:text-zinc-200
+  {% endif %}"
+  role="alert">
+  
+  <div class="flex items-start gap-3">
+    {# Status Icon #}
+    <div class="shrink-0 mt-0.5">
+      {% if type == 'error' or type == 'danger' %}
+        <svg class="w-4 h-4 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      {% elif type == 'success' %}
+        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+      {% elif type == 'warning' %}
+        <svg class="w-4 h-4 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      {% elif type == 'disabled' %}
+        <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+        </svg>
+      {% else %}
+        <svg class="w-4 h-4 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      {% endif %}
+    </div>
+
+    {# Text & Details #}
+    <div class="flex-1 min-w-0 space-y-0.5">
+      {% if title %}
+        <h4 class="font-semibold leading-tight">{{ title }}</h4>
+      {% endif %}
+      <p class="leading-relaxed {% if type == 'disabled' %}line-through{% endif %}">
+        {{ message }}
+      </p>
+
+      {% if action_text and action_url %}
+        <div class="pt-1.5">
+          <a href="{{ action_url }}" class="inline-flex items-center gap-1 font-semibold underline underline-offset-2 hover:opacity-80">
+            {{ action_text }} &rarr;
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    {# Optional Dismiss Button #}
+    {% if dismissible %}
+      <button type="button"
+              onclick="this.closest('[role=alert]').remove()"
+              class="shrink-0 p-1 rounded-md opacity-60 hover:opacity-100 transition-smooth"
+              aria-label="Dismiss alert">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    {% endif %}
+  </div>
+</div>

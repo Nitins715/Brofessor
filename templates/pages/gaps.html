@@ -1,0 +1,286 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Knowledge Gaps | Brofessor{% endblock %}
+{% block page_title %}Knowledge Gaps & Remediation{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+
+  {# Header & What Should I Improve Next #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="space-y-1">
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded font-semibold bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400">
+          Targeted Remediation
+        </span>
+        <span class="text-xs text-zinc-400 font-mono">Personal Knowledge Model</span>
+      </div>
+      <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+        What should I improve next?
+      </h2>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 max-w-2xl leading-relaxed">
+        Prioritized conceptual deficiencies detected between roadmap standards and your demonstrated learning evidence.
+      </p>
+    </div>
+
+    {# Filter / Summary Stats #}
+    <div class="flex items-center gap-2 font-mono text-xs">
+      <div class="px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+        <span class="text-zinc-400">Total:</span>
+        <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ total_gaps_count }}</span>
+      </div>
+      <div class="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400">
+        <span class="opacity-75">High:</span>
+        <span class="font-bold">{{ high_gaps_count }}</span>
+      </div>
+    </div>
+  </div>
+
+  {# Severity Groups #}
+  <div class="space-y-6">
+
+    {# 1. HIGH SEVERITY SECTION #}
+    <div class="space-y-3">
+      <div class="flex items-center justify-between pb-2 border-b border-zinc-200/80 dark:border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+            High Severity Gaps
+          </h3>
+        </div>
+        <span class="text-xs font-mono text-zinc-400">{{ high_gaps|length }} critical deficiencies</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for gap in high_gaps %}
+          <div class="p-5 rounded-2xl border border-rose-200/80 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/10 shadow-sm space-y-4 flex flex-col justify-between hover:border-rose-300 dark:hover:border-rose-800 transition-smooth">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-bold bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                  {{ gap.severity }}
+                </span>
+                <span class="text-[11px] font-mono text-zinc-400">
+                  Target: {{ gap.target_score }}% &bull; Current: {{ gap.current_score }}%
+                </span>
+              </div>
+
+              <div>
+                <h4 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+                  {{ gap.title }}
+                </h4>
+                <div class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  {% if gap.skill %}Skill: {{ gap.skill.name }} &bull; {% elif gap.topic %}Topic: {{ gap.topic.name }} &bull; {% endif %}Current mastery: <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ gap.current_level|default:"Beginner"|title }}</span>
+                </div>
+              </div>
+
+              {# Concise explanation #}
+              <p class="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                {{ gap.description|default:"Evaluation performance is below required curriculum benchmark." }}
+              </p>
+
+              {# Relevant evidence #}
+              <div class="pt-1 text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>{{ gap.evidence_count }} evidence record{{ gap.evidence_count|pluralize }} analyzed</span>
+              </div>
+            </div>
+
+            {# Action buttons: Take Assessment / Revise #}
+            <div class="pt-3 border-t border-rose-100 dark:border-rose-900/40 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                {% if gap.assessment_id %}
+                  <a href="{% url 'web-assessment-take' gap.assessment_id %}"
+                     class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+                    Take assessment &rarr;
+                  </a>
+                {% else %}
+                  <a href="{% url 'web-assessments' %}"
+                     class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-medium transition-smooth shadow-sm">
+                    Take assessment &rarr;
+                  </a>
+                {% endif %}
+
+                {% if gap.skill %}
+                  <a href="{% url 'web-skill-detail' gap.skill.id %}"
+                     class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-smooth">
+                    Revise
+                  </a>
+                {% endif %}
+              </div>
+
+              {% if gap.skill %}
+                <a href="{% url 'web-chat' %}?skill_id={{ gap.skill.id }}&context={{ gap.skill.name|urlencode }}"
+                   class="text-xs font-mono text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-smooth"
+                   title="Ask Brofessor about this gap">
+                  Ask &rarr;
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full p-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 text-center italic">
+            No high-severity knowledge gaps detected.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# 2. MEDIUM SEVERITY SECTION #}
+    <div class="space-y-3 pt-2">
+      <div class="flex items-center justify-between pb-2 border-b border-zinc-200/80 dark:border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+            Medium Severity Gaps
+          </h3>
+        </div>
+        <span class="text-xs font-mono text-zinc-400">{{ medium_gaps|length }} items</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for gap in medium_gaps %}
+          <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-4 flex flex-col justify-between hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400">
+                  {{ gap.severity }}
+                </span>
+                <span class="text-[11px] font-mono text-zinc-400">
+                  Target: {{ gap.target_score }}% &bull; Current: {{ gap.current_score }}%
+                </span>
+              </div>
+
+              <div>
+                <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {{ gap.title }}
+                </h4>
+                <div class="text-[11px] font-mono text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  {% if gap.skill %}Skill: {{ gap.skill.name }} &bull; {% elif gap.topic %}Topic: {{ gap.topic.name }} &bull; {% endif %}Current mastery: <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ gap.current_level|default:"Beginner"|title }}</span>
+                </div>
+              </div>
+
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                {{ gap.description|default:"Partial coverage identified in recent learning evidence." }}
+              </p>
+
+              <div class="pt-1 text-[11px] font-mono text-zinc-400 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>{{ gap.evidence_count }} evidence record{{ gap.evidence_count|pluralize }} analyzed</span>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                {% if gap.assessment_id %}
+                  <a href="{% url 'web-assessment-take' gap.assessment_id %}"
+                     class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium transition-smooth">
+                    Take assessment &rarr;
+                  </a>
+                {% else %}
+                  <a href="{% url 'web-assessments' %}"
+                     class="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium transition-smooth">
+                    Take assessment &rarr;
+                  </a>
+                {% endif %}
+
+                {% if gap.skill %}
+                  <a href="{% url 'web-skill-detail' gap.skill.id %}"
+                     class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-smooth">
+                    Revise
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full p-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 text-center italic">
+            No medium-severity knowledge gaps detected.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    {# 3. LOW SEVERITY SECTION #}
+    <div class="space-y-3 pt-2">
+      <div class="flex items-center justify-between pb-2 border-b border-zinc-200/80 dark:border-zinc-800">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-zinc-400"></span>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
+            Low Severity Gaps & Calibrations
+          </h3>
+        </div>
+        <span class="text-xs font-mono text-zinc-400">{{ low_gaps|length }} items</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for gap in low_gaps %}
+          <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-4 flex flex-col justify-between">
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                  {{ gap.severity }}
+                </span>
+                <span class="text-[11px] font-mono text-zinc-400">
+                  Target: {{ gap.target_score }}% &bull; Current: {{ gap.current_score }}%
+                </span>
+              </div>
+
+              <div>
+                <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                  {{ gap.title }}
+                </h4>
+                <div class="text-[11px] font-mono text-zinc-500 mt-0.5">
+                  {% if gap.skill %}Skill: {{ gap.skill.name }} &bull; {% elif gap.topic %}Topic: {{ gap.topic.name }} &bull; {% endif %}Current mastery: <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ gap.current_level|default:"Beginner"|title }}</span>
+                </div>
+              </div>
+
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                {{ gap.description|default:"Minor practice or concept review suggested." }}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between gap-2">
+              {% if gap.skill %}
+                <a href="{% url 'web-skill-detail' gap.skill.id %}"
+                   class="px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-smooth">
+                  Revise &rarr;
+                </a>
+              {% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <div class="col-span-full p-4 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 text-xs text-zinc-400 text-center italic">
+            No low-severity knowledge gaps detected.
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+  {# 4. ACTIONABLE REMEDIATION RECOMMENDATIONS SECTION (Reusable Component) #}
+  {% if recommendations %}
+    <div class="space-y-4 pt-4 border-t border-zinc-200 dark:border-zinc-800/80">
+      <div>
+        <h3 class="text-base font-bold text-zinc-900 dark:text-zinc-100">
+          Remediation Recommendations
+        </h3>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400">
+          System-generated next actions based on your highest-severity deficiencies.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for rec in recommendations %}
+          {% include "components/recommendation_card.html" with rec=rec %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

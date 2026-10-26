@@ -1,0 +1,5901 @@
+openapi: 3.0.3
+info:
+  title: Brofessor API
+  version: 1.0.0
+  description: Local-first Personal Knowledge System API
+paths:
+  /api/:
+    get:
+      operationId: root_retrieve
+      description: Lists all primary module endpoints of the Brofessor system.
+      summary: API Root
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/accounts/:
+    get:
+      operationId: accounts_retrieve
+      description: Placeholder endpoint for accounts module.
+      tags:
+      - accounts
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/assessments/:
+    get:
+      operationId: assessments_retrieve
+      description: Overview endpoint for Assessment & Scoring Engine module.
+      summary: Assessments Module Overview
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/assessments/assessments/:
+    get:
+      operationId: assessments_assessments_list
+      description: List assessments or create a new assessment suite for a skill/topic.
+      summary: List Assessments
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment'
+          description: ''
+    post:
+      operationId: assessments_assessments_create
+      description: List assessments or create a new assessment suite for a skill/topic.
+      summary: Create Assessment
+      tags:
+      - assessments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+  /api/assessments/assessments/{id}/:
+    get:
+      operationId: assessments_assessments_retrieve
+      description: View details of a specific Assessment.
+      summary: Assessment Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+  /api/assessments/assessments/{id}/attempt/:
+    post:
+      operationId: assessments_assessments_attempt_create
+      description: Begin an attempt on an Assessment.
+      summary: Start Assessment Attempt
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          description: ''
+  /api/assessments/assessments/{id}/questions/:
+    get:
+      operationId: assessments_assessments_questions_list
+      description: Retrieve questions for an assessment or trigger regeneration.
+      summary: Get Assessment Questions
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+          description: ''
+    post:
+      operationId: assessments_assessments_questions_create
+      description: Retrieve questions for an assessment or trigger regeneration.
+      summary: Generate Questions
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+          description: ''
+  /api/assessments/attempts/{attempt_id}/answers/:
+    post:
+      operationId: assessments_attempts_answers_create
+      description: Submit an answer to a question during an attempt and receive immediate
+        evaluation.
+      summary: Submit & Evaluate Answer
+      parameters:
+      - in: path
+        name: attempt_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerResponse'
+          description: ''
+  /api/assessments/attempts/{attempt_id}/complete/:
+    post:
+      operationId: assessments_attempts_complete_create
+      description: Finalize an attempt, calculate total accuracy & points, and emit
+        assessment evidence.
+      summary: Complete Attempt
+      parameters:
+      - in: path
+        name: attempt_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          description: ''
+  /api/assessments/attempts/{attempt_id}/result/:
+    get:
+      operationId: assessments_attempts_result_retrieve
+      description: View results of an attempt.
+      summary: Get Attempt Result
+      parameters:
+      - in: path
+        name: attempt_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          description: ''
+  /api/assessments/history/skills/{skill_id}/:
+    get:
+      operationId: assessments_history_skills_retrieve
+      description: View ongoing assessment history using up to the latest 3 assessments
+        for a skill.
+      summary: Skill Assessment History (Latest 3)
+      parameters:
+      - in: path
+        name: skill_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillAssessmentHistory'
+          description: ''
+  /api/assessments/history/topics/{topic_id}/:
+    get:
+      operationId: assessments_history_topics_retrieve
+      description: View ongoing assessment history using up to the latest 3 assessments
+        for a topic.
+      summary: Topic Assessment History (Latest 3)
+      parameters:
+      - in: path
+        name: topic_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - assessments
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillAssessmentHistory'
+          description: ''
+  /api/conversations/:
+    get:
+      operationId: conversations_retrieve
+      description: List recent conversations or create a new conversation.
+      summary: List Conversations
+      tags:
+      - conversations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: conversations_create
+      description: List recent conversations or create a new conversation.
+      summary: Create Conversation
+      tags:
+      - conversations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/conversations/{id}/:
+    get:
+      operationId: conversations_retrieve_2
+      description: Retrieve complete message history and grounding citations for a
+        Conversation.
+      summary: Conversation Details & Messages
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - conversations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: Check status of Django core, database connection, Redis, and Celery
+        broker configuration.
+      summary: System Health Check
+      tags:
+      - health
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/:
+    get:
+      operationId: knowledge_retrieve
+      description: Overview endpoint for Knowledge & Personal Knowledge Model module.
+      summary: Knowledge Module Overview
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/concepts/:
+    get:
+      operationId: knowledge_concepts_list
+      description: List extracted concepts with filtering by mapping status, topic,
+        and skill.
+      summary: List Extracted Concepts
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Concept'
+          description: ''
+  /api/knowledge/concepts/{id}/:
+    get:
+      operationId: knowledge_concepts_retrieve
+      description: View details of a single Concept.
+      summary: Concept Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Concept'
+          description: ''
+  /api/knowledge/coverage/:
+    get:
+      operationId: knowledge_coverage_retrieve
+      description: View knowledge coverage across skills, topics, and modalities.
+      summary: Get Knowledge Coverage Summary
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/evidence/:
+    get:
+      operationId: knowledge_evidence_list
+      description: List or record knowledge evidence items.
+      summary: List Evidence
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evidence'
+          description: ''
+    post:
+      operationId: knowledge_evidence_create
+      description: List or record knowledge evidence items.
+      summary: Record Knowledge Evidence
+      tags:
+      - knowledge
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordEvidenceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecordEvidenceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordEvidenceRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+          description: ''
+  /api/knowledge/gaps/:
+    get:
+      operationId: knowledge_gaps_list
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: List Knowledge Gaps
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+    post:
+      operationId: knowledge_gaps_create
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: Evaluate Knowledge Gaps
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+  /api/knowledge/mastery/:
+    get:
+      operationId: knowledge_mastery_list
+      description: List calculated mastery records across skills and topics.
+      summary: List Calculated Masteries
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/knowledge/profile/:
+    get:
+      operationId: knowledge_profile_retrieve
+      description: High-level Personal Knowledge Model summary profile.
+      summary: Knowledge Model Profile
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeProfileResponse'
+          description: ''
+  /api/knowledge/recalculate/:
+    post:
+      operationId: knowledge_recalculate_create
+      description: Trigger full recalculation of masteries, coverage, gaps, and recommendations.
+      summary: Recalculate Derived Knowledge Model
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/recommendations/:
+    get:
+      operationId: knowledge_recommendations_list
+      description: List recommendations and trigger new generation.
+      summary: List Recommendations
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+    post:
+      operationId: knowledge_recommendations_create
+      description: List recommendations and trigger new generation.
+      summary: Generate Recommendations
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/knowledge/recommendations/{id}/:
+    get:
+      operationId: knowledge_recommendations_retrieve
+      description: View and update recommendation status (completed, dismissed).
+      summary: Get Recommendation Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+    patch:
+      operationId: knowledge_recommendations_partial_update
+      description: View and update recommendation status (completed, dismissed).
+      summary: Update Recommendation Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/knowledge/skills/{id}/:
+    get:
+      operationId: knowledge_skills_retrieve
+      description: Aggregate knowledge metrics, covered concepts, and evidence for
+        a specific Skill.
+      summary: Skill Knowledge Summary
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillKnowledgeResponse'
+          description: ''
+  /api/knowledge/skills/{id}/mastery/:
+    get:
+      operationId: knowledge_skills_mastery_retrieve
+      description: View and recalculate mastery for a single Skill.
+      summary: Get Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: knowledge_skills_mastery_create
+      description: View and recalculate mastery for a single Skill.
+      summary: Recalculate Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/knowledge/skills/{id}/summary/:
+    get:
+      operationId: knowledge_skills_summary_retrieve
+      description: |-
+        Returns full integrated knowledge flow for a Skill:
+        Skill -> Evidence -> Score -> Mastery -> Gap -> Recommendation -> Roadmap Progress
+      summary: Integrated Skill Knowledge Summary
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/sources/{id}/extract/:
+    post:
+      operationId: knowledge_sources_extract_create
+      description: Trigger the Knowledge Extraction pipeline for an ingested Source.
+      summary: Extract Knowledge from Source
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeExtractionResponse'
+          description: ''
+  /api/knowledge/sources/{id}/retry/:
+    post:
+      operationId: knowledge_sources_retry_create
+      description: Retry failed knowledge extraction jobs for a Source.
+      summary: Retry Knowledge Extraction
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/summary/:
+    get:
+      operationId: knowledge_summary_retrieve
+      description: |-
+        Returns high-level dashboard summary across all skills, including:
+        Domain progress, roadmap level progress, and integrated skill snapshots.
+      summary: Overall Knowledge & Roadmap Summary
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/topics/{id}/:
+    get:
+      operationId: knowledge_topics_retrieve
+      description: Summarize knowledge and skills status under a Topic.
+      summary: Topic Knowledge Summary
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/knowledge/topics/{id}/mastery/:
+    get:
+      operationId: knowledge_topics_mastery_retrieve
+      description: View and recalculate mastery for a single Topic.
+      summary: Get Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: knowledge_topics_mastery_create
+      description: View and recalculate mastery for a single Topic.
+      summary: Recalculate Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - knowledge
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/mastery/:
+    get:
+      operationId: mastery_list
+      description: List calculated mastery records across skills and topics.
+      summary: List Calculated Masteries
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/mastery/coverage/:
+    get:
+      operationId: mastery_coverage_retrieve
+      description: View knowledge coverage across skills, topics, and modalities.
+      summary: Get Knowledge Coverage Summary
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/mastery/recalculate/:
+    post:
+      operationId: mastery_recalculate_create
+      description: Trigger full recalculation of masteries, coverage, gaps, and recommendations.
+      summary: Recalculate Derived Knowledge Model
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/mastery/skills/{id}/:
+    get:
+      operationId: mastery_skills_retrieve
+      description: View and recalculate mastery for a single Skill.
+      summary: Get Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: mastery_skills_create
+      description: View and recalculate mastery for a single Skill.
+      summary: Recalculate Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/mastery/skills/{id}/recalculate/:
+    get:
+      operationId: mastery_skills_recalculate_retrieve
+      description: View and recalculate mastery for a single Skill.
+      summary: Get Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: mastery_skills_recalculate_create
+      description: View and recalculate mastery for a single Skill.
+      summary: Recalculate Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/mastery/topics/{id}/:
+    get:
+      operationId: mastery_topics_retrieve
+      description: View and recalculate mastery for a single Topic.
+      summary: Get Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: mastery_topics_create
+      description: View and recalculate mastery for a single Topic.
+      summary: Recalculate Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/mastery/topics/{id}/recalculate/:
+    get:
+      operationId: mastery_topics_recalculate_retrieve
+      description: View and recalculate mastery for a single Topic.
+      summary: Get Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: mastery_topics_recalculate_create
+      description: View and recalculate mastery for a single Topic.
+      summary: Recalculate Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - mastery
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/processing/:
+    get:
+      operationId: processing_retrieve
+      description: Unified system processing health and telemetry overview.
+      summary: Processing System Overview
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/processing/embeddings/:
+    get:
+      operationId: processing_embeddings_retrieve
+      description: Check embedding pipeline metrics and trigger retries.
+      summary: Get Embedding Processing Status
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: processing_embeddings_create
+      description: Check embedding pipeline metrics and trigger retries.
+      summary: Retry Failed/Missing Embeddings
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/processing/extractions/:
+    get:
+      operationId: processing_extractions_retrieve
+      description: Inspect concepts extraction and mapping pipeline metrics.
+      summary: Get Extraction Processing Status
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/processing/failures/:
+    get:
+      operationId: processing_failures_retrieve
+      description: Unified failure diagnostics dashboard.
+      summary: List Processing Failures & Diagnostics
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/processing/sources/:
+    get:
+      operationId: processing_sources_retrieve
+      description: List processing statuses and diagnostics across all knowledge sources.
+      summary: List Sources Processing Status
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/processing/sources/{id}/:
+    get:
+      operationId: processing_sources_retrieve_2
+      description: Detailed processing breakdown and chunk embedding state for a single
+        Source.
+      summary: Get Source Processing Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/processing/sources/{id}/retry/:
+    post:
+      operationId: processing_sources_retry_create
+      description: Retry ingestion and processing for a failed Source.
+      summary: Retry Source Processing
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - processing
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/rag/:
+    get:
+      operationId: rag_retrieve
+      description: Overview endpoint for RAG module.
+      summary: RAG Module Overview
+      tags:
+      - rag
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/rag/chat/:
+    post:
+      operationId: rag_chat_create
+      description: Ask a question against stored knowledge using the full LangGraph
+        RAG pipeline.
+      summary: RAG Chat Question & Answer
+      tags:
+      - rag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RAGChatRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RAGChatRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RAGChatRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RAGChatResponse'
+          description: ''
+  /api/rag/conversations/:
+    get:
+      operationId: rag_conversations_retrieve
+      description: List recent conversations or create a new conversation.
+      summary: List Conversations
+      tags:
+      - rag
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: rag_conversations_create
+      description: List recent conversations or create a new conversation.
+      summary: Create Conversation
+      tags:
+      - rag
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/rag/conversations/{id}/:
+    get:
+      operationId: rag_conversations_retrieve_2
+      description: Retrieve complete message history and grounding citations for a
+        Conversation.
+      summary: Conversation Details & Messages
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - rag
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/rag/search/:
+    post:
+      operationId: rag_search_create
+      description: Search stored document chunks using dense embeddings and cosine
+        similarity.
+      summary: Vector Similarity Search
+      tags:
+      - rag
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VectorSearchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VectorSearchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VectorSearchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VectorSearchResponse'
+          description: ''
+  /api/recommendations/:
+    get:
+      operationId: recommendations_list
+      description: List recommendations and trigger new generation.
+      summary: List Recommendations
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+    post:
+      operationId: recommendations_create
+      description: List recommendations and trigger new generation.
+      summary: Generate Recommendations
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/recommendations/{id}/:
+    get:
+      operationId: recommendations_retrieve
+      description: View and update recommendation status (completed, dismissed).
+      summary: Get Recommendation Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+    patch:
+      operationId: recommendations_partial_update
+      description: View and update recommendation status (completed, dismissed).
+      summary: Update Recommendation Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - recommendations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/recommendations/gaps/:
+    get:
+      operationId: recommendations_gaps_list
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: List Knowledge Gaps
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+    post:
+      operationId: recommendations_gaps_create
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: Evaluate Knowledge Gaps
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+  /api/recommendations/gaps/evaluate/:
+    get:
+      operationId: recommendations_gaps_evaluate_list
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: List Knowledge Gaps
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+    post:
+      operationId: recommendations_gaps_evaluate_create
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: Evaluate Knowledge Gaps
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+  /api/recommendations/generate/:
+    get:
+      operationId: recommendations_generate_list
+      description: List recommendations and trigger new generation.
+      summary: List Recommendations
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+    post:
+      operationId: recommendations_generate_create
+      description: List recommendations and trigger new generation.
+      summary: Generate Recommendations
+      tags:
+      - recommendations
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/roadmap/:
+    get:
+      operationId: roadmap_retrieve
+      description: Overview endpoint for Roadmap module.
+      summary: Roadmap Module Overview
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/roadmap/domains/:
+    get:
+      operationId: roadmap_domains_list
+      description: List knowledge domains or retrieve active domain.
+      summary: List Domains
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Domain'
+          description: ''
+  /api/roadmap/domains/{id}/:
+    get:
+      operationId: roadmap_domains_retrieve
+      description: Retrieve details for a single knowledge domain.
+      summary: Get Domain Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+          description: ''
+  /api/roadmap/domains/{id}/progress/:
+    get:
+      operationId: roadmap_domains_progress_retrieve
+      description: View curriculum progress for all topics in a Domain.
+      summary: Get Domain Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/roadmap/domains/{id}/select/:
+    post:
+      operationId: roadmap_domains_select_create
+      description: Select and activate a Domain as the user's primary roadmap focus.
+      summary: Select Active Domain
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+          description: ''
+  /api/roadmap/hierarchy/:
+    get:
+      operationId: roadmap_hierarchy_retrieve
+      description: |-
+        Returns complete hierarchical roadmap tree:
+        Domain -> Topic -> Skill -> Progression Node
+      summary: Get Roadmap Hierarchy
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/roadmap/progress/:
+    get:
+      operationId: roadmap_progress_retrieve
+      description: Calculate and retrieve overall curriculum roadmap progress for
+        domain and levels.
+      summary: Overall Roadmap Progress
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/roadmap/progress/levels/:
+    get:
+      operationId: roadmap_progress_levels_retrieve
+      description: View curriculum progress broken down by Roadmap difficulty levels.
+      summary: Get Roadmap Level Progress
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/roadmap/skills/:
+    get:
+      operationId: roadmap_skills_list
+      description: List skills with optional filtering by topic or difficulty.
+      summary: List Skills
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Skill'
+          description: ''
+  /api/roadmap/skills/{id}/:
+    get:
+      operationId: roadmap_skills_retrieve
+      description: Retrieve details for a specific Skill.
+      summary: Get Skill Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+          description: ''
+  /api/roadmap/skills/{id}/progress/:
+    get:
+      operationId: roadmap_skills_progress_retrieve
+      description: View and update curriculum progress for a single Skill.
+      summary: Get Skill Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: roadmap_skills_progress_create
+      description: View and update curriculum progress for a single Skill.
+      summary: Update Skill Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillProgress'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillProgress'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillProgress'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/roadmap/topics/:
+    get:
+      operationId: roadmap_topics_list
+      description: List topics under a domain or across all domains.
+      summary: List Topics
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/roadmap/topics/{id}/:
+    get:
+      operationId: roadmap_topics_retrieve
+      description: Retrieve details for a specific Topic.
+      summary: Get Topic Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/roadmap/topics/{id}/progress/:
+    get:
+      operationId: roadmap_topics_progress_retrieve
+      description: View curriculum progress for all skills in a Topic.
+      summary: Get Topic Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - roadmap
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/sources/:
+    get:
+      operationId: sources_list
+      description: Retrieve all knowledge sources with optional filtering.
+      summary: List Sources
+      parameters:
+      - in: query
+        name: source_type
+        schema:
+          type: string
+        description: Filter by source type (note, article, pdf, youtube, manual)
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by status (pending, processing, completed, failed)
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Source'
+          description: ''
+  /api/sources/{id}/:
+    get:
+      operationId: sources_retrieve
+      description: Retrieve full details of a single knowledge source.
+      summary: Get Source Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+    delete:
+      operationId: sources_destroy
+      description: Retrieve full details of a single knowledge source.
+      summary: Delete Source
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/sources/{id}/chunks/:
+    get:
+      operationId: sources_chunks_list
+      description: Retrieve all chunks generated for a source's document.
+      summary: Get Document Chunks
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentChunk'
+          description: ''
+  /api/sources/{id}/documents/:
+    get:
+      operationId: sources_documents_retrieve
+      description: Retrieve the normalized document generated for a source.
+      summary: Get Source Document
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/sources/{id}/embed/:
+    post:
+      operationId: sources_embed_create
+      description: Trigger or re-generate dense vector embeddings for all chunks in
+        a Source.
+      summary: Generate/Regenerate Embeddings for Source
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  embedded_chunks:
+                    type: integer
+          description: ''
+  /api/sources/{id}/retry/:
+    post:
+      operationId: sources_retry_create
+      description: Retry ingestion and processing for a failed or pending source.
+      summary: Retry Source Processing
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/sources/{id}/status/:
+    get:
+      operationId: sources_status_retrieve
+      description: Check processing status and error diagnostics for a knowledge source.
+      summary: Get Source Processing Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceStatus'
+          description: ''
+  /api/sources/article/:
+    post:
+      operationId: sources_article_create
+      description: Ingest a web article or blog post via URL.
+      summary: Add Web Article Source
+      tags:
+      - sources
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleSourceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/sources/embed/retry/:
+    post:
+      operationId: sources_embed_retry_create
+      description: Retry embedding generation for all document chunks that lack vectors.
+      summary: Retry Missing Embeddings Across All Sources
+      tags:
+      - sources
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_embedded:
+                    type: integer
+          description: ''
+  /api/sources/pdf/:
+    post:
+      operationId: sources_pdf_create
+      description: Upload a local PDF document for text extraction and chunking.
+      summary: Upload PDF Source
+      tags:
+      - sources
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PDFUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PDFUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/sources/text/:
+    post:
+      operationId: sources_text_create
+      description: Ingest user-provided text, note, or manual knowledge.
+      summary: Add Text/Manual Source
+      tags:
+      - sources
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextSourceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/sources/youtube/:
+    post:
+      operationId: sources_youtube_create
+      description: Ingest a YouTube video transcript via URL.
+      summary: Add YouTube Video Source
+      tags:
+      - sources
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YouTubeSourceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/:
+    get:
+      operationId: v1_retrieve
+      description: Lists all primary module endpoints of the Brofessor system.
+      summary: API Root
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/accounts/:
+    get:
+      operationId: v1_accounts_retrieve
+      description: Placeholder endpoint for accounts module.
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/assessments/:
+    get:
+      operationId: v1_assessments_retrieve
+      description: Overview endpoint for Assessment & Scoring Engine module.
+      summary: Assessments Module Overview
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/assessments/assessments/:
+    get:
+      operationId: v1_assessments_assessments_list
+      description: List assessments or create a new assessment suite for a skill/topic.
+      summary: List Assessments
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment'
+          description: ''
+    post:
+      operationId: v1_assessments_assessments_create
+      description: List assessments or create a new assessment suite for a skill/topic.
+      summary: Create Assessment
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAssessmentRequest'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+  /api/v1/assessments/assessments/{id}/:
+    get:
+      operationId: v1_assessments_assessments_retrieve
+      description: View details of a specific Assessment.
+      summary: Assessment Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+  /api/v1/assessments/assessments/{id}/attempt/:
+    post:
+      operationId: v1_assessments_assessments_attempt_create
+      description: Begin an attempt on an Assessment.
+      summary: Start Assessment Attempt
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attempt'
+          description: ''
+  /api/v1/assessments/assessments/{id}/questions/:
+    get:
+      operationId: v1_assessments_assessments_questions_list
+      description: Retrieve questions for an assessment or trigger regeneration.
+      summary: Get Assessment Questions
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+          description: ''
+    post:
+      operationId: v1_assessments_assessments_questions_create
+      description: Retrieve questions for an assessment or trigger regeneration.
+      summary: Generate Questions
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Question'
+          description: ''
+  /api/v1/assessments/attempts/{attempt_id}/answers/:
+    post:
+      operationId: v1_assessments_attempts_answers_create
+      description: Submit an answer to a question during an attempt and receive immediate
+        evaluation.
+      summary: Submit & Evaluate Answer
+      parameters:
+      - in: path
+        name: attempt_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerResponse'
+          description: ''
+  /api/v1/assessments/attempts/{attempt_id}/complete/:
+    post:
+      operationId: v1_assessments_attempts_complete_create
+      description: Finalize an attempt, calculate total accuracy & points, and emit
+        assessment evidence.
+      summary: Complete Attempt
+      parameters:
+      - in: path
+        name: attempt_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          description: ''
+  /api/v1/assessments/attempts/{attempt_id}/result/:
+    get:
+      operationId: v1_assessments_attempts_result_retrieve
+      description: View results of an attempt.
+      summary: Get Attempt Result
+      parameters:
+      - in: path
+        name: attempt_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptResult'
+          description: ''
+  /api/v1/assessments/history/skills/{skill_id}/:
+    get:
+      operationId: v1_assessments_history_skills_retrieve
+      description: View ongoing assessment history using up to the latest 3 assessments
+        for a skill.
+      summary: Skill Assessment History (Latest 3)
+      parameters:
+      - in: path
+        name: skill_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillAssessmentHistory'
+          description: ''
+  /api/v1/assessments/history/topics/{topic_id}/:
+    get:
+      operationId: v1_assessments_history_topics_retrieve
+      description: View ongoing assessment history using up to the latest 3 assessments
+        for a topic.
+      summary: Topic Assessment History (Latest 3)
+      parameters:
+      - in: path
+        name: topic_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillAssessmentHistory'
+          description: ''
+  /api/v1/conversations/:
+    get:
+      operationId: v1_conversations_retrieve
+      description: List recent conversations or create a new conversation.
+      summary: List Conversations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_conversations_create
+      description: List recent conversations or create a new conversation.
+      summary: Create Conversation
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/conversations/{id}/:
+    get:
+      operationId: v1_conversations_retrieve_2
+      description: Retrieve complete message history and grounding citations for a
+        Conversation.
+      summary: Conversation Details & Messages
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/health/:
+    get:
+      operationId: v1_health_retrieve
+      description: Check status of Django core, database connection, Redis, and Celery
+        broker configuration.
+      summary: System Health Check
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/:
+    get:
+      operationId: v1_knowledge_retrieve
+      description: Overview endpoint for Knowledge & Personal Knowledge Model module.
+      summary: Knowledge Module Overview
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/concepts/:
+    get:
+      operationId: v1_knowledge_concepts_list
+      description: List extracted concepts with filtering by mapping status, topic,
+        and skill.
+      summary: List Extracted Concepts
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Concept'
+          description: ''
+  /api/v1/knowledge/concepts/{id}/:
+    get:
+      operationId: v1_knowledge_concepts_retrieve
+      description: View details of a single Concept.
+      summary: Concept Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Concept'
+          description: ''
+  /api/v1/knowledge/coverage/:
+    get:
+      operationId: v1_knowledge_coverage_retrieve
+      description: View knowledge coverage across skills, topics, and modalities.
+      summary: Get Knowledge Coverage Summary
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/evidence/:
+    get:
+      operationId: v1_knowledge_evidence_list
+      description: List or record knowledge evidence items.
+      summary: List Evidence
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Evidence'
+          description: ''
+    post:
+      operationId: v1_knowledge_evidence_create
+      description: List or record knowledge evidence items.
+      summary: Record Knowledge Evidence
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordEvidenceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecordEvidenceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordEvidenceRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Evidence'
+          description: ''
+  /api/v1/knowledge/gaps/:
+    get:
+      operationId: v1_knowledge_gaps_list
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: List Knowledge Gaps
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+    post:
+      operationId: v1_knowledge_gaps_create
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: Evaluate Knowledge Gaps
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+  /api/v1/knowledge/mastery/:
+    get:
+      operationId: v1_knowledge_mastery_list
+      description: List calculated mastery records across skills and topics.
+      summary: List Calculated Masteries
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/knowledge/profile/:
+    get:
+      operationId: v1_knowledge_profile_retrieve
+      description: High-level Personal Knowledge Model summary profile.
+      summary: Knowledge Model Profile
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeProfileResponse'
+          description: ''
+  /api/v1/knowledge/recalculate/:
+    post:
+      operationId: v1_knowledge_recalculate_create
+      description: Trigger full recalculation of masteries, coverage, gaps, and recommendations.
+      summary: Recalculate Derived Knowledge Model
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/recommendations/:
+    get:
+      operationId: v1_knowledge_recommendations_list
+      description: List recommendations and trigger new generation.
+      summary: List Recommendations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+    post:
+      operationId: v1_knowledge_recommendations_create
+      description: List recommendations and trigger new generation.
+      summary: Generate Recommendations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/knowledge/recommendations/{id}/:
+    get:
+      operationId: v1_knowledge_recommendations_retrieve
+      description: View and update recommendation status (completed, dismissed).
+      summary: Get Recommendation Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+    patch:
+      operationId: v1_knowledge_recommendations_partial_update
+      description: View and update recommendation status (completed, dismissed).
+      summary: Update Recommendation Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/knowledge/skills/{id}/:
+    get:
+      operationId: v1_knowledge_skills_retrieve
+      description: Aggregate knowledge metrics, covered concepts, and evidence for
+        a specific Skill.
+      summary: Skill Knowledge Summary
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SkillKnowledgeResponse'
+          description: ''
+  /api/v1/knowledge/skills/{id}/mastery/:
+    get:
+      operationId: v1_knowledge_skills_mastery_retrieve
+      description: View and recalculate mastery for a single Skill.
+      summary: Get Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: v1_knowledge_skills_mastery_create
+      description: View and recalculate mastery for a single Skill.
+      summary: Recalculate Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/knowledge/skills/{id}/summary/:
+    get:
+      operationId: v1_knowledge_skills_summary_retrieve
+      description: |-
+        Returns full integrated knowledge flow for a Skill:
+        Skill -> Evidence -> Score -> Mastery -> Gap -> Recommendation -> Roadmap Progress
+      summary: Integrated Skill Knowledge Summary
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/sources/{id}/extract/:
+    post:
+      operationId: v1_knowledge_sources_extract_create
+      description: Trigger the Knowledge Extraction pipeline for an ingested Source.
+      summary: Extract Knowledge from Source
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeExtractionResponse'
+          description: ''
+  /api/v1/knowledge/sources/{id}/retry/:
+    post:
+      operationId: v1_knowledge_sources_retry_create
+      description: Retry failed knowledge extraction jobs for a Source.
+      summary: Retry Knowledge Extraction
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/summary/:
+    get:
+      operationId: v1_knowledge_summary_retrieve
+      description: |-
+        Returns high-level dashboard summary across all skills, including:
+        Domain progress, roadmap level progress, and integrated skill snapshots.
+      summary: Overall Knowledge & Roadmap Summary
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/topics/{id}/:
+    get:
+      operationId: v1_knowledge_topics_retrieve
+      description: Summarize knowledge and skills status under a Topic.
+      summary: Topic Knowledge Summary
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/knowledge/topics/{id}/mastery/:
+    get:
+      operationId: v1_knowledge_topics_mastery_retrieve
+      description: View and recalculate mastery for a single Topic.
+      summary: Get Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: v1_knowledge_topics_mastery_create
+      description: View and recalculate mastery for a single Topic.
+      summary: Recalculate Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/mastery/:
+    get:
+      operationId: v1_mastery_list
+      description: List calculated mastery records across skills and topics.
+      summary: List Calculated Masteries
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/mastery/coverage/:
+    get:
+      operationId: v1_mastery_coverage_retrieve
+      description: View knowledge coverage across skills, topics, and modalities.
+      summary: Get Knowledge Coverage Summary
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mastery/recalculate/:
+    post:
+      operationId: v1_mastery_recalculate_create
+      description: Trigger full recalculation of masteries, coverage, gaps, and recommendations.
+      summary: Recalculate Derived Knowledge Model
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/mastery/skills/{id}/:
+    get:
+      operationId: v1_mastery_skills_retrieve
+      description: View and recalculate mastery for a single Skill.
+      summary: Get Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: v1_mastery_skills_create
+      description: View and recalculate mastery for a single Skill.
+      summary: Recalculate Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/mastery/skills/{id}/recalculate/:
+    get:
+      operationId: v1_mastery_skills_recalculate_retrieve
+      description: View and recalculate mastery for a single Skill.
+      summary: Get Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: v1_mastery_skills_recalculate_create
+      description: View and recalculate mastery for a single Skill.
+      summary: Recalculate Skill Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/mastery/topics/{id}/:
+    get:
+      operationId: v1_mastery_topics_retrieve
+      description: View and recalculate mastery for a single Topic.
+      summary: Get Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: v1_mastery_topics_create
+      description: View and recalculate mastery for a single Topic.
+      summary: Recalculate Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/mastery/topics/{id}/recalculate/:
+    get:
+      operationId: v1_mastery_topics_recalculate_retrieve
+      description: View and recalculate mastery for a single Topic.
+      summary: Get Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+    post:
+      operationId: v1_mastery_topics_recalculate_create
+      description: View and recalculate mastery for a single Topic.
+      summary: Recalculate Topic Mastery
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculatedMastery'
+          description: ''
+  /api/v1/processing/:
+    get:
+      operationId: v1_processing_retrieve
+      description: Unified system processing health and telemetry overview.
+      summary: Processing System Overview
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/processing/embeddings/:
+    get:
+      operationId: v1_processing_embeddings_retrieve
+      description: Check embedding pipeline metrics and trigger retries.
+      summary: Get Embedding Processing Status
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_processing_embeddings_create
+      description: Check embedding pipeline metrics and trigger retries.
+      summary: Retry Failed/Missing Embeddings
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/processing/extractions/:
+    get:
+      operationId: v1_processing_extractions_retrieve
+      description: Inspect concepts extraction and mapping pipeline metrics.
+      summary: Get Extraction Processing Status
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/processing/failures/:
+    get:
+      operationId: v1_processing_failures_retrieve
+      description: Unified failure diagnostics dashboard.
+      summary: List Processing Failures & Diagnostics
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/processing/sources/:
+    get:
+      operationId: v1_processing_sources_retrieve
+      description: List processing statuses and diagnostics across all knowledge sources.
+      summary: List Sources Processing Status
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/processing/sources/{id}/:
+    get:
+      operationId: v1_processing_sources_retrieve_2
+      description: Detailed processing breakdown and chunk embedding state for a single
+        Source.
+      summary: Get Source Processing Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/processing/sources/{id}/retry/:
+    post:
+      operationId: v1_processing_sources_retry_create
+      description: Retry ingestion and processing for a failed Source.
+      summary: Retry Source Processing
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/:
+    get:
+      operationId: v1_rag_retrieve
+      description: Overview endpoint for RAG module.
+      summary: RAG Module Overview
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/chat/:
+    post:
+      operationId: v1_rag_chat_create
+      description: Ask a question against stored knowledge using the full LangGraph
+        RAG pipeline.
+      summary: RAG Chat Question & Answer
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RAGChatRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RAGChatRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RAGChatRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RAGChatResponse'
+          description: ''
+  /api/v1/rag/conversations/:
+    get:
+      operationId: v1_rag_conversations_retrieve
+      description: List recent conversations or create a new conversation.
+      summary: List Conversations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_rag_conversations_create
+      description: List recent conversations or create a new conversation.
+      summary: Create Conversation
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/conversations/{id}/:
+    get:
+      operationId: v1_rag_conversations_retrieve_2
+      description: Retrieve complete message history and grounding citations for a
+        Conversation.
+      summary: Conversation Details & Messages
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/rag/search/:
+    post:
+      operationId: v1_rag_search_create
+      description: Search stored document chunks using dense embeddings and cosine
+        similarity.
+      summary: Vector Similarity Search
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VectorSearchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VectorSearchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VectorSearchRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VectorSearchResponse'
+          description: ''
+  /api/v1/recommendations/:
+    get:
+      operationId: v1_recommendations_list
+      description: List recommendations and trigger new generation.
+      summary: List Recommendations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+    post:
+      operationId: v1_recommendations_create
+      description: List recommendations and trigger new generation.
+      summary: Generate Recommendations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/recommendations/{id}/:
+    get:
+      operationId: v1_recommendations_retrieve
+      description: View and update recommendation status (completed, dismissed).
+      summary: Get Recommendation Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+    patch:
+      operationId: v1_recommendations_partial_update
+      description: View and update recommendation status (completed, dismissed).
+      summary: Update Recommendation Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUpdateRecommendation'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/recommendations/gaps/:
+    get:
+      operationId: v1_recommendations_gaps_list
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: List Knowledge Gaps
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+    post:
+      operationId: v1_recommendations_gaps_create
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: Evaluate Knowledge Gaps
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+  /api/v1/recommendations/gaps/evaluate/:
+    get:
+      operationId: v1_recommendations_gaps_evaluate_list
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: List Knowledge Gaps
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+    post:
+      operationId: v1_recommendations_gaps_evaluate_create
+      description: List identified knowledge gaps with filters and trigger re-evaluation.
+      summary: Evaluate Knowledge Gaps
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KnowledgeGap'
+          description: ''
+  /api/v1/recommendations/generate/:
+    get:
+      operationId: v1_recommendations_generate_list
+      description: List recommendations and trigger new generation.
+      summary: List Recommendations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+    post:
+      operationId: v1_recommendations_generate_create
+      description: List recommendations and trigger new generation.
+      summary: Generate Recommendations
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Recommendation'
+          description: ''
+  /api/v1/roadmap/:
+    get:
+      operationId: v1_roadmap_retrieve
+      description: Overview endpoint for Roadmap module.
+      summary: Roadmap Module Overview
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/roadmap/domains/:
+    get:
+      operationId: v1_roadmap_domains_list
+      description: List knowledge domains or retrieve active domain.
+      summary: List Domains
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Domain'
+          description: ''
+  /api/v1/roadmap/domains/{id}/:
+    get:
+      operationId: v1_roadmap_domains_retrieve
+      description: Retrieve details for a single knowledge domain.
+      summary: Get Domain Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+          description: ''
+  /api/v1/roadmap/domains/{id}/progress/:
+    get:
+      operationId: v1_roadmap_domains_progress_retrieve
+      description: View curriculum progress for all topics in a Domain.
+      summary: Get Domain Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/roadmap/domains/{id}/select/:
+    post:
+      operationId: v1_roadmap_domains_select_create
+      description: Select and activate a Domain as the user's primary roadmap focus.
+      summary: Select Active Domain
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Domain'
+          description: ''
+  /api/v1/roadmap/hierarchy/:
+    get:
+      operationId: v1_roadmap_hierarchy_retrieve
+      description: |-
+        Returns complete hierarchical roadmap tree:
+        Domain -> Topic -> Skill -> Progression Node
+      summary: Get Roadmap Hierarchy
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/roadmap/progress/:
+    get:
+      operationId: v1_roadmap_progress_retrieve
+      description: Calculate and retrieve overall curriculum roadmap progress for
+        domain and levels.
+      summary: Overall Roadmap Progress
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/roadmap/progress/levels/:
+    get:
+      operationId: v1_roadmap_progress_levels_retrieve
+      description: View curriculum progress broken down by Roadmap difficulty levels.
+      summary: Get Roadmap Level Progress
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/roadmap/skills/:
+    get:
+      operationId: v1_roadmap_skills_list
+      description: List skills with optional filtering by topic or difficulty.
+      summary: List Skills
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Skill'
+          description: ''
+  /api/v1/roadmap/skills/{id}/:
+    get:
+      operationId: v1_roadmap_skills_retrieve
+      description: Retrieve details for a specific Skill.
+      summary: Get Skill Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+          description: ''
+  /api/v1/roadmap/skills/{id}/progress/:
+    get:
+      operationId: v1_roadmap_skills_progress_retrieve
+      description: View and update curriculum progress for a single Skill.
+      summary: Get Skill Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_roadmap_skills_progress_create
+      description: View and update curriculum progress for a single Skill.
+      summary: Update Skill Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillProgress'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillProgress'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpdateSkillProgress'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/roadmap/topics/:
+    get:
+      operationId: v1_roadmap_topics_list
+      description: List topics under a domain or across all domains.
+      summary: List Topics
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/v1/roadmap/topics/{id}/:
+    get:
+      operationId: v1_roadmap_topics_retrieve
+      description: Retrieve details for a specific Topic.
+      summary: Get Topic Detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+          description: ''
+  /api/v1/roadmap/topics/{id}/progress/:
+    get:
+      operationId: v1_roadmap_topics_progress_retrieve
+      description: View curriculum progress for all skills in a Topic.
+      summary: Get Topic Roadmap Progress
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/v1/sources/:
+    get:
+      operationId: v1_sources_list
+      description: Retrieve all knowledge sources with optional filtering.
+      summary: List Sources
+      parameters:
+      - in: query
+        name: source_type
+        schema:
+          type: string
+        description: Filter by source type (note, article, pdf, youtube, manual)
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by status (pending, processing, completed, failed)
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/sources/{id}/:
+    get:
+      operationId: v1_sources_retrieve
+      description: Retrieve full details of a single knowledge source.
+      summary: Get Source Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+    delete:
+      operationId: v1_sources_destroy
+      description: Retrieve full details of a single knowledge source.
+      summary: Delete Source
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sources/{id}/chunks/:
+    get:
+      operationId: v1_sources_chunks_list
+      description: Retrieve all chunks generated for a source's document.
+      summary: Get Document Chunks
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentChunk'
+          description: ''
+  /api/v1/sources/{id}/documents/:
+    get:
+      operationId: v1_sources_documents_retrieve
+      description: Retrieve the normalized document generated for a source.
+      summary: Get Source Document
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+          description: ''
+  /api/v1/sources/{id}/embed/:
+    post:
+      operationId: v1_sources_embed_create
+      description: Trigger or re-generate dense vector embeddings for all chunks in
+        a Source.
+      summary: Generate/Regenerate Embeddings for Source
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  embedded_chunks:
+                    type: integer
+          description: ''
+  /api/v1/sources/{id}/retry/:
+    post:
+      operationId: v1_sources_retry_create
+      description: Retry ingestion and processing for a failed or pending source.
+      summary: Retry Source Processing
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/sources/{id}/status/:
+    get:
+      operationId: v1_sources_status_retrieve
+      description: Check processing status and error diagnostics for a knowledge source.
+      summary: Get Source Processing Status
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SourceStatus'
+          description: ''
+  /api/v1/sources/article/:
+    post:
+      operationId: v1_sources_article_create
+      description: Ingest a web article or blog post via URL.
+      summary: Add Web Article Source
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticleSourceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/sources/embed/retry/:
+    post:
+      operationId: v1_sources_embed_retry_create
+      description: Retry embedding generation for all document chunks that lack vectors.
+      summary: Retry Missing Embeddings Across All Sources
+      tags:
+      - v1
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_embedded:
+                    type: integer
+          description: ''
+  /api/v1/sources/pdf/:
+    post:
+      operationId: v1_sources_pdf_create
+      description: Upload a local PDF document for text extraction and chunking.
+      summary: Upload PDF Source
+      tags:
+      - v1
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PDFUpload'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PDFUpload'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/sources/text/:
+    post:
+      operationId: v1_sources_text_create
+      description: Ingest user-provided text, note, or manual knowledge.
+      summary: Add Text/Manual Source
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextSourceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+  /api/v1/sources/youtube/:
+    post:
+      operationId: v1_sources_youtube_create
+      description: Ingest a YouTube video transcript via URL.
+      summary: Add YouTube Video Source
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/YouTubeSourceCreate'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Source'
+          description: ''
+components:
+  schemas:
+    ActionTypeEnum:
+      enum:
+      - revise_topic
+      - study_concept
+      - read_source
+      - practice_questions
+      - build_project
+      - reassess_skill
+      type: string
+      description: |-
+        * `revise_topic` - Revise a Topic
+        * `study_concept` - Study a Missing Concept
+        * `read_source` - Read/Revisit a Source
+        * `practice_questions` - Practice Questions
+        * `build_project` - Build/Practice a Project
+        * `reassess_skill` - Reassess a Weak Skill
+    AnswerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        question_id:
+          type: string
+          format: uuid
+          readOnly: true
+        user_response:
+          type: string
+        accuracy:
+          type: number
+          format: double
+          description: Normalized accuracy value between 0.0 and 1.0.
+        score_awarded:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        is_correct:
+          type: boolean
+          nullable: true
+        feedback:
+          type: string
+      required:
+      - id
+      - question_id
+      - user_response
+    ArticleSourceCreate:
+      type: object
+      description: Payload for submitting web article or blog URL.
+      properties:
+        url:
+          type: string
+          format: uri
+        title:
+          type: string
+          default: ''
+          maxLength: 255
+        metadata:
+          type: object
+          additionalProperties: {}
+        run_async:
+          type: boolean
+          default: true
+      required:
+      - url
+    Assessment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        skill:
+          type: string
+          format: uuid
+          nullable: true
+        skill_name:
+          type: string
+          readOnly: true
+        topic:
+          type: string
+          format: uuid
+          nullable: true
+        topic_name:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/AssessmentStatusEnum'
+        difficulty_level:
+          $ref: '#/components/schemas/DifficultyLevelB85Enum'
+        passing_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: Passing threshold percentage (e.g. 70.00%).
+        time_limit_minutes:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          description: Optional time limit in minutes.
+        questions_count:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - questions_count
+      - skill_name
+      - title
+      - topic_name
+      - updated_at
+    AssessmentStatusEnum:
+      enum:
+      - draft
+      - active
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `active` - Active
+        * `completed` - Completed
+        * `failed` - Failed
+    Attempt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        assessment:
+          type: string
+          format: uuid
+        assessment_title:
+          type: string
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        total_points_possible:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        total_points_awarded:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          nullable: true
+          description: Achieved score percentage (0.00 to 100.00).
+        passed:
+          type: boolean
+          nullable: true
+        feedback:
+          type: string
+      required:
+      - assessment
+      - assessment_title
+      - id
+    AttemptResult:
+      type: object
+      properties:
+        attempt_id:
+          type: string
+        assessment_id:
+          type: string
+        title:
+          type: string
+        skill_name:
+          type: string
+          nullable: true
+        topic_name:
+          type: string
+          nullable: true
+        score_percentage:
+          type: number
+          format: double
+        passed:
+          type: boolean
+        total_points_possible:
+          type: number
+          format: double
+        total_points_awarded:
+          type: number
+          format: double
+        total_questions:
+          type: integer
+        correct_answers_count:
+          type: integer
+        answers:
+          type: array
+          items: {}
+        completed_at:
+          type: string
+        evidence_id:
+          type: string
+          nullable: true
+      required:
+      - answers
+      - assessment_id
+      - attempt_id
+      - completed_at
+      - correct_answers_count
+      - evidence_id
+      - passed
+      - score_percentage
+      - skill_name
+      - title
+      - topic_name
+      - total_points_awarded
+      - total_points_possible
+      - total_questions
+    CalculatedMastery:
+      type: object
+      description: Serializer for CalculatedMastery model.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        skill:
+          type: string
+          format: uuid
+          nullable: true
+        skill_name:
+          type: string
+          readOnly: true
+        topic:
+          type: string
+          format: uuid
+          nullable: true
+        topic_name:
+          type: string
+          readOnly: true
+        mastery_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: Calculated mastery level percentage (0.00 to 100.00).
+        mastery_level:
+          $ref: '#/components/schemas/MasteryLevelEnum'
+        knowledge_coverage:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: Calculated knowledge coverage percentage (0.00 to 100.00).
+        confidence_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          description: Confidence metric based on evidence freshness and diversity.
+        evidence_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        last_calculated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        calculation_metadata:
+          description: Stores algorithm version, breakdown by evidence type, and intermediate
+            weights.
+      required:
+      - id
+      - last_calculated_at
+      - skill_name
+      - topic_name
+    Citation:
+      type: object
+      description: Detailed attribution reference for a chunk used in answering.
+      properties:
+        chunk_id:
+          type: string
+        chunk_index:
+          type: integer
+        document:
+          type: object
+          additionalProperties: {}
+        source:
+          type: object
+          additionalProperties: {}
+        rank:
+          type: integer
+        similarity_score:
+          type: number
+          format: double
+        rerank_score:
+          type: number
+          format: double
+          nullable: true
+        page:
+          type: integer
+          nullable: true
+        timestamp:
+          type: string
+          nullable: true
+        snippet:
+          type: string
+      required:
+      - chunk_id
+      - chunk_index
+      - document
+      - rank
+      - similarity_score
+      - snippet
+      - source
+    Concept:
+      type: object
+      description: Serializer for Concept instances with mapped skills information.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        domain:
+          type: string
+          format: uuid
+          nullable: true
+        topic:
+          type: string
+          format: uuid
+          nullable: true
+        skills:
+          type: string
+          readOnly: true
+        evidence_count:
+          type: string
+          readOnly: true
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - evidence_count
+      - id
+      - name
+      - skills
+      - slug
+      - updated_at
+    CreateAssessmentRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        skill_id:
+          type: string
+          format: uuid
+          nullable: true
+        topic_id:
+          type: string
+          format: uuid
+          nullable: true
+        difficulty_level:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyLevelB85Enum'
+          default: intermediate
+        auto_generate:
+          type: boolean
+          default: true
+        passing_score:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          default: 70.0
+        time_limit_minutes:
+          type: integer
+          nullable: true
+    DifficultyLevelB85Enum:
+      enum:
+      - basic
+      - intermediate
+      - advanced
+      - expert
+      type: string
+      description: |-
+        * `basic` - Basic
+        * `intermediate` - Intermediate
+        * `advanced` - Advanced
+        * `expert` - Expert
+    Document:
+      type: object
+      description: Serializer for processed documents.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          maxLength: 512
+        content:
+          type: string
+          description: Extracted text or markdown content.
+        content_hash:
+          type: string
+          description: SHA-256 for change detection.
+          maxLength: 64
+        metadata: {}
+        chunks_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - chunks_count
+      - content
+      - created_at
+      - id
+      - updated_at
+    DocumentChunk:
+      type: object
+      description: Serializer for individual document chunks.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        chunk_index:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        content:
+          type: string
+        token_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        metadata: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - chunk_index
+      - content
+      - created_at
+      - id
+    Domain:
+      type: object
+      description: Serializer for knowledge Domain.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        is_active:
+          type: boolean
+        is_selected:
+          type: boolean
+          description: Currently active/selected domain for the user.
+        topic_count:
+          type: string
+          readOnly: true
+        skill_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - skill_count
+      - slug
+      - topic_count
+      - updated_at
+    Evidence:
+      type: object
+      description: Serializer for Evidence records.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        evidence_type:
+          $ref: '#/components/schemas/EvidenceTypeEnum'
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        source:
+          type: string
+          format: uuid
+          nullable: true
+        source_name:
+          type: string
+          readOnly: true
+        concept:
+          type: string
+          format: uuid
+          nullable: true
+        concept_name:
+          type: string
+          readOnly: true
+        topic:
+          type: string
+          format: uuid
+          nullable: true
+        topic_name:
+          type: string
+          readOnly: true
+        skill:
+          type: string
+          format: uuid
+          nullable: true
+        skill_name:
+          type: string
+          readOnly: true
+        raw_data:
+          description: Raw payload (e.g. self-ratings, git commit SHAs, quiz scores,
+            note references).
+        confidence_weight:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,2}(?:\.\d{0,2})?$
+          description: Evaluation weighting factor (0.00 to 1.00).
+        recorded_at:
+          type: string
+          format: date-time
+      required:
+      - concept_name
+      - evidence_type
+      - id
+      - skill_name
+      - source_name
+      - title
+      - topic_name
+    EvidenceTypeEnum:
+      enum:
+      - declared
+      - practical
+      - learning
+      - assessment
+      type: string
+      description: |-
+        * `declared` - User-Declared Knowledge
+        * `practical` - Practical/Project Evidence
+        * `learning` - Learning Evidence
+        * `assessment` - Assessment Result
+    GapTypeEnum:
+      enum:
+      - no_evidence
+      - weak_coverage
+      - weak_assessment
+      - below_level
+      type: string
+      description: |-
+        * `no_evidence` - Little or No Evidence
+        * `weak_coverage` - Weak Knowledge Coverage
+        * `weak_assessment` - Weak Assessment Performance
+        * `below_level` - Mastery Below Expected Roadmap Level
+    KnowledgeExtractionResponse:
+      type: object
+      description: Result after triggering source knowledge extraction.
+      properties:
+        source_id:
+          type: string
+        concepts_extracted:
+          type: integer
+        concepts_mapped:
+          type: integer
+        evidence_recorded:
+          type: integer
+        affected_skills:
+          type: array
+          items: {}
+        status:
+          type: string
+        error:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: {}
+      required:
+      - affected_skills
+      - concepts_extracted
+      - concepts_mapped
+      - evidence_recorded
+      - metadata
+      - source_id
+      - status
+    KnowledgeGap:
+      type: object
+      description: Serializer for KnowledgeGap model.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        skill:
+          type: string
+          format: uuid
+          nullable: true
+        skill_name:
+          type: string
+          readOnly: true
+        topic:
+          type: string
+          format: uuid
+          nullable: true
+        topic_name:
+          type: string
+          readOnly: true
+        gap_type:
+          $ref: '#/components/schemas/GapTypeEnum'
+        severity:
+          $ref: '#/components/schemas/SeverityEnum'
+        status:
+          $ref: '#/components/schemas/KnowledgeGapStatusEnum'
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        expected_level:
+          type: string
+          maxLength: 32
+        current_level:
+          type: string
+          maxLength: 32
+        current_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        target_score:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        identified_at:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        metadata: {}
+      required:
+      - gap_type
+      - id
+      - skill_name
+      - title
+      - topic_name
+    KnowledgeGapStatusEnum:
+      enum:
+      - active
+      - resolved
+      type: string
+      description: |-
+        * `active` - Active
+        * `resolved` - Resolved
+    KnowledgeProfileResponse:
+      type: object
+      description: High-level personal knowledge model profile across all roadmap
+        skills.
+      properties:
+        total_encountered_skills:
+          type: integer
+        total_roadmap_skills:
+          type: integer
+        coverage_percentage:
+          type: number
+          format: double
+        total_concepts_extracted:
+          type: integer
+        total_evidence_items:
+          type: integer
+        evidence_by_type:
+          type: object
+          additionalProperties: {}
+        encountered_skills:
+          type: array
+          items: {}
+      required:
+      - coverage_percentage
+      - encountered_skills
+      - evidence_by_type
+      - total_concepts_extracted
+      - total_encountered_skills
+      - total_evidence_items
+      - total_roadmap_skills
+    MasteryLevelEnum:
+      enum:
+      - beginner
+      - intermediate
+      - advanced
+      - expert
+      type: string
+      description: |-
+        * `beginner` - Beginner
+        * `intermediate` - Intermediate
+        * `advanced` - Advanced
+        * `expert` - Expert
+    PDFUpload:
+      type: object
+      description: Payload for uploading a local PDF document.
+      properties:
+        file:
+          type: string
+          format: uri
+        title:
+          type: string
+          default: ''
+          maxLength: 255
+        metadata:
+          type: object
+          additionalProperties: {}
+        run_async:
+          type: boolean
+          default: true
+      required:
+      - file
+    PatchedUpdateRecommendation:
+      type: object
+      description: Payload to update recommendation status.
+      properties:
+        status:
+          $ref: '#/components/schemas/StatusEfbEnum'
+    PriorityEnum:
+      enum:
+      - urgent
+      - high
+      - medium
+      - low
+      type: string
+      description: |-
+        * `urgent` - Urgent
+        * `high` - High
+        * `medium` - Medium
+        * `low` - Low
+    Question:
+      type: object
+      description: Student-facing question serializer (excludes correct answer during
+        active attempts).
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        question_type:
+          $ref: '#/components/schemas/QuestionTypeEnum'
+        difficulty_level:
+          type: string
+          description: basic, intermediate, advanced, or expert
+          maxLength: 32
+        prompt:
+          type: string
+          description: Question text or prompt.
+        options:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        points:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+      required:
+      - id
+      - options
+      - prompt
+    QuestionTypeEnum:
+      enum:
+      - mcq
+      - textual
+      - explanation
+      - code
+      type: string
+      description: |-
+        * `mcq` - Multiple Choice
+        * `textual` - Textual / Conceptual
+        * `explanation` - Explanation / Project-based
+        * `code` - Code / Practical
+    RAGChatRequest:
+      type: object
+      description: Request payload for querying stored knowledge via the RAG pipeline.
+      properties:
+        query:
+          type: string
+          maxLength: 2000
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+        domain_id:
+          type: string
+          format: uuid
+          nullable: true
+        retrieval_top_k:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 10
+        rerank_top_k:
+          type: integer
+          maximum: 20
+          minimum: 1
+          default: 4
+        source_types:
+          type: array
+          items:
+            type: string
+        source_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        document_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        min_similarity:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: 0.0
+      required:
+      - query
+    RAGChatResponse:
+      type: object
+      description: Full response envelope containing answer, citations, and conversation
+        linkage.
+      properties:
+        conversation_id:
+          type: string
+        message_id:
+          type: string
+        query:
+          type: string
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        retrieved_count:
+          type: integer
+        reranked_count:
+          type: integer
+        tokens_used:
+          type: integer
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: {}
+      required:
+      - answer
+      - citations
+      - conversation_id
+      - message_id
+      - metadata
+      - query
+      - reranked_count
+      - retrieved_count
+      - tokens_used
+    Recommendation:
+      type: object
+      description: Serializer for Recommendation model.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        gap:
+          type: string
+          format: uuid
+          nullable: true
+        skill:
+          type: string
+          format: uuid
+          nullable: true
+        skill_name:
+          type: string
+          readOnly: true
+        topic:
+          type: string
+          format: uuid
+          nullable: true
+        topic_name:
+          type: string
+          readOnly: true
+        action_type:
+          $ref: '#/components/schemas/ActionTypeEnum'
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        status:
+          $ref: '#/components/schemas/StatusEfbEnum'
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        suggested_action:
+          type: string
+        source:
+          type: string
+          format: uuid
+          nullable: true
+        source_title:
+          type: string
+          readOnly: true
+        concept:
+          type: string
+          format: uuid
+          nullable: true
+        assessment:
+          type: string
+          format: uuid
+          nullable: true
+        assessment_title:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        metadata: {}
+      required:
+      - action_type
+      - assessment_title
+      - created_at
+      - description
+      - id
+      - skill_name
+      - source_title
+      - title
+      - topic_name
+    RecordEvidenceRequest:
+      type: object
+      description: Payload to record new user-declared or practical knowledge evidence.
+      properties:
+        evidence_type:
+          $ref: '#/components/schemas/EvidenceTypeEnum'
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        skill_id:
+          type: string
+          format: uuid
+          nullable: true
+        concept_id:
+          type: string
+          format: uuid
+          nullable: true
+        confidence_weight:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: 0.0
+          default: 1.0
+        raw_data:
+          type: object
+          additionalProperties: {}
+      required:
+      - evidence_type
+      - title
+    SearchResultItem:
+      type: object
+      description: Individual vector search match item.
+      properties:
+        chunk_id:
+          type: string
+        chunk_index:
+          type: integer
+        content:
+          type: string
+        similarity_score:
+          type: number
+          format: double
+        distance:
+          type: number
+          format: double
+        document:
+          type: object
+          additionalProperties: {}
+        source:
+          type: object
+          additionalProperties: {}
+        metadata:
+          type: object
+          additionalProperties: {}
+      required:
+      - chunk_id
+      - chunk_index
+      - content
+      - distance
+      - document
+      - metadata
+      - similarity_score
+      - source
+    SeverityEnum:
+      enum:
+      - critical
+      - high
+      - medium
+      - low
+      type: string
+      description: |-
+        * `critical` - Critical
+        * `high` - High
+        * `medium` - Medium
+        * `low` - Low
+    Skill:
+      type: object
+      description: Serializer for roadmap Skill.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        topic:
+          type: string
+          format: uuid
+        topic_name:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        difficulty_level:
+          $ref: '#/components/schemas/SkillDifficultyLevelEnum'
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - slug
+      - topic
+      - topic_name
+      - updated_at
+    SkillAssessmentHistory:
+      type: object
+      properties:
+        target_id:
+          type: string
+        target_name:
+          type: string
+        target_type:
+          type: string
+        attempts_considered:
+          type: integer
+        average_score:
+          type: number
+          format: double
+        latest_score:
+          type: number
+          format: double
+          nullable: true
+        highest_score:
+          type: number
+          format: double
+          nullable: true
+        passing_rate:
+          type: number
+          format: double
+        trend:
+          type: string
+        attempts:
+          type: array
+          items: {}
+      required:
+      - attempts
+      - attempts_considered
+      - average_score
+      - highest_score
+      - latest_score
+      - passing_rate
+      - target_id
+      - target_name
+      - target_type
+      - trend
+    SkillDifficultyLevelEnum:
+      enum:
+      - beginner
+      - intermediate
+      - advanced
+      type: string
+      description: |-
+        * `beginner` - Beginner
+        * `intermediate` - Intermediate
+        * `advanced` - Advanced
+    SkillKnowledgeResponse:
+      type: object
+      description: Consolidated knowledge view for a skill.
+      properties:
+        skill_id:
+          type: string
+        skill_name:
+          type: string
+        topic_id:
+          type: string
+        topic_name:
+          type: string
+        difficulty_level:
+          type: string
+        total_evidence_count:
+          type: integer
+        evidence_breakdown:
+          type: object
+          additionalProperties: {}
+        covered_concepts:
+          type: array
+          items: {}
+        last_supported_at:
+          type: string
+          nullable: true
+        mastery_score:
+          type: number
+          format: double
+        confidence_score:
+          type: number
+          format: double
+        evidence_items:
+          type: array
+          items: {}
+      required:
+      - confidence_score
+      - covered_concepts
+      - difficulty_level
+      - evidence_breakdown
+      - evidence_items
+      - last_supported_at
+      - mastery_score
+      - skill_id
+      - skill_name
+      - topic_id
+      - topic_name
+      - total_evidence_count
+    Source:
+      type: object
+      description: Serializer for Source overview and detail.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        source_type:
+          $ref: '#/components/schemas/SourceType079Enum'
+        uri:
+          type: string
+          description: URL, repository link, or external identifier.
+          maxLength: 1024
+        file_path:
+          type: string
+          description: Local path if stored in media storage.
+          maxLength: 1024
+        status:
+          $ref: '#/components/schemas/StatusA8fEnum'
+        metadata: {}
+        error_message:
+          type: string
+        document:
+          allOf:
+          - $ref: '#/components/schemas/Document'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - document
+      - id
+      - name
+      - source_type
+      - updated_at
+    SourceStatus:
+      type: object
+      description: Status serializer for polling ingestion progress.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        source_type:
+          $ref: '#/components/schemas/SourceType079Enum'
+        status:
+          $ref: '#/components/schemas/StatusA8fEnum'
+        error_message:
+          type: string
+        document_id:
+          type: string
+          readOnly: true
+        chunk_count:
+          type: string
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - chunk_count
+      - document_id
+      - id
+      - name
+      - source_type
+      - updated_at
+    SourceType079Enum:
+      enum:
+      - note
+      - article
+      - pdf
+      - youtube
+      - manual
+      - github
+      type: string
+      description: |-
+        * `note` - Note
+        * `article` - Article/Blog
+        * `pdf` - PDF
+        * `youtube` - YouTube
+        * `manual` - Manual Knowledge
+        * `github` - Project/GitHub
+    StatusA8fEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `processing` - Processing
+        * `completed` - Completed
+        * `failed` - Failed
+    StatusEfbEnum:
+      enum:
+      - pending
+      - completed
+      - dismissed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `completed` - Completed
+        * `dismissed` - Dismissed
+    SubmitAnswerRequest:
+      type: object
+      properties:
+        question_id:
+          type: string
+          format: uuid
+        user_response:
+          type: string
+      required:
+      - question_id
+      - user_response
+    TextSourceCreate:
+      type: object
+      description: Payload for submitting text, notes, or manual knowledge.
+      properties:
+        title:
+          type: string
+          default: ''
+          maxLength: 255
+        content:
+          type: string
+        source_type:
+          allOf:
+          - $ref: '#/components/schemas/TextSourceCreateSourceTypeEnum'
+          default: note
+        metadata:
+          type: object
+          additionalProperties: {}
+        run_async:
+          type: boolean
+          default: false
+      required:
+      - content
+    TextSourceCreateSourceTypeEnum:
+      enum:
+      - note
+      - manual
+      type: string
+      description: |-
+        * `note` - note
+        * `manual` - manual
+    Topic:
+      type: object
+      description: Serializer for roadmap Topic with skills count.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        domain:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        order:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        skills_count:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - domain
+      - id
+      - name
+      - skills_count
+      - slug
+      - updated_at
+    UpdateSkillProgress:
+      type: object
+      description: Payload to update a skill's progression state.
+      properties:
+        status:
+          $ref: '#/components/schemas/UpdateSkillProgressStatusEnum'
+        is_current:
+          type: boolean
+          default: false
+        notes:
+          type: string
+          default: ''
+      required:
+      - status
+    UpdateSkillProgressStatusEnum:
+      enum:
+      - not_started
+      - in_progress
+      - completed
+      - mastered
+      type: string
+      description: |-
+        * `not_started` - Not Started
+        * `in_progress` - In Progress
+        * `completed` - Completed
+        * `mastered` - Mastered
+    VectorSearchRequest:
+      type: object
+      description: Payload for executing a vector similarity query.
+      properties:
+        query:
+          type: string
+          maxLength: 2000
+        top_k:
+          type: integer
+          maximum: 50
+          minimum: 1
+          default: 10
+        source_types:
+          type: array
+          items:
+            type: string
+          description: Optional filter by source types (e.g. ['note', 'pdf', 'youtube',
+            'article']).
+        source_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Optional list of Source UUIDs to restrict the search.
+        document_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Optional list of Document UUIDs to restrict the search.
+        min_similarity:
+          type: number
+          format: double
+          maximum: 1.0
+          minimum: 0.0
+          description: Optional minimum similarity cutoff (0.0 to 1.0).
+      required:
+      - query
+    VectorSearchResponse:
+      type: object
+      description: Response envelope for vector similarity search.
+      properties:
+        query:
+          type: string
+        total_results:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResultItem'
+      required:
+      - query
+      - results
+      - total_results
+    YouTubeSourceCreate:
+      type: object
+      description: Payload for submitting YouTube video URL.
+      properties:
+        url:
+          type: string
+        title:
+          type: string
+          default: ''
+          maxLength: 255
+        metadata:
+          type: object
+          additionalProperties: {}
+        run_async:
+          type: boolean
+          default: true
+      required:
+      - url
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

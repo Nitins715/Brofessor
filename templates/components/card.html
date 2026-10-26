@@ -1,0 +1,25 @@
+{# Reusable Card Component #}
+{# Props: title, subtitle, header_actions, id, extra_classes, padding #}
+<div {% if id %}id="{{ id }}"{% endif %}
+     class="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/80 rounded-xl overflow-hidden shadow-sm transition-smooth {{ extra_classes }}">
+  {% if title or header_actions %}
+    <div class="px-5 py-4 border-b border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between gap-4">
+      <div>
+        {% if title %}
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight">{{ title }}</h3>
+        {% endif %}
+        {% if subtitle %}
+          <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">{{ subtitle }}</p>
+        {% endif %}
+      </div>
+      {% if header_actions %}
+        <div class="flex items-center gap-2">
+          {{ header_actions|safe }}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+  <div class="{% if padding %}{{ padding }}{% else %}p-5{% endif %}">
+    {{ content|default:slot|safe }}
+  </div>
+</div>

@@ -1,0 +1,155 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Knowledge Model | Brofessor{% endblock %}
+{% block page_title %}Personal Knowledge Model{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Header #}
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h2 class="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Personal Knowledge Model
+        </h2>
+        <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+          {{ total_skills_count }} skills
+        </span>
+      </div>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+        Multi-dimensional view of demonstrated capabilities, evidence density, and assessment trends.
+      </p>
+    </div>
+  </div>
+
+  {# Filter Bar (Topic, Mastery Level, Search) #}
+  <div class="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-3">
+    <form method="get" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+      {# Topic Filter #}
+      <div>
+        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1">Topic</label>
+        <select name="topic_id"
+                onchange="this.form.submit()"
+                class="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-800 dark:text-zinc-200">
+          <option value="">All Topics</option>
+          {% for t in topics %}
+            <option value="{{ t.id }}" {% if selected_topic_id == t.id|stringformat:"s" %}selected{% endif %}>
+              {{ t.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      {# Mastery Level Filter #}
+      <div>
+        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1">Mastery Level</label>
+        <select name="mastery_level"
+                onchange="this.form.submit()"
+                class="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-800 dark:text-zinc-200">
+          <option value="all" {% if selected_mastery == 'all' %}selected{% endif %}>All Levels</option>
+          <option value="expert" {% if selected_mastery == 'expert' %}selected{% endif %}>Expert</option>
+          <option value="advanced" {% if selected_mastery == 'advanced' %}selected{% endif %}>Advanced</option>
+          <option value="intermediate" {% if selected_mastery == 'intermediate' %}selected{% endif %}>Intermediate</option>
+          <option value="beginner" {% if selected_mastery == 'beginner' %}selected{% endif %}>Beginner</option>
+          <option value="unrated" {% if selected_mastery == 'unrated' %}selected{% endif %}>Unrated</option>
+        </select>
+      </div>
+
+      {# Skill Search #}
+      <div>
+        <label class="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mb-1">Search Skill</label>
+        <div class="flex items-center gap-2">
+          <input type="text"
+                 name="q"
+                 value="{{ search_query }}"
+                 placeholder="Search by name..."
+                 class="w-full text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1.5 text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:border-indigo-500">
+          <button type="submit"
+                  class="px-3 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+            Go
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  {# Skills Knowledge Grid #}
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {% for skill in skills_data %}
+      <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-4 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth flex flex-col justify-between">
+
+        {# Skill Header #}
+        <div class="space-y-2">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <span class="text-[10px] font-mono text-zinc-400 block mb-0.5">{{ skill.topic_name }}</span>
+              <a href="/knowledge/skills/{{ skill.id }}/"
+                 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 hover:text-indigo-600 dark:hover:text-indigo-400 transition-smooth">
+                {{ skill.name }}
+              </a>
+            </div>
+            <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold shrink-0
+              {% if skill.mastery_level == 'expert' or skill.mastery_level == 'advanced' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400
+              {% elif skill.mastery_level == 'intermediate' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+              {% elif skill.mastery_level == 'beginner' %}bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300
+              {% else %}bg-zinc-100 text-zinc-400 dark:bg-zinc-800/50 dark:text-zinc-500{% endif %}">
+              {{ skill.mastery_level }}
+            </span>
+          </div>
+
+          {# Coverage Progress Bar #}
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px] font-mono">
+              <span class="text-zinc-400">Knowledge Coverage</span>
+              <span class="font-bold text-zinc-900 dark:text-zinc-100">{{ skill.mastery_score }}%</span>
+            </div>
+            <div class="w-full bg-zinc-100 dark:bg-zinc-800 h-2 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300
+                {% if skill.mastery_score >= 70 %}bg-emerald-500
+                {% elif skill.mastery_score >= 40 %}bg-amber-500
+                {% else %}bg-indigo-600 dark:bg-indigo-500{% endif %}"
+                style="width: {{ skill.mastery_score }}%;"></div>
+            </div>
+          </div>
+        </div>
+
+        {# Evidence Breakdown & Assessment Trend #}
+        <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800/60 space-y-2 text-xs">
+          {# Evidence count tag #}
+          <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+            <span>Evidence</span>
+            <span class="text-zinc-700 dark:text-zinc-300">
+              {{ skill.sources_count }} sources &bull; {{ skill.assessments_count }} assessments &bull; {{ skill.projects_count }} projects
+            </span>
+          </div>
+
+          {# Assessment Trend if present #}
+          {% if skill.trend_display %}
+            <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+              <span>Recent Performance</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-bold">
+                {{ skill.trend_display }}
+              </span>
+            </div>
+          {% endif %}
+
+          <div class="pt-2 flex items-center justify-end">
+            <a href="/knowledge/skills/{{ skill.id }}/"
+               class="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1">
+              Deep Dive Skill Details &rarr;
+            </a>
+          </div>
+        </div>
+
+      </div>
+    {% empty %}
+      <div class="col-span-full">
+        {% include "components/empty_state.html" with title="No skills match your filters" description="Try selecting a different domain, topic, or mastery level." action_text="Reset Filters" action_href="/knowledge/" %}
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,624 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}{{ assessment.title }} | Brofessor{% endblock %}
+{% block page_title %}{{ assessment.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+
+  {# Top Navigation & Context Bar #}
+  <div class="flex items-center justify-between gap-4 pb-4 border-b border-zinc-200 dark:border-zinc-800/80">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold
+          {% if assessment.difficulty_level == 'hard' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400
+          {% elif assessment.difficulty_level == 'medium' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400
+          {% else %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400{% endif %}">
+          {{ assessment.difficulty_level|upper }}
+        </span>
+        {% if assessment.skill %}
+          <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ assessment.skill.name }}</span>
+        {% elif assessment.topic %}
+          <span class="text-xs font-medium text-zinc-700 dark:text-zinc-300">{{ assessment.topic.name }}</span>
+        {% endif %}
+        <span class="text-[10px] font-mono text-zinc-400">
+          {% if assessment.difficulty_level == 'easy' %}
+            &bull; Local Ollama
+          {% else %}
+            &bull; Cloud LLM
+          {% endif %}
+        </span>
+      </div>
+      <h2 class="text-lg sm:text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 mt-1">
+        {{ assessment.title }}
+      </h2>
+    </div>
+
+    {# Exit Assessment button #}
+    <a href="{% url 'web-assessments' %}"
+       onclick="return confirmExit(event)"
+       class="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800">
+      &larr; Exit Session
+    </a>
+  </div>
+
+  {# Progress Indicator #}
+  <div class="space-y-2">
+    <div class="flex items-center justify-between text-xs font-mono">
+      <span id="progress-indicator-text" class="text-zinc-900 dark:text-zinc-100 font-semibold">
+        Question <span id="current-q-index">1</span> of {{ target_questions_count|default:10 }}
+      </span>
+      <div class="flex items-center gap-3">
+        <span id="answered-count-badge" class="text-[11px] text-zinc-400">
+          0 of {{ target_questions_count|default:10 }} answered
+        </span>
+        <span id="provider-badge" class="text-[10px] text-zinc-400 font-mono">
+          {{ assessment.provider_used|default:"Batch Generated" }}
+        </span>
+      </div>
+    </div>
+    
+    {# Progress Bar #}
+    <div class="w-full h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+      <div id="progress-bar-fill" class="h-full bg-zinc-900 dark:bg-zinc-100 transition-all duration-300" style="width: 0%;"></div>
+    </div>
+
+    {# Question Navigation Pills (1..10) #}
+    <div class="flex items-center gap-1.5 pt-1 overflow-x-auto pb-1" id="question-pills-container">
+      {% for i in pills_range %}
+        <button type="button"
+                id="pill-{{ i }}"
+                onclick="goToOrder({{ i }})"
+                class="w-7 h-7 rounded-lg text-xs font-mono font-medium flex items-center justify-center border transition-smooth shrink-0 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+          {{ i }}
+        </button>
+      {% empty %}
+        {% for i in "1234567890"|make_list %}
+          <button type="button"
+                  id="pill-{{ forloop.counter }}"
+                  onclick="goToOrder({{ forloop.counter }})"
+                  class="w-7 h-7 rounded-lg text-xs font-mono font-medium flex items-center justify-center border transition-smooth shrink-0 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+            {{ forloop.counter }}
+          </button>
+        {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+
+  {# Provider Error Banner (shown if Ollama / Cloud API is unconfigured or unreachable) #}
+  <div id="provider-error-banner" class="hidden p-4 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/20 text-xs text-rose-800 dark:text-rose-200 space-y-2">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2 font-bold uppercase tracking-wider">
+        <svg class="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span id="provider-error-title">Provider Configuration Notice</span>
+      </div>
+      <button type="button" onclick="retryGenerate()" class="px-3 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-medium shadow-sm transition-smooth">
+        Retry Generation
+      </button>
+    </div>
+    <p id="provider-error-message" class="text-zinc-600 dark:text-zinc-400">
+      The required model provider is not currently accessible.
+    </p>
+  </div>
+
+  {# Question Loading Card (shown while LLM generates the 10-question assessment) #}
+  <div id="question-loading-card" class="hidden p-8 sm:p-12 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm text-center space-y-4">
+    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 animate-pulse">
+      <svg class="w-7 h-7 animate-spin text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+      </svg>
+    </div>
+    <div class="space-y-1.5 max-w-md mx-auto">
+      <h3 class="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100" id="loading-header-text">
+        Your Assessment is Being Generated...
+      </h3>
+      <p id="loading-sub-text" class="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+        Generating all 10 questions in a single query so you can practice smoothly with zero wait time.
+      </p>
+      <div class="pt-2">
+        <span id="loading-provider-text" class="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/80 text-zinc-600 dark:text-zinc-400 font-mono">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+          Querying {% if assessment.difficulty_level == 'easy' %}local Ollama (llama3.2:1b){% else %}Cloud LLM API{% endif %}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {# Main Question Card #}
+  <div id="question-card" class="p-6 sm:p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800/80 bg-white dark:bg-zinc-900/60 shadow-sm space-y-6">
+    
+    {# Question Header #}
+    <div class="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800/60">
+      <div class="flex items-center gap-2">
+        <span id="q-type-badge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+          MCQ
+        </span>
+        <span id="q-concept-badge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400">
+          Concept
+        </span>
+        <span id="q-points-badge" class="text-[11px] font-mono text-zinc-400">
+          1 pt
+        </span>
+      </div>
+      <div class="text-[11px] font-mono text-zinc-400" id="timer-display">
+        Time: 0s
+      </div>
+    </div>
+
+    {# Question Prompt #}
+    <div class="space-y-2">
+      <div id="q-prompt" class="text-base sm:text-lg font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed space-y-3">
+        Loading question prompt...
+      </div>
+    </div>
+
+    {# MCQ Options Container #}
+    <div id="q-answer-container" class="space-y-3 pt-2">
+      {# Rendered dynamically via JavaScript #}
+    </div>
+
+    {# Evaluation Feedback Card (revealed upon submitting answer) #}
+    <div id="q-feedback-card" class="hidden p-4 rounded-xl border text-xs space-y-2 transition-all">
+      <div class="flex items-center justify-between">
+        <span id="feedback-result-badge" class="text-[11px] font-mono uppercase font-bold px-2 py-0.5 rounded">
+          CORRECT
+        </span>
+        <span id="feedback-time-badge" class="text-[10px] font-mono text-zinc-400"></span>
+      </div>
+      <p id="feedback-text" class="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed"></p>
+    </div>
+
+    {# Bottom Controls Bar #}
+    <div class="pt-6 border-t border-zinc-100 dark:border-zinc-800/60 flex items-center justify-between gap-4">
+      <button type="button"
+              id="btn-prev"
+              onclick="navigateQuestion(-1)"
+              class="px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-smooth disabled:opacity-40 disabled:cursor-not-allowed">
+        &larr; Previous
+      </button>
+
+      <div class="flex items-center gap-2">
+        {# Submit Answer Button (active when question unanswered) #}
+        <button type="button"
+                id="btn-submit-answer"
+                onclick="submitCurrentAnswer()"
+                class="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-semibold transition-smooth shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+          Submit Answer
+        </button>
+
+        {# Next Question Button (active after submission) #}
+        <button type="button"
+                id="btn-next"
+                onclick="navigateQuestion(1)"
+                class="hidden px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white text-xs font-semibold transition-smooth shadow-sm">
+          Next Question &rarr;
+        </button>
+
+        {# Finish Button (active on last question submission) #}
+        <button type="button"
+                id="btn-finish"
+                onclick="finishAndRedirect()"
+                class="hidden px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-smooth shadow-sm">
+          View Results & Weak Concepts &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// State Management
+const attemptId = "{{ attempt.id }}";
+const assessmentId = "{{ assessment.id }}";
+const skillId = "{{ skill.id|default:'' }}";
+const difficulty = "{{ difficulty|default:'easy' }}";
+const targetTotal = parseInt("{{ target_questions_count|default:10 }}", 10);
+
+// Preloaded cached questions
+let questions = JSON.parse('{{ questions_json_escaped|escapejs }}');
+let answersState = JSON.parse('{{ initial_answers_json|escapejs }}') || {};
+
+let currentOrder = 1;
+let selectedOption = null;
+let questionStartTime = Date.now();
+let timerInterval = null;
+
+// Timer ticker
+function resetTimer() {
+  questionStartTime = Date.now();
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const elapsed = Math.round((Date.now() - questionStartTime) / 1000);
+    const timerEl = document.getElementById('timer-display');
+    if (timerEl) timerEl.textContent = `Time: ${elapsed}s`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+}
+
+function confirmExit(e) {
+  if (Object.keys(answersState).length > 0) {
+    if (!confirm('Your session progress is saved. Exit back to assessments?')) {
+      e.preventDefault();
+      return false;
+    }
+  }
+  return true;
+}
+
+// Fetch or generate question at requested order
+async function loadQuestionAtOrder(order) {
+  currentOrder = order;
+  document.getElementById('current-q-index').textContent = order;
+  
+  // Check if we already have this question in memory
+  const existing = questions.find(q => q.order === order);
+  if (existing) {
+    renderQuestion(existing);
+    return;
+  }
+
+  // Not in memory; fetch or batch generate
+  document.getElementById('question-card').classList.add('hidden');
+  document.getElementById('question-loading-card').classList.remove('hidden');
+  document.getElementById('provider-error-banner').classList.add('hidden');
+
+  try {
+    const res = await fetch(`/api/v1/assessments/skills/${skillId}/next-question/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: JSON.stringify({
+        difficulty: difficulty,
+        order: order,
+        attempt_id: attemptId
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      document.getElementById('question-loading-card').classList.add('hidden');
+      document.getElementById('provider-error-banner').classList.remove('hidden');
+      document.getElementById('provider-error-title').textContent = data.error === 'provider_not_configured' 
+        ? `${(data.provider || 'Provider').toUpperCase()} Not Configured` 
+        : 'Provider Unavailable';
+      document.getElementById('provider-error-message').textContent = data.message || 'Generation failed.';
+      return;
+    }
+
+    // Cache ALL returned batch questions in client memory!
+    if (data.all_questions && Array.isArray(data.all_questions) && data.all_questions.length > 0) {
+      data.all_questions.forEach(q => {
+        const idx = questions.findIndex(existing => existing.order === q.order);
+        if (idx >= 0) {
+          questions[idx] = q;
+        } else {
+          questions.push(q);
+        }
+      });
+      questions.sort((a, b) => a.order - b.order);
+    } else if (data.question) {
+      const idx = questions.findIndex(existing => existing.order === data.question.order);
+      if (idx >= 0) {
+        questions[idx] = data.question;
+      } else {
+        questions.push(data.question);
+      }
+    }
+
+    const qObj = questions.find(q => q.order === order) || data.question;
+
+    if (data.is_answered && qObj) {
+      answersState[qObj.id] = {
+        user_response: data.user_response,
+        is_correct: data.is_correct,
+        feedback: data.feedback,
+        correct_answer: data.correct_answer,
+        distractor_explanations: data.distractor_explanations,
+        explanation: data.explanation
+      };
+    }
+
+    document.getElementById('question-loading-card').classList.add('hidden');
+    document.getElementById('question-card').classList.remove('hidden');
+    renderQuestion(qObj);
+
+  } catch (err) {
+    document.getElementById('question-loading-card').classList.add('hidden');
+    document.getElementById('provider-error-banner').classList.remove('hidden');
+    document.getElementById('provider-error-message').textContent = 'Network or connection error: ' + err.message;
+  }
+}
+
+function retryGenerate() {
+  loadQuestionAtOrder(currentOrder);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function renderFormattedPrompt(text) {
+  if (!text) return '';
+
+  // Match markdown code blocks: ```python\n...\n``` or ```...```
+  const codeBlockRegex = /```(?:[a-zA-Z]*\n)?([\s\S]*?)```/g;
+  let html = '';
+  let lastIndex = 0;
+  let match;
+
+  while ((match = codeBlockRegex.exec(text)) !== null) {
+    const textBefore = text.slice(lastIndex, match.index).trim();
+    if (textBefore) {
+      const inlineParsed = escapeHtml(textBefore).replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-mono text-xs font-semibold">$1</code>');
+      html += `<p class="text-base sm:text-lg font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed">${inlineParsed.replace(/\n/g, '<br>')}</p>`;
+    }
+
+    const codeSnippet = escapeHtml(match[1].trim());
+    html += `
+      <div class="my-3 rounded-xl bg-zinc-950 border border-zinc-800 p-4 font-mono text-xs sm:text-sm text-emerald-400 overflow-x-auto shadow-inner leading-relaxed">
+        <pre class="m-0 font-mono"><code>${codeSnippet}</code></pre>
+      </div>
+    `;
+    lastIndex = match.index + match[0].length;
+  }
+
+  const remaining = text.slice(lastIndex).trim();
+  if (remaining) {
+    const inlineParsed = escapeHtml(remaining).replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-mono text-xs font-semibold">$1</code>');
+    html += `<p class="text-base sm:text-lg font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed">${inlineParsed.replace(/\n/g, '<br>')}</p>`;
+  }
+
+  if (!html) {
+    const inlineParsed = escapeHtml(text).replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-mono text-xs font-semibold">$1</code>');
+    html = `<p class="text-base sm:text-lg font-medium text-zinc-900 dark:text-zinc-100 leading-relaxed">${inlineParsed.replace(/\n/g, '<br>')}</p>`;
+  }
+
+  return html;
+}
+
+function renderQuestion(q) {
+  document.getElementById('question-card').classList.remove('hidden');
+  document.getElementById('q-prompt').innerHTML = renderFormattedPrompt(q.prompt);
+  document.getElementById('q-points-badge').textContent = `${q.points} pt${q.points > 1 ? 's' : ''}`;
+  document.getElementById('q-concept-badge').textContent = q.concept || 'Core Concept';
+
+  const container = document.getElementById('q-answer-container');
+  container.innerHTML = '';
+  selectedOption = null;
+
+  const answerInfo = answersState[q.id];
+  const isAnswered = !!answerInfo;
+
+  // Options
+  (q.options || []).forEach(opt => {
+    const isSelected = isAnswered && answerInfo.user_response === opt.key;
+    const isCorrectOption = isAnswered && answerInfo.correct_answer === opt.key;
+
+    const optDiv = document.createElement('div');
+    optDiv.className = `flex items-center gap-3.5 p-4 rounded-xl border transition-smooth cursor-pointer ${
+      isAnswered
+        ? isCorrectOption
+          ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/40'
+          : isSelected
+            ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40'
+            : 'border-zinc-200/80 dark:border-zinc-800 opacity-60'
+        : 'border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600 bg-white dark:bg-zinc-900/40'
+    }`;
+
+    optDiv.innerHTML = `
+      <span class="w-6 h-6 rounded-md font-mono text-xs font-bold flex items-center justify-center shrink-0 ${
+        isAnswered
+          ? isCorrectOption
+            ? 'bg-emerald-600 text-white'
+            : isSelected
+              ? 'bg-rose-600 text-white'
+              : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+          : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+      }">
+        ${opt.key}
+      </span>
+      <span class="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-normal flex-1">
+        ${opt.text}
+      </span>
+    `;
+
+    if (!isAnswered) {
+      optDiv.addEventListener('click', () => {
+        container.querySelectorAll('div').forEach(d => {
+          d.classList.remove('border-zinc-900', 'dark:border-zinc-100', 'bg-zinc-50', 'dark:bg-zinc-800/80');
+        });
+        optDiv.classList.add('border-zinc-900', 'dark:border-zinc-100', 'bg-zinc-50', 'dark:bg-zinc-800/80');
+        selectedOption = opt.key;
+        document.getElementById('btn-submit-answer').disabled = false;
+      });
+    }
+
+    container.appendChild(optDiv);
+  });
+
+  // Feedback Card
+  const feedbackCard = document.getElementById('q-feedback-card');
+  if (isAnswered) {
+    stopTimer();
+    feedbackCard.classList.remove('hidden');
+    const badge = document.getElementById('feedback-result-badge');
+    if (answerInfo.is_correct) {
+      badge.textContent = 'CORRECT';
+      badge.className = 'text-[11px] font-mono uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300';
+      feedbackCard.className = 'p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-xs space-y-2';
+    } else {
+      badge.textContent = 'INCORRECT';
+      badge.className = 'text-[11px] font-mono uppercase font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300';
+      feedbackCard.className = 'p-4 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/40 dark:bg-rose-950/20 text-xs space-y-2';
+    }
+
+    const rawFeedback = answerInfo.feedback || 'Answer recorded.';
+    document.getElementById('feedback-text').innerHTML = escapeHtml(rawFeedback)
+      .replace(/`([^`]+)`/g, '<code class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 font-mono text-[11px] font-bold text-zinc-800 dark:text-zinc-200">$1</code>')
+      .replace(/\n/g, '<br>');
+    
+    // Buttons state
+    document.getElementById('btn-submit-answer').classList.add('hidden');
+    if (q.order >= targetTotal) {
+      document.getElementById('btn-next').classList.add('hidden');
+      document.getElementById('btn-finish').classList.remove('hidden');
+    } else {
+      document.getElementById('btn-next').classList.remove('hidden');
+      document.getElementById('btn-finish').classList.add('hidden');
+    }
+  } else {
+    resetTimer();
+    feedbackCard.classList.add('hidden');
+    document.getElementById('btn-submit-answer').classList.remove('hidden');
+    document.getElementById('btn-submit-answer').disabled = true;
+    document.getElementById('btn-next').classList.add('hidden');
+    document.getElementById('btn-finish').classList.add('hidden');
+  }
+
+  // Update pills and progress bar
+  document.getElementById('btn-prev').disabled = (q.order === 1);
+  updateProgressUI();
+}
+
+async function submitCurrentAnswer() {
+  if (!selectedOption) return;
+  const q = questions.find(item => item.order === currentOrder);
+  if (!q) return;
+
+  const btn = document.getElementById('btn-submit-answer');
+  btn.disabled = true;
+  btn.textContent = 'Evaluating...';
+
+  const responseTime = Math.round((Date.now() - questionStartTime) / 1000 * 10) / 10;
+
+  try {
+    const res = await fetch(`/api/v1/assessments/attempts/${attemptId}/answers/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: JSON.stringify({
+        question_id: q.id,
+        user_response: selectedOption,
+        response_time_seconds: responseTime
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Evaluation failed.');
+
+    answersState[q.id] = {
+      user_response: selectedOption,
+      is_correct: data.is_correct,
+      feedback: data.feedback,
+      correct_answer: data.correct_answer,
+      distractor_explanations: data.distractor_explanations,
+      explanation: data.explanation
+    };
+
+    btn.textContent = 'Submit Answer';
+    renderQuestion(q);
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'Submit Answer';
+    alert('Error submitting answer: ' + err.message);
+  }
+}
+
+function navigateQuestion(delta) {
+  const target = currentOrder + delta;
+  if (target >= 1 && target <= targetTotal) {
+    loadQuestionAtOrder(target);
+  }
+}
+
+function goToOrder(order) {
+  loadQuestionAtOrder(order);
+}
+
+function updateProgressUI() {
+  const answeredCount = Object.keys(answersState).length;
+  document.getElementById('answered-count-badge').textContent = `${answeredCount} of ${targetTotal} answered`;
+  
+  const pct = Math.round((currentOrder / targetTotal) * 100);
+  document.getElementById('progress-bar-fill').style.width = `${pct}%`;
+
+  const pillsContainer = document.getElementById('question-pills-container');
+  if (pillsContainer && pillsContainer.children.length < targetTotal) {
+    pillsContainer.innerHTML = '';
+    for (let i = 1; i <= targetTotal; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.id = `pill-${i}`;
+      btn.setAttribute('onclick', `goToOrder(${i})`);
+      btn.className = 'w-7 h-7 rounded-lg text-xs font-mono font-medium flex items-center justify-center border transition-smooth shrink-0 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800';
+      btn.textContent = i;
+      pillsContainer.appendChild(btn);
+    }
+  }
+
+  for (let i = 1; i <= targetTotal; i++) {
+    const pill = document.getElementById(`pill-${i}`);
+    if (!pill) continue;
+    const qObj = questions.find(q => q.order === i);
+    const isAns = qObj && answersState[qObj.id];
+
+    if (i === currentOrder) {
+      pill.className = 'w-7 h-7 rounded-lg text-xs font-mono font-bold flex items-center justify-center border transition-smooth shrink-0 border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900 ring-2 ring-zinc-400 dark:ring-zinc-600 ring-offset-2 dark:ring-offset-zinc-900';
+    } else if (isAns) {
+      pill.className = 'w-7 h-7 rounded-lg text-xs font-mono font-medium flex items-center justify-center border transition-smooth shrink-0 border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400';
+    } else {
+      pill.className = 'w-7 h-7 rounded-lg text-xs font-mono font-medium flex items-center justify-center border transition-smooth shrink-0 border-zinc-200 dark:border-zinc-800 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800';
+    }
+  }
+}
+
+async function finishAndRedirect() {
+  const btn = document.getElementById('btn-finish');
+  btn.disabled = true;
+  btn.textContent = 'Finalizing Assessment...';
+
+  try {
+    const res = await fetch(`/api/v1/assessments/attempts/${attemptId}/complete/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      }
+    });
+    if (!res.ok) throw new Error('Completion failed');
+    window.location.href = `/assessments/attempts/${attemptId}/result/`;
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'View Results & Weak Concepts →';
+    alert('Failed to complete attempt: ' + err.message);
+  }
+}
+
+// Initial Kickoff
+document.addEventListener('DOMContentLoaded', () => {
+  // If questions exist, find first unanswered order or 1
+  let initialOrder = 1;
+  for (const q of questions) {
+    if (!answersState[q.id]) {
+      initialOrder = q.order;
+      break;
+    }
+  }
+  loadQuestionAtOrder(initialOrder);
+});
+</script>
+{% endblock %}

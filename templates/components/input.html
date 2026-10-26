@@ -1,0 +1,30 @@
+{# Reusable Input Component #}
+{# Props: name, id, type, label, placeholder, value, required, help_text, error, icon, extra_classes, disabled, readonly #}
+<div class="w-full space-y-1.5 {{ extra_classes }}">
+  {% if label %}
+    <label for="{{ id|default:name }}" class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+      {{ label }}{% if required %}<span class="text-red-500 ml-0.5">*</span>{% endif %}
+    </label>
+  {% endif %}
+  <div class="relative rounded-lg shadow-sm">
+    {% if icon %}
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400">
+        {{ icon|safe }}
+      </div>
+    {% endif %}
+    <input type="{{ type|default:'text' }}"
+           name="{{ name }}"
+           id="{{ id|default:name }}"
+           value="{{ value|default:'' }}"
+           placeholder="{{ placeholder|default:'' }}"
+           {% if required %}required{% endif %}
+           {% if disabled %}disabled{% endif %}
+           {% if readonly %}readonly{% endif %}
+           class="block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 text-sm py-2 {% if icon %}pl-9{% else %}px-3{% endif %} pr-3 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none transition-smooth disabled:bg-zinc-100 dark:disabled:bg-zinc-800/50 disabled:text-zinc-500 {% if error %}border-red-500 dark:border-red-500 focus:border-red-500 focus:ring-red-500/20{% endif %}">
+  </div>
+  {% if error %}
+    <p class="text-xs text-red-500 mt-1">{{ error }}</p>
+  {% elif help_text %}
+    <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{{ help_text }}</p>
+  {% endif %}
+</div>

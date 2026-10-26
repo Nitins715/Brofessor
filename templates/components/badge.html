@@ -1,0 +1,22 @@
+{# Reusable Badge Component #}
+{# Props: text, variant (neutral|success|warning|danger|indigo|purple), dot (true|false), size (sm|md), extra_classes #}
+<span class="inline-flex items-center font-medium rounded-full select-none
+  {% if size == 'md' %}px-2.5 py-1 text-xs gap-1.5{% else %}px-2 py-0.5 text-[11px] gap-1{% endif %}
+  {% if variant == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40
+  {% elif variant == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/40
+  {% elif variant == 'danger' %}bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800/40
+  {% elif variant == 'indigo' %}bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-400 dark:border-indigo-800/40
+  {% elif variant == 'purple' %}bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800/40
+  {% else %}bg-zinc-100 text-zinc-700 border border-zinc-200 dark:bg-zinc-800/80 dark:text-zinc-300 dark:border-zinc-700/60{% endif %}
+  {{ extra_classes }}">
+  {% if dot %}
+    <span class="w-1.5 h-1.5 rounded-full
+      {% if variant == 'success' %}bg-emerald-500
+      {% elif variant == 'warning' %}bg-amber-500
+      {% elif variant == 'danger' %}bg-rose-500
+      {% elif variant == 'indigo' %}bg-indigo-500
+      {% elif variant == 'purple' %}bg-purple-500
+      {% else %}bg-zinc-400 dark:bg-zinc-500{% endif %}"></span>
+  {% endif %}
+  {{ text }}
+</span>

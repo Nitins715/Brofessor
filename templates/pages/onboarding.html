@@ -1,0 +1,946 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Onboarding | Brofessor{% endblock %}
+
+{% block layout %}
+<div class="min-h-full flex flex-col justify-between bg-zinc-50 dark:bg-zinc-950 px-4 py-6 sm:px-6 lg:px-8">
+
+  {# Top Header with Progress #}
+  <header class="w-full max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 py-4">
+    <div class="flex items-center gap-2.5">
+      <div class="w-6 h-6 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-950 flex items-center justify-center font-bold text-xs tracking-wider">
+        B
+      </div>
+      <span class="text-xs font-semibold tracking-wider text-zinc-900 dark:text-zinc-100">BROFESSOR</span>
+      <span class="text-zinc-300 dark:text-zinc-700">/</span>
+      <span class="text-xs text-zinc-500 font-mono" id="step-label">Step 1 of 5</span>
+    </div>
+
+    {# Progress Bar Indicator #}
+    <div class="flex items-center gap-2 w-full sm:w-64">
+      <div class="flex-1 bg-zinc-200 dark:bg-zinc-800 h-1.5 rounded-full overflow-hidden">
+        <div id="progress-bar-fill"
+             class="bg-zinc-900 dark:bg-white h-full transition-all duration-300"
+             style="width: 20%;"></div>
+      </div>
+      <span id="progress-pct" class="text-[11px] font-mono text-zinc-500">20%</span>
+    </div>
+
+    {# Theme toggle button #}
+    <button type="button"
+            onclick="window.BrofessorTheme.toggle()"
+            class="hidden sm:inline-flex p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm transition-smooth"
+            title="Toggle Theme">
+      <svg data-theme-icon-sun class="w-3.5 h-3.5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+      <svg data-theme-icon-moon class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+    </button>
+  </header>
+
+  {# Main Conversational Onboarding Container #}
+  <main class="w-full max-w-3xl mx-auto my-auto py-6">
+
+    {# STEP 1: WELCOME #}
+    <div id="onboarding-step-1" class="onboarding-step space-y-6">
+      <div class="text-center max-w-xl mx-auto space-y-4">
+        <div class="w-12 h-12 rounded-2xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center mx-auto shadow-md font-bold text-lg">
+          B
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Welcome to Brofessor
+        </h2>
+        <p class="text-base sm:text-lg text-zinc-600 dark:text-zinc-300 font-normal leading-relaxed">
+          Brofessor builds a personal model of <span class="font-semibold text-zinc-900 dark:text-white">what you know</span>, <span class="font-semibold text-zinc-900 dark:text-white">what you don't know</span>, and <span class="font-semibold text-zinc-900 dark:text-white">what you should learn next</span>.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+        <div class="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm space-y-2">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            1
+          </div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Focus on Your Domain</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Choose a structured curriculum tailored to your engineering or technical goals.</p>
+        </div>
+        <div class="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm space-y-2">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            2
+          </div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Declare & Ingest Evidence</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Add notes, docs, PDFs, articles, or videos to establish your knowledge profile.</p>
+        </div>
+        <div class="p-5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm space-y-2">
+          <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            3
+          </div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Close Knowledge Gaps</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Receive precise diagnostic assessments and prioritized recommendations.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-center pt-6">
+        <button type="button"
+                onclick="window.Onboarding.goToStep(2)"
+                class="px-6 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 font-medium text-sm shadow-sm transition-smooth flex items-center gap-2">
+          Get Started
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    {# STEP 2: SELECT DOMAIN #}
+    <div id="onboarding-step-2" class="onboarding-step space-y-6 hidden">
+      <div class="space-y-1">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Select Your Domain
+        </h2>
+        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+          Choose a primary technical discipline to ground your knowledge model and curriculum roadmap.
+        </p>
+      </div>
+
+      {# Domains List #}
+      <div id="domain-options-container" class="grid grid-cols-1 gap-3">
+        {% for domain in domains %}
+          <label class="domain-card relative flex items-start gap-3.5 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/70 hover:border-zinc-400 dark:hover:border-zinc-700 cursor-pointer transition-smooth {% if domain.is_selected %}border-indigo-500 dark:border-indigo-500 ring-1 ring-indigo-500/30{% endif %}">
+            <input type="radio"
+                   name="domain_choice"
+                   value="{{ domain.id }}"
+                   data-domain-name="{{ domain.name }}"
+                   {% if domain.is_selected %}checked{% endif %}
+                   class="mt-1 text-indigo-600 focus:ring-indigo-500">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{{ domain.name }}</h4>
+                <span class="text-[11px] font-mono text-zinc-400">{{ domain.topics.count }} topics</span>
+              </div>
+              <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-2">{{ domain.description }}</p>
+            </div>
+          </label>
+        {% empty %}
+          <div class="text-center py-6 text-zinc-400 text-xs">No domains found in database.</div>
+        {% endfor %}
+      </div>
+
+      {# Custom Domain Collapsible Form #}
+      <div class="pt-2">
+        <details class="group rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 p-4">
+          <summary class="flex items-center justify-between cursor-pointer text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 select-none">
+            <span>+ Create Custom Domain</span>
+            <span class="text-zinc-400 group-open:rotate-180 transition-transform">&darr;</span>
+          </summary>
+          <div class="mt-4 space-y-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60">
+            <div>
+              <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Domain Name</label>
+              <input type="text"
+                     id="custom-domain-name"
+                     placeholder="e.g. Distributed Systems"
+                     class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-sm py-1.5 px-3 focus:outline-none focus:border-indigo-500">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Description</label>
+              <input type="text"
+                     id="custom-domain-desc"
+                     placeholder="Brief description of the domain..."
+                     class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-sm py-1.5 px-3 focus:outline-none focus:border-indigo-500">
+            </div>
+            <button type="button"
+                    onclick="window.Onboarding.createCustomDomain()"
+                    class="px-3 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+              Add Domain
+            </button>
+          </div>
+        </details>
+      </div>
+
+      {# Navigation Buttons #}
+      <div class="flex items-center justify-between pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80">
+        <button type="button"
+                onclick="window.Onboarding.goToStep(1)"
+                class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+          &larr; Back
+        </button>
+        <button type="button"
+                id="btn-confirm-domain"
+                onclick="window.Onboarding.confirmDomain()"
+                class="px-5 py-2 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90 transition-smooth flex items-center gap-1.5">
+          Continue &rarr;
+        </button>
+      </div>
+    </div>
+
+    {# STEP 3: EXISTING KNOWLEDGE #}
+    <div id="onboarding-step-3" class="onboarding-step space-y-6 hidden">
+      <div class="space-y-1">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          What Do You Already Know?
+        </h2>
+        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+          Select topics you are already familiar with and rate your current confidence level (e.g. Python Programming, Data Structures &amp; Algorithms).
+        </p>
+      </div>
+
+      {# Topics Selection Container #}
+      <div id="topics-loading" class="py-12 flex justify-center">
+        {% include "components/loading_state.html" with label="Loading curriculum topics..." %}
+      </div>
+
+      <div id="topics-list" class="space-y-3 max-h-[440px] overflow-y-auto pr-1 hidden">
+        {# Populated dynamically by JS for chosen domain #}
+      </div>
+
+      {# Custom Topic Input #}
+      <div class="p-3 rounded-xl border border-dashed border-zinc-200 dark:border-zinc-800 bg-white/40 dark:bg-zinc-900/30 flex items-center gap-2">
+        <input type="text"
+               id="custom-topic-input"
+               placeholder="Add a custom topic you know (e.g. Python, DSA, Linear Algebra)..."
+               class="flex-1 bg-transparent text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-none px-2 py-1">
+        <select id="custom-topic-level" class="text-xs bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 text-zinc-700 dark:text-zinc-300">
+          <option value="beginner">Beginner</option>
+          <option value="intermediate" selected>Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+        <button type="button"
+                onclick="window.Onboarding.addCustomTopic()"
+                class="px-3 py-1 bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 rounded-lg text-xs font-medium hover:opacity-90 transition-smooth">
+          Add
+        </button>
+      </div>
+
+      {# Navigation Buttons #}
+      <div class="flex items-center justify-between pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80">
+        <button type="button"
+                onclick="window.Onboarding.goToStep(2)"
+                class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+          &larr; Back
+        </button>
+        <button type="button"
+                onclick="window.Onboarding.saveExistingKnowledge()"
+                id="btn-save-knowledge"
+                class="px-5 py-2 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90 transition-smooth flex items-center gap-1.5">
+          Continue &rarr;
+        </button>
+      </div>
+    </div>
+
+    {# STEP 4: EXISTING EVIDENCE #}
+    <div id="onboarding-step-4" class="onboarding-step space-y-6 hidden">
+      <div class="space-y-1">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Add Knowledge Evidence
+        </h2>
+        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+          Connect real materials to back your knowledge model: notes, PDFs, articles, or YouTube links.
+        </p>
+      </div>
+
+      {# Evidence Tabs #}
+      <div class="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-800 text-xs font-medium overflow-x-auto">
+        <button type="button"
+                onclick="window.Onboarding.setEvidenceTab('note')"
+                id="tab-btn-note"
+                class="evidence-tab-btn py-2 px-3 border-b-2 border-zinc-900 dark:border-white text-zinc-900 dark:text-white transition-smooth">
+          Notes / Text
+        </button>
+        <button type="button"
+                onclick="window.Onboarding.setEvidenceTab('pdf')"
+                id="tab-btn-pdf"
+                class="evidence-tab-btn py-2 px-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+          PDF Document
+        </button>
+        <button type="button"
+                onclick="window.Onboarding.setEvidenceTab('article')"
+                id="tab-btn-article"
+                class="evidence-tab-btn py-2 px-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+          Article URL
+        </button>
+        <button type="button"
+                onclick="window.Onboarding.setEvidenceTab('youtube')"
+                id="tab-btn-youtube"
+                class="evidence-tab-btn py-2 px-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+          YouTube URL
+        </button>
+        <button type="button"
+                onclick="window.Onboarding.setEvidenceTab('project')"
+                id="tab-btn-project"
+                class="evidence-tab-btn py-2 px-3 border-b-2 border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-smooth">
+          Project / GitHub
+        </button>
+      </div>
+
+      {# Tab Panels #}
+      <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-5 shadow-sm">
+        {# Note Tab #}
+        <div id="panel-note" class="evidence-panel space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Note Title</label>
+            <input type="text"
+                   id="evidence-note-title"
+                   placeholder="e.g. My Learnings on Attention Mechanisms"
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Content / Summary</label>
+            <textarea id="evidence-note-content"
+                      rows="4"
+                      placeholder="Paste your notes or write down what you know..."
+                      class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+          <button type="button"
+                  onclick="window.Onboarding.submitEvidence('note')"
+                  class="px-3.5 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+            Add Note Evidence
+          </button>
+        </div>
+
+        {# PDF Tab #}
+        <div id="panel-pdf" class="evidence-panel space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Document Title (Optional)</label>
+            <input type="text"
+                   id="evidence-pdf-title"
+                   placeholder="e.g. Attention Is All You Need Paper"
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Upload PDF File</label>
+            <input type="file"
+                   id="evidence-pdf-file"
+                   accept=".pdf"
+                   class="mt-1 block w-full text-xs text-zinc-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-zinc-100 dark:file:bg-zinc-800 file:text-zinc-700 dark:file:text-zinc-300 hover:file:bg-zinc-200">
+          </div>
+          <button type="button"
+                  onclick="window.Onboarding.submitEvidence('pdf')"
+                  class="px-3.5 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+            Upload & Ingest PDF
+          </button>
+        </div>
+
+        {# Article Tab #}
+        <div id="panel-article" class="evidence-panel space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Article / Blog URL</label>
+            <input type="url"
+                   id="evidence-article-url"
+                   placeholder="https://example.com/blog/understanding-transformers"
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Custom Title (Optional)</label>
+            <input type="text"
+                   id="evidence-article-title"
+                   placeholder="e.g. Deep Dive into Vector Search"
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <button type="button"
+                  onclick="window.Onboarding.submitEvidence('article')"
+                  class="px-3.5 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+            Add Article Evidence
+          </button>
+        </div>
+
+        {# YouTube Tab #}
+        <div id="panel-youtube" class="evidence-panel space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">YouTube Video URL</label>
+            <input type="url"
+                   id="evidence-youtube-url"
+                   placeholder="https://www.youtube.com/watch?v=..."
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Video Title (Optional)</label>
+            <input type="text"
+                   id="evidence-youtube-title"
+                   placeholder="e.g. 3Blue1Brown Attention"
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <button type="button"
+                  onclick="window.Onboarding.submitEvidence('youtube')"
+                  class="px-3.5 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+            Add YouTube Evidence
+          </button>
+        </div>
+
+        {# Project Tab #}
+        <div id="panel-project" class="evidence-panel space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Project Name / Repository</label>
+            <input type="text"
+                   id="evidence-project-name"
+                   placeholder="e.g. My LLM Agent Pipeline (github.com/...)"
+                   class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Key Capabilities Demonstrated</label>
+            <textarea id="evidence-project-desc"
+                      rows="3"
+                      placeholder="Describe what you built, architecture decisions, frameworks used..."
+                      class="mt-1 block w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-xs py-2 px-3 focus:outline-none focus:border-indigo-500"></textarea>
+          </div>
+          <button type="button"
+                  onclick="window.Onboarding.submitEvidence('project')"
+                  class="px-3.5 py-1.5 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90">
+            Record Project Evidence
+          </button>
+        </div>
+      </div>
+
+      {# Ingested Evidence Live List #}
+      <div class="space-y-2">
+        <h4 class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">Recorded Evidence In This Session</h4>
+        <div id="recorded-evidence-list" class="space-y-1.5">
+          <p id="no-evidence-placeholder" class="text-xs text-zinc-400 italic">No evidence items added yet. You may add some now or skip to proceed.</p>
+        </div>
+      </div>
+
+      {# Navigation Buttons #}
+      <div class="flex items-center justify-between pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80">
+        <button type="button"
+                onclick="window.Onboarding.goToStep(3)"
+                class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+          &larr; Back
+        </button>
+        <button type="button"
+                onclick="window.Onboarding.goToStep(5)"
+                class="px-5 py-2 rounded-lg bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium hover:opacity-90 transition-smooth flex items-center gap-1.5">
+          Next: Assessment &rarr;
+        </button>
+      </div>
+    </div>
+
+    {# STEP 5: INITIAL ASSESSMENT #}
+    <div id="onboarding-step-5" class="onboarding-step space-y-6 hidden">
+      <div class="space-y-1 text-center max-w-lg mx-auto">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Ready for Initial Assessment
+        </h2>
+        <p class="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+          Validate your knowledge with a brief diagnostic assessment, or jump straight into your personalized dashboard.
+        </p>
+      </div>
+
+      {# Assessment Card #}
+      <div id="assessment-card" class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm space-y-4">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 mb-2">
+              DIAGNOSTIC BENCHMARK
+            </span>
+            <h3 id="assessment-title" class="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+              Foundational Domain Assessment
+            </h3>
+            <p id="assessment-desc" class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+              Short questions to calibrate your mastery score, establish baseline coverage, and pinpoint early knowledge gaps.
+            </p>
+          </div>
+          <span class="text-xs font-mono text-zinc-400 shrink-0">~5-10 mins</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60">
+          <a id="btn-start-assessment-link"
+             href="{% url 'web-assessments' %}"
+             class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-sm transition-smooth text-center">
+            Start Diagnostic Assessment
+          </a>
+          <a href="{% url 'web-dashboard' %}"
+             class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium text-xs transition-smooth text-center">
+            Skip to Dashboard &rarr;
+          </a>
+        </div>
+      </div>
+
+      {# Navigation Buttons #}
+      <div class="flex items-center justify-between pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80">
+        <button type="button"
+                onclick="window.Onboarding.goToStep(4)"
+                class="px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+          &larr; Back
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer class="w-full max-w-3xl mx-auto text-center text-xs text-zinc-400 py-4">
+    Brofessor Onboarding Flow &bull; 1 to 5
+  </footer>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+window.Onboarding = (function() {
+  let state = {
+    currentStep: 1,
+    selectedDomainId: document.querySelector('input[name="domain_choice"]:checked')?.value || null,
+    selectedDomainName: document.querySelector('input[name="domain_choice"]:checked')?.dataset.domainName || null,
+    selectedTopics: {},
+    recordedEvidence: []
+  };
+
+  function updateProgress(step) {
+    state.currentStep = step;
+    const label = document.getElementById('step-label');
+    const bar = document.getElementById('progress-bar-fill');
+    const pct = document.getElementById('progress-pct');
+
+    const p = Math.round((step / 5) * 100);
+    if (label) label.textContent = `Step ${step} of 5`;
+    if (bar) bar.style.width = `${p}%`;
+    if (pct) pct.textContent = `${p}%`;
+
+    // Show/hide steps
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById(`onboarding-step-${i}`);
+      if (el) {
+        if (i === step) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      }
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Load topics for selected domain
+  async function loadTopicsForDomain(domainId) {
+    const listEl = document.getElementById('topics-list');
+    const loadingEl = document.getElementById('topics-loading');
+    if (!listEl || !loadingEl) return;
+
+    listEl.classList.add('hidden');
+    loadingEl.classList.remove('hidden');
+
+    try {
+      const res = await fetch(`/api/v1/roadmap/topics/?domain_id=${domainId}`);
+      if (!res.ok) throw new Error('Failed to load topics');
+      const topics = await res.json();
+
+      loadingEl.classList.add('hidden');
+      listEl.innerHTML = '';
+
+      if (topics.length === 0) {
+        listEl.innerHTML = '<p class="text-xs text-zinc-400 italic p-4 text-center">No topics registered for this domain yet. Add your own below!</p>';
+      } else {
+        topics.forEach(topic => {
+          const item = document.createElement('div');
+          item.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 hover:border-zinc-300 dark:hover:border-zinc-700 transition-smooth';
+
+          const priorityBadge = topic.priority ? `<span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">${topic.priority}</span>` : '';
+          const skillsBadge = topic.skills_count ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 font-medium">${topic.skills_count} skills</span>` : '';
+          const descText = topic.description ? `<p class="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1 mt-0.5">${topic.description}</p>` : '';
+
+          item.innerHTML = `
+            <label class="flex items-start gap-3 flex-1 min-w-0 cursor-pointer">
+              <input type="checkbox"
+                     data-topic-id="${topic.id}"
+                     data-topic-name="${topic.name}"
+                     onchange="window.Onboarding.toggleTopic(this)"
+                     class="mt-0.5 text-indigo-600 rounded border-zinc-300 focus:ring-indigo-500">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-xs sm:text-sm font-semibold text-zinc-800 dark:text-zinc-200">${topic.name}</span>
+                  ${priorityBadge}
+                  ${skillsBadge}
+                </div>
+                ${descText}
+              </div>
+            </label>
+            <div class="flex items-center gap-2 shrink-0 pl-7 sm:pl-0">
+              <span class="text-[11px] text-zinc-400">Confidence:</span>
+              <select data-topic-select="${topic.id}"
+                      disabled
+                      onchange="window.Onboarding.updateTopicConfidence('${topic.id}', this.value)"
+                      class="text-xs bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2 py-1 text-zinc-700 dark:text-zinc-300 disabled:opacity-40 focus:outline-none focus:border-indigo-500">
+                <option value="beginner">Beginner</option>
+                <option value="intermediate" selected>Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+          `;
+          listEl.appendChild(item);
+        });
+      }
+      listEl.classList.remove('hidden');
+    } catch (e) {
+      loadingEl.classList.add('hidden');
+      listEl.innerHTML = `<p class="text-xs text-red-500 p-4 text-center">${e.message}</p>`;
+      listEl.classList.remove('hidden');
+    }
+  }
+
+  return {
+    goToStep: function(step) {
+      if (step === 3 && state.selectedDomainId) {
+        const listEl = document.getElementById('topics-list');
+        if (listEl && listEl.children.length === 0) {
+          loadTopicsForDomain(state.selectedDomainId);
+        }
+      }
+      updateProgress(step);
+    },
+
+    confirmDomain: async function() {
+      const radio = document.querySelector('input[name="domain_choice"]:checked');
+      if (!radio) {
+        window.BrofessorToast.show('Please select a domain to proceed', 'warning');
+        return;
+      }
+      state.selectedDomainId = radio.value;
+      state.selectedDomainName = radio.dataset.domainName;
+
+      // Select domain via backend API
+      try {
+        await fetch(`/api/v1/roadmap/domains/${state.selectedDomainId}/select/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': window.getCsrfToken(),
+            'Content-Type': 'application/json'
+          }
+        });
+      } catch (e) {
+        console.warn('Domain selection background call:', e);
+      }
+
+      // Load topics for step 3
+      loadTopicsForDomain(state.selectedDomainId);
+      updateProgress(3);
+    },
+
+    createCustomDomain: async function() {
+      const nameInput = document.getElementById('custom-domain-name');
+      const descInput = document.getElementById('custom-domain-desc');
+      if (!nameInput || !nameInput.value.trim()) {
+        window.BrofessorToast.show('Domain name is required', 'warning');
+        return;
+      }
+
+      const name = nameInput.value.trim();
+      const desc = descInput ? descInput.value.trim() : '';
+
+      try {
+        const res = await fetch('/onboarding/api/create-domain/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': window.getCsrfToken(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: name, description: desc })
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.BrofessorToast.show(`Domain "${name}" created!`, 'success');
+          // Reload page to reflect or add to list
+          setTimeout(() => window.location.reload(), 600);
+        } else {
+          window.BrofessorToast.show(data.error || 'Failed to create domain', 'error');
+        }
+      } catch (e) {
+        window.BrofessorToast.show('Network error while creating domain', 'error');
+      }
+    },
+
+    toggleTopic: function(checkbox) {
+      const topicId = checkbox.dataset.topicId;
+      const select = document.querySelector(`select[data-topic-select="${topicId}"]`);
+      if (checkbox.checked) {
+        if (select) select.disabled = false;
+        state.selectedTopics[topicId] = {
+          name: checkbox.dataset.topicName,
+          confidence: select ? select.value : 'intermediate'
+        };
+      } else {
+        if (select) select.disabled = true;
+        delete state.selectedTopics[topicId];
+      }
+    },
+
+    // Backward-compatibility alias
+    toggleSkill: function(checkbox) {
+      this.toggleTopic(checkbox);
+    },
+
+    updateTopicConfidence: function(topicId, value) {
+      if (state.selectedTopics[topicId]) {
+        state.selectedTopics[topicId].confidence = value;
+      }
+    },
+
+    // Backward-compatibility alias
+    updateSkillConfidence: function(topicId, value) {
+      this.updateTopicConfidence(topicId, value);
+    },
+
+    addCustomTopic: async function() {
+      const input = document.getElementById('custom-topic-input');
+      const levelSelect = document.getElementById('custom-topic-level');
+      if (!input || !input.value.trim()) return;
+
+      const topicName = input.value.trim();
+      const level = levelSelect ? levelSelect.value : 'intermediate';
+
+      // Record declared evidence immediately
+      try {
+        const res = await fetch('/api/v1/knowledge/evidence/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': window.getCsrfToken(),
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            evidence_type: 'declared',
+            title: `Self-Declared Topic: ${topicName}`,
+            description: `Declared during initial onboarding with level ${level}.`,
+            confidence_weight: level === 'advanced' ? 0.9 : (level === 'intermediate' ? 0.6 : 0.3)
+          })
+        });
+
+        if (res.ok) {
+          window.BrofessorToast.show(`Added topic: ${topicName}`, 'success');
+          input.value = '';
+        }
+      } catch (e) {
+        window.BrofessorToast.show('Failed to save topic', 'error');
+      }
+    },
+
+    // Backward-compatibility alias
+    addCustomSkill: function() {
+      this.addCustomTopic();
+    },
+
+    saveExistingKnowledge: async function() {
+      const btn = document.getElementById('btn-save-knowledge');
+      if (btn) btn.disabled = true;
+
+      // Submit declared evidence for each selected topic
+      const topicIds = Object.keys(state.selectedTopics);
+      for (const id of topicIds) {
+        const info = state.selectedTopics[id];
+        const weight = info.confidence === 'advanced' ? 0.9 : (info.confidence === 'intermediate' ? 0.6 : 0.3);
+
+        try {
+          await fetch('/api/v1/knowledge/evidence/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.getCsrfToken(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              topic_id: id,
+              evidence_type: 'declared',
+              title: `Declared Knowledge: ${info.name}`,
+              description: `User indicated familiarity with topic "${info.name}" during onboarding with ${info.confidence} level.`,
+              confidence_weight: weight
+            })
+          });
+        } catch (e) {
+          console.warn('Evidence submission:', e);
+        }
+      }
+
+      if (btn) btn.disabled = false;
+      updateProgress(4);
+    },
+
+    setEvidenceTab: function(tabName) {
+      document.querySelectorAll('.evidence-tab-btn').forEach(btn => {
+        btn.classList.remove('border-zinc-900', 'dark:border-white', 'text-zinc-900', 'dark:text-white');
+        btn.classList.add('border-transparent', 'text-zinc-500');
+      });
+      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+      if (activeBtn) {
+        activeBtn.classList.add('border-zinc-900', 'dark:border-white', 'text-zinc-900', 'dark:text-white');
+        activeBtn.classList.remove('border-transparent', 'text-zinc-500');
+      }
+
+      document.querySelectorAll('.evidence-panel').forEach(panel => panel.classList.add('hidden'));
+      const activePanel = document.getElementById(`panel-${tabName}`);
+      if (activePanel) activePanel.classList.remove('hidden');
+    },
+
+    submitEvidence: async function(type) {
+      const placeholder = document.getElementById('no-evidence-placeholder');
+      const list = document.getElementById('recorded-evidence-list');
+
+      if (type === 'note') {
+        const title = document.getElementById('evidence-note-title').value.trim();
+        const content = document.getElementById('evidence-note-content').value.trim();
+        if (!content) {
+          window.BrofessorToast.show('Note content cannot be empty', 'warning');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/v1/sources/text/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.getCsrfToken(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              title: title || 'Onboarding Note',
+              content: content,
+              source_type: 'note',
+              run_async: false
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            window.BrofessorToast.show('Note ingested successfully', 'success');
+            document.getElementById('evidence-note-title').value = '';
+            document.getElementById('evidence-note-content').value = '';
+            if (placeholder) placeholder.remove();
+            list.innerHTML += `<div class="p-2 rounded border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between"><span class="font-medium text-zinc-900 dark:text-zinc-100">[Note] ${data.name}</span><span class="text-[10px] text-emerald-500">Ingested</span></div>`;
+          }
+        } catch (e) {
+          window.BrofessorToast.show('Failed to record note', 'error');
+        }
+      } else if (type === 'pdf') {
+        const fileInput = document.getElementById('evidence-pdf-file');
+        const title = document.getElementById('evidence-pdf-title').value.trim();
+        if (!fileInput.files || fileInput.files.length === 0) {
+          window.BrofessorToast.show('Please choose a PDF file', 'warning');
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        if (title) formData.append('title', title);
+        formData.append('run_async', 'false');
+
+        try {
+          const res = await fetch('/api/v1/sources/pdf/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.getCsrfToken()
+            },
+            body: formData
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            window.BrofessorToast.show('PDF uploaded and ingested', 'success');
+            fileInput.value = '';
+            document.getElementById('evidence-pdf-title').value = '';
+            if (placeholder) placeholder.remove();
+            list.innerHTML += `<div class="p-2 rounded border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between"><span class="font-medium text-zinc-900 dark:text-zinc-100">[PDF] ${data.name}</span><span class="text-[10px] text-emerald-500">Ingested</span></div>`;
+          }
+        } catch (e) {
+          window.BrofessorToast.show('Failed to upload PDF', 'error');
+        }
+      } else if (type === 'article') {
+        const url = document.getElementById('evidence-article-url').value.trim();
+        const title = document.getElementById('evidence-article-title').value.trim();
+        if (!url) {
+          window.BrofessorToast.show('Please provide a URL', 'warning');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/v1/sources/article/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.getCsrfToken(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              url: url,
+              title: title,
+              run_async: false
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            window.BrofessorToast.show('Article source queued', 'success');
+            document.getElementById('evidence-article-url').value = '';
+            document.getElementById('evidence-article-title').value = '';
+            if (placeholder) placeholder.remove();
+            list.innerHTML += `<div class="p-2 rounded border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between"><span class="font-medium text-zinc-900 dark:text-zinc-100">[Article] ${data.name}</span><span class="text-[10px] text-emerald-500">Recorded</span></div>`;
+          }
+        } catch (e) {
+          window.BrofessorToast.show('Failed to save article', 'error');
+        }
+      } else if (type === 'youtube') {
+        const url = document.getElementById('evidence-youtube-url').value.trim();
+        const title = document.getElementById('evidence-youtube-title').value.trim();
+        if (!url) {
+          window.BrofessorToast.show('Please provide a YouTube URL', 'warning');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/v1/sources/youtube/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.getCsrfToken(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              url: url,
+              title: title,
+              run_async: false
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            window.BrofessorToast.show('YouTube source queued', 'success');
+            document.getElementById('evidence-youtube-url').value = '';
+            document.getElementById('evidence-youtube-title').value = '';
+            if (placeholder) placeholder.remove();
+            list.innerHTML += `<div class="p-2 rounded border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between"><span class="font-medium text-zinc-900 dark:text-zinc-100">[YouTube] ${data.name}</span><span class="text-[10px] text-emerald-500">Recorded</span></div>`;
+          }
+        } catch (e) {
+          window.BrofessorToast.show('Failed to save video', 'error');
+        }
+      } else if (type === 'project') {
+        const name = document.getElementById('evidence-project-name').value.trim();
+        const desc = document.getElementById('evidence-project-desc').value.trim();
+        if (!name) {
+          window.BrofessorToast.show('Project name is required', 'warning');
+          return;
+        }
+
+        try {
+          const res = await fetch('/api/v1/knowledge/evidence/', {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': window.getCsrfToken(),
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              evidence_type: 'practical',
+              title: `Project: ${name}`,
+              description: desc || 'Practical repository/project experience.',
+              confidence_weight: 0.85
+            })
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            window.BrofessorToast.show('Project evidence recorded', 'success');
+            document.getElementById('evidence-project-name').value = '';
+            document.getElementById('evidence-project-desc').value = '';
+            if (placeholder) placeholder.remove();
+            list.innerHTML += `<div class="p-2 rounded border border-zinc-200 dark:border-zinc-800 text-xs flex items-center justify-between"><span class="font-medium text-zinc-900 dark:text-zinc-100">[Project] ${data.title}</span><span class="text-[10px] text-emerald-500">Recorded</span></div>`;
+          }
+        } catch (e) {
+          window.BrofessorToast.show('Failed to save project evidence', 'error');
+        }
+      }
+    }
+  };
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Environment variables & secrets (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+*.env
+
+# Local-first user data & databases (NEVER COMMIT USER DATA OR API KEYS)
+data/
+*.sqlite3
+*.db
+db.sqlite3
+
+# Static collected & Media files
+media/*
+!media/.gitkeep
+staticfiles/
+collected_static/
+
+# Logs
+logs/
+*.log
+
+# Scratch & temporary workspace files
+scratch/
+
+# IDE & OS files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Testing & Coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
