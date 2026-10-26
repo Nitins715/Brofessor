@@ -220,6 +220,44 @@ class SequentialQuestionGenerationService:
             if len(curr) >= target_count:
                 return curr
 
+            # 1. Reuse questions from user's 'Need to Learn' memory for this skill before calling LLM
+            if assessment.skill and len(curr) < target_count:
+                from apps.knowledge.services.knowledge_graph import KnowledgeGraphService
+                unmastered = KnowledgeGraphService.get_unmastered_questions_for_skill(
+                    skill=assessment.skill,
+                    limit=(target_count - len(curr)),
+                )
+                curr_prompts = {q.prompt.strip().lower() for q in curr}
+                for unmastered_q in unmastered:
+                    if unmastered_q.prompt.strip().lower() in curr_prompts:
+                        continue
+                    new_order = len(curr) + 1
+                    reused_q = Question.objects.create(
+                        assessment=assessment,
+                        question_type=unmastered_q.question_type,
+                        difficulty_level=unmastered_q.difficulty_level,
+                        concept=unmastered_q.concept,
+                        prompt=unmastered_q.prompt,
+                        options=unmastered_q.options,
+                        correct_answer=unmastered_q.correct_answer,
+                        distractor_explanations=unmastered_q.distractor_explanations,
+                        rubric=unmastered_q.rubric,
+                        points=unmastered_q.points,
+                        order=new_order,
+                        generation_metadata={
+                            "source": "knowledge_graph_need_to_learn",
+                            "original_question_id": str(unmastered_q.id),
+                        },
+                    )
+                    curr.append(reused_q)
+                    curr_prompts.add(unmastered_q.prompt.strip().lower())
+
+            if len(curr) >= target_count:
+                assessment.generation_status = Assessment.GenerationStatus.READY
+                assessment.save(update_fields=["generation_status"])
+                logger.info(f"Filled assessment '{assessment.title}' entirely from Need-to-Learn memory ({len(curr)} questions). Zero LLM calls needed.")
+                return curr
+
             active_llm = AssessmentProviderResolver.get_provider_for_difficulty(
                 difficulty=assessment.difficulty_level,
                 override_provider=llm_provider,
@@ -228,11 +266,12 @@ class SequentialQuestionGenerationService:
             assessment.generation_status = Assessment.GenerationStatus.GENERATING
             assessment.save(update_fields=["generation_status"])
 
+            needed_count = target_count - len(curr)
             user_prompt = cls._build_batch_context_prompt(
                 skill=assessment.skill,
                 topic=assessment.topic,
                 difficulty=assessment.difficulty_level,
-                target_count=target_count,
+                target_count=needed_count,
             )
 
             skill_name = assessment.skill.name if assessment.skill else assessment.title
@@ -277,10 +316,19 @@ class SequentialQuestionGenerationService:
                     next_order = 1
 
                     with transaction.atomic():
+                        # Re-check existing questions count under transaction lock
+                        current_db_count = assessment.questions.count()
+                        if current_db_count >= target_count:
+                            logger.info(
+                                f"Assessment '{assessment.title}' already reached {current_db_count} questions. Skipping duplicate batch."
+                            )
+                            return list(assessment.questions.filter(order__lte=target_count).order_by("order"))
+
                         for q_data in valid_questions:
                             while next_order in existing_orders:
                                 next_order += 1
-                            if next_order > target_count and len(created_objs) + len(curr) >= target_count:
+
+                            if next_order > target_count or (len(created_objs) + current_db_count >= target_count):
                                 break
 
                             q_obj = Question.objects.create(
@@ -301,6 +349,7 @@ class SequentialQuestionGenerationService:
                                     "latency_ms": latency_ms,
                                     "attempt": attempt_idx + 1,
                                     "batch": True,
+                                    "target_capped": True,
                                 },
                             )
                             existing_orders.add(next_order)
@@ -333,6 +382,20 @@ class SequentialQuestionGenerationService:
                     if isinstance(e, (ProviderNotConfiguredError, ProviderUnavailableError)):
                         raise
                     continue
+
+            # If cloud generation failed after all retries, attempt seamless fallback to local Ollama before failing
+            if getattr(active_llm, "provider_name", "") in ("gemini", "openai"):
+                try:
+                    logger.warning("Cloud generation failed after retries; seamlessly falling back to local Ollama...")
+                    ai_cfg = get_system_ai_config()
+                    local_llm = AssessmentProviderResolver._resolve_ollama(ai_cfg, assessment.difficulty_level)
+                    return cls.generate_all_questions_batch(
+                        assessment=assessment,
+                        target_count=target_count,
+                        llm_provider=local_llm,
+                    )
+                except Exception as fallback_err:
+                    logger.error(f"Fallback to local Ollama also failed: {fallback_err}")
 
             # If retries exhausted but we got at least some questions
             final_qs = list(assessment.questions.all().order_by("order"))

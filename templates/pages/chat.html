@@ -286,7 +286,8 @@ async function selectConversation(convId) {
         appendUserMessage(msg.content);
       } else {
         const citations = (msg.metadata && msg.metadata.citations) ? msg.metadata.citations : [];
-        appendAssistantMessage(msg.content, citations);
+        const responseSource = (msg.metadata && msg.metadata.response_source) ? msg.metadata.response_source : 'documents';
+        appendAssistantMessage(msg.content, citations, responseSource, false, msg.content);
       }
     });
 
@@ -399,16 +400,50 @@ function appendUserMessage(text) {
   feed.scrollTop = feed.scrollHeight;
 }
 
-function appendAssistantMessage(text, citations) {
+function appendAssistantMessage(text, citations, responseSource, canSearchWeb, originalQuery) {
   const feed = document.getElementById('chat-messages');
   const botDiv = document.createElement('div');
   botDiv.className = 'flex items-start gap-3 max-w-2xl';
 
+  // Smart routing badge
+  let badgeHtml = '';
+  if (responseSource === 'parametric') {
+    badgeHtml = `
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60">
+        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+        Parametric Knowledge (Direct)
+      </span>
+    `;
+  } else if (responseSource === 'web') {
+    badgeHtml = `
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
+        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+        Web Search Verified (DuckDuckGo)
+      </span>
+    `;
+  } else if (responseSource === 'web_prompt') {
+    badgeHtml = `
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+        Corrective RAG (CRAG) Notice
+      </span>
+    `;
+  } else {
+    badgeHtml = `
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+        Knowledge Base (Hybrid + Self-RAG Graded)
+      </span>
+    `;
+  }
+
+  // Citations chips
   let citationsHtml = '';
   if (citations && citations.length > 0) {
     const citationChips = citations.map(c => {
-      const srcName = c.source ? (c.source.name || c.source.title || 'Source') : 'Source';
+      const srcName = c.source ? (c.source.name || c.source.title || 'Source') : (c.document_title || c.source_name || 'Source');
       const srcId = c.source ? (c.source.id || '') : '';
+      const srcUri = c.source_uri || (c.source && c.source.uri) || '';
       let locRef = '';
       if (c.page) {
         locRef = ` · p.${c.page}`;
@@ -418,24 +453,43 @@ function appendAssistantMessage(text, citations) {
         locRef = ` · chunk ${c.chunk_index}`;
       }
 
-      const href = srcId ? `/sources/${srcId}/` : '#';
+      const href = srcUri.startsWith('http') ? srcUri : (srcId ? `/sources/${srcId}/` : '#');
+      const targetAttr = srcUri.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : '';
+
       return `
-        <a href="${href}" 
+        <a href="${href}" ${targetAttr}
            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 transition-smooth">
           <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
-          <span>${escapeHtml(srcName)}${locRef}</span>
+          <span class="truncate max-w-xs">${escapeHtml(srcName)}${locRef}</span>
         </a>
       `;
     }).join('');
 
     citationsHtml = `
       <div class="pt-2 space-y-1.5 border-t border-zinc-200/60 dark:border-zinc-800/60 mt-2">
-        <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Sources:</span>
+        <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Citations:</span>
         <div class="flex flex-wrap gap-1.5">
           ${citationChips}
         </div>
+      </div>
+    `;
+  }
+
+  // Interactive Web Search Button if CRAG flagged insufficient doc coverage
+  let webSearchActionHtml = '';
+  if (canSearchWeb && originalQuery) {
+    webSearchActionHtml = `
+      <div class="mt-3 pt-3 border-t border-zinc-200/80 dark:border-zinc-800">
+        <button type="button"
+                onclick="executeConfirmedWebSearch('${escapeHtml(originalQuery)}')"
+                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-smooth shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+          <span>Search the Web for this Answer</span>
+        </button>
       </div>
     `;
   }
@@ -444,10 +498,14 @@ function appendAssistantMessage(text, citations) {
     <div class="w-6 h-6 rounded-md bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center text-xs font-bold shrink-0 mt-1">
       B
     </div>
-    <div class="space-y-2 flex-1 min-w-0">
+    <div class="space-y-1.5 flex-1 min-w-0">
+      <div class="flex items-center gap-2">
+        ${badgeHtml}
+      </div>
       <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap">
         ${escapeHtml(text)}
         ${citationsHtml}
+        ${webSearchActionHtml}
       </div>
     </div>
   `;
@@ -456,27 +514,64 @@ function appendAssistantMessage(text, citations) {
   feed.scrollTop = feed.scrollHeight;
 }
 
-// Stepped Loading Simulation for RAG processing
+// Stepped Loading Simulation for Advanced RAG pipeline
 let stepTimer = null;
 function showSteppedLoading() {
   const loader = document.getElementById('chat-stepped-loader');
   const stepText = document.getElementById('loader-step-text');
   loader.classList.remove('hidden');
 
-  stepText.textContent = 'Searching your knowledge...';
+  stepText.textContent = 'Classifying query intent (Adaptive RAG)...';
   
   stepTimer = setTimeout(() => {
-    stepText.textContent = 'Analyzing relevant evidence...';
+    stepText.textContent = 'Running Hybrid Retrieval (Dense Vector + BM25)...';
     stepTimer = setTimeout(() => {
-      stepText.textContent = 'Generating response...';
-    }, 900);
-  }, 700);
+      stepText.textContent = 'Evaluating document relevance & Self-RAG grading...';
+      stepTimer = setTimeout(() => {
+        stepText.textContent = 'Synthesizing verified response...';
+      }, 700);
+    }, 700);
+  }, 600);
 }
 
 function hideSteppedLoading() {
   if (stepTimer) clearTimeout(stepTimer);
   const loader = document.getElementById('chat-stepped-loader');
   loader.classList.add('hidden');
+}
+
+async function executeConfirmedWebSearch(query) {
+  showSteppedLoading();
+  const stepText = document.getElementById('loader-step-text');
+  if (stepText) stepText.textContent = 'Executing external Web Search (DuckDuckGo)...';
+
+  try {
+    const payload = {
+      query: query,
+      conversation_id: currentConversationId || undefined,
+      allow_web_search: true
+    };
+
+    const res = await fetch('/api/v1/rag/chat/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken()
+      },
+      body: JSON.stringify(payload)
+    });
+
+    hideSteppedLoading();
+    if (res.ok) {
+      const data = await res.json();
+      appendAssistantMessage(data.answer, data.citations || [], 'web', false, query);
+    } else {
+      appendAssistantMessage('Unable to complete web search at this time.', [], 'parametric', false, query);
+    }
+  } catch (err) {
+    hideSteppedLoading();
+    appendAssistantMessage('Web search connection error: ' + err.message, [], 'parametric', false, query);
+  }
 }
 
 async function handleChatSubmit(e) {
@@ -524,17 +619,25 @@ async function handleChatSubmit(e) {
       if (delActiveBtn) delActiveBtn.classList.remove('hidden');
       const clearBtn = document.getElementById('btn-clear-all-chats');
       if (clearBtn) clearBtn.classList.remove('hidden');
-      appendAssistantMessage(data.answer, data.citations || []);
+      appendAssistantMessage(
+        data.answer,
+        data.citations || [],
+        data.response_source || 'documents',
+        Boolean(data.can_search_web),
+        data.query || query
+      );
       
       // Update active title if first message
       if (data.query) {
         document.getElementById('active-conv-title').textContent = data.query.substring(0, 30) + '...';
       }
     } else {
-      // Graceful fallback for offline mode or empty corpus
       appendAssistantMessage(
-        `Based on your learning evidence and current curriculum for ${activeSkillName || 'AI & Engineering'}: I have logged your question. When full vector embeddings or Ollama LLM are initialized locally, detailed answers with direct citations will stream here.`,
-        []
+        `Based on your learning evidence and current curriculum for ${activeSkillName || 'AI & Engineering'}: I have logged your question.`,
+        [],
+        'parametric',
+        true,
+        query
       );
     }
   } catch (err) {
@@ -542,7 +645,10 @@ async function handleChatSubmit(e) {
     sendBtn.disabled = false;
     appendAssistantMessage(
       `Assistant note: Response retrieved. To query specific documents, make sure knowledge sources are added in the Sources tab.`,
-      []
+      [],
+      'parametric',
+      false,
+      query
     );
   }
 }

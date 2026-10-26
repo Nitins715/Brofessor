@@ -49,61 +49,64 @@ class MockTestLLMProvider(BaseLLMProvider):
 
 
 class AssessmentProviderResolverTestCase(TestCase):
-    """Tests that difficulty tiers strictly resolve to their mandated providers."""
+    """Tests that assessment generation resolves to Cloud by default if available, else Local Ollama."""
 
-    def test_easy_tier_resolves_ollama(self):
+    def test_cloud_available_uses_gemini_by_default(self):
         with patch("apps.assessments.services.provider_resolver.get_system_ai_config") as mock_cfg:
             mock_cfg.return_value = {
-                "llm_provider": "ollama",
+                "llm_provider": "auto",
+                "gemini_api_key": "dummy-gemini-key",
+                "gemini_model": "gemini-2.5-flash",
                 "ollama_base_url": "http://127.0.0.1:11434",
                 "ollama_model": "llama3.2",
             }
+            # Cloud is used by default when API key is provided
             provider = AssessmentProviderResolver.get_provider_for_difficulty("easy")
-            self.assertEqual(provider.provider_name, "ollama")
-            self.assertEqual(provider.model_name, "llama3.2")
-
-    def test_easy_tier_missing_ollama_raises_error(self):
-        with patch("apps.assessments.services.provider_resolver.get_system_ai_config") as mock_cfg:
-            mock_cfg.return_value = {
-                "llm_provider": "gemini",
-                "ollama_base_url": "",
-                "ollama_model": "",
-            }
-            with self.assertRaises(ProviderNotConfiguredError) as ctx:
-                AssessmentProviderResolver.get_provider_for_difficulty("easy")
-            self.assertEqual(ctx.exception.provider, "ollama")
-            self.assertEqual(ctx.exception.difficulty, "easy")
-
-    def test_medium_tier_resolves_cloud(self):
-        with patch("apps.assessments.services.provider_resolver.get_system_ai_config") as mock_cfg:
-            mock_cfg.return_value = {
-                "llm_provider": "gemini",
-                "gemini_api_key": "dummy-gemini-key",
-                "gemini_model": "gemini-2.5-flash",
-            }
-            provider = AssessmentProviderResolver.get_provider_for_difficulty("medium")
             self.assertEqual(provider.provider_name, "gemini")
 
-    def test_hard_tier_resolves_cloud(self):
+            provider_med = AssessmentProviderResolver.get_provider_for_difficulty("medium")
+            self.assertEqual(provider_med.provider_name, "gemini")
+
+    def test_cloud_available_uses_openai(self):
         with patch("apps.assessments.services.provider_resolver.get_system_ai_config") as mock_cfg:
             mock_cfg.return_value = {
-                "llm_provider": "openai",
+                "llm_provider": "auto",
+                "gemini_api_key": "",
                 "openai_api_key": "sk-dummy-key",
                 "openai_model": "gpt-4o-mini",
             }
             provider = AssessmentProviderResolver.get_provider_for_difficulty("hard")
             self.assertEqual(provider.provider_name, "openai")
 
-    def test_cloud_missing_credentials_raises_error(self):
+    def test_cloud_unconfigured_falls_back_to_local_ollama(self):
         with patch("apps.assessments.services.provider_resolver.get_system_ai_config") as mock_cfg:
             mock_cfg.return_value = {
-                "llm_provider": "ollama",  # Cloud is unconfigured
+                "llm_provider": "auto",
                 "gemini_api_key": "",
                 "openai_api_key": "",
+                "ollama_base_url": "http://127.0.0.1:11434",
+                "ollama_model": "llama3.2",
+            }
+            # When cloud credentials are empty, falls back seamlessly to Ollama for all tasks
+            provider = AssessmentProviderResolver.get_provider_for_difficulty("easy")
+            self.assertEqual(provider.provider_name, "ollama")
+            self.assertEqual(provider.model_name, "llama3.2")
+
+            provider_med = AssessmentProviderResolver.get_provider_for_difficulty("medium")
+            self.assertEqual(provider_med.provider_name, "ollama")
+
+    def test_both_unconfigured_raises_error(self):
+        with patch("apps.assessments.services.provider_resolver.get_system_ai_config") as mock_cfg:
+            mock_cfg.return_value = {
+                "llm_provider": "auto",
+                "gemini_api_key": "",
+                "openai_api_key": "",
+                "ollama_base_url": "",
+                "ollama_model": "",
             }
             with self.assertRaises(ProviderNotConfiguredError) as ctx:
-                AssessmentProviderResolver.get_provider_for_difficulty("medium")
-            self.assertIn(ctx.exception.provider, ("gemini", "openai", "cloud"))
+                AssessmentProviderResolver.get_provider_for_difficulty("easy")
+            self.assertEqual(ctx.exception.provider, "ollama")
 
 
 class QuestionValidatorTestCase(TestCase):

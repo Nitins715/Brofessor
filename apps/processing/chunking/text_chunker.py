@@ -26,64 +26,106 @@ class TextChunker:
         """Rough token approximation (avg 4 characters per token)."""
         return max(1, math.ceil(len(text) / 4))
 
-    def _split_text(self, text: str, separators: List[str]) -> List[str]:
-        """Recursively split text by separators until pieces fit within chunk_size."""
-        final_chunks: List[str] = []
+    def _extract_blocks(self, text: str) -> List[Dict[str, Any]]:
+        """
+        Decomposes document into semantic blocks: headings, code blocks, and natural paragraphs.
+        Preserves complete code blocks and markdown sections without fragmentation.
+        """
+        import re
 
-        if not text:
-            return final_chunks
+        # Identify fenced code blocks first to protect them from splitting
+        code_block_pattern = re.compile(r"(```[\s\S]*?```)", re.MULTILINE)
+        parts = code_block_pattern.split(text)
 
-        # Find the highest-priority separator present in text
-        separator = ""
-        new_separators: List[str] = []
-        for i, sep in enumerate(separators):
-            if sep == "":
-                separator = ""
-                break
-            if sep in text:
-                separator = sep
-                new_separators = separators[i + 1 :]
-                break
+        blocks: List[Dict[str, Any]] = []
+        current_heading = ""
 
-        splits = text.split(separator) if separator else list(text)
-
-        current_doc: List[str] = []
-        total_len = 0
-
-        for s in splits:
-            s_len = len(s) + (len(separator) if current_doc else 0)
-            if total_len + s_len <= self.config.chunk_size:
-                current_doc.append(s)
-                total_len += s_len
+        for part in parts:
+            if not part:
+                continue
+            if part.startswith("```") and part.endswith("```"):
+                # Treat entire code block as an indivisible semantic block
+                blocks.append({
+                    "type": "code",
+                    "text": part.strip(),
+                    "heading": current_heading,
+                })
             else:
-                if current_doc:
-                    doc_text = separator.join(current_doc).strip()
-                    if doc_text:
-                        final_chunks.append(doc_text)
-                    current_doc = []
-                    total_len = 0
+                # Split text into paragraphs by blank lines
+                raw_paragraphs = re.split(r"\n\s*\n", part)
+                for para in raw_paragraphs:
+                    cleaned_para = para.strip()
+                    if not cleaned_para:
+                        continue
+                    # Check if paragraph is a markdown heading
+                    if cleaned_para.startswith("#"):
+                        current_heading = cleaned_para.split("\n")[0].strip("# \t")
+                    blocks.append({
+                        "type": "text",
+                        "text": cleaned_para,
+                        "heading": current_heading,
+                    })
+        return blocks
 
-                # If single split item exceeds chunk_size, recurse with next separator
-                if len(s) > self.config.chunk_size:
-                    if new_separators:
-                        sub_chunks = self._split_text(s, new_separators)
-                        final_chunks.extend(sub_chunks)
+    def _split_text(self, text: str, separators: List[str]) -> List[str]:
+        """
+        Paragraph & Semantic-Aware chunking:
+        Groups cohesive paragraphs up to chunk_size without arbitrary mid-sentence cuts.
+        """
+        blocks = self._extract_blocks(text)
+        if not blocks:
+            return []
+
+        chunks: List[str] = []
+        current_chunk_parts: List[str] = []
+        current_chunk_len = 0
+
+        for block in blocks:
+            b_text = block["text"]
+            b_len = len(b_text)
+
+            # If a single block (e.g. large code block or huge paragraph) exceeds chunk_size
+            if b_len > self.config.chunk_size:
+                # Flush existing chunk parts
+                if current_chunk_parts:
+                    chunks.append("\n\n".join(current_chunk_parts).strip())
+                    current_chunk_parts = []
+                    current_chunk_len = 0
+
+                # Split large block by sentence or newline boundaries
+                sub_lines = b_text.split("\n")
+                sub_accum: List[str] = []
+                sub_len = 0
+                for line in sub_lines:
+                    if sub_len + len(line) + 1 <= self.config.chunk_size:
+                        sub_accum.append(line)
+                        sub_len += len(line) + 1
                     else:
-                        # Hard character boundary split
-                        for start_idx in range(0, len(s), self.config.chunk_size):
-                            piece = s[start_idx : start_idx + self.config.chunk_size].strip()
-                            if piece:
-                                final_chunks.append(piece)
-                else:
-                    current_doc.append(s)
-                    total_len = len(s)
+                        if sub_accum:
+                            chunks.append("\n".join(sub_accum).strip())
+                            sub_accum = []
+                            sub_len = 0
+                        sub_accum.append(line)
+                        sub_len = len(line)
+                if sub_accum:
+                    chunks.append("\n".join(sub_accum).strip())
+                continue
 
-        if current_doc:
-            doc_text = separator.join(current_doc).strip()
-            if doc_text:
-                final_chunks.append(doc_text)
+            # Check if adding this block fits within the chunk size
+            projected_len = current_chunk_len + (2 if current_chunk_parts else 0) + b_len
+            if projected_len <= self.config.chunk_size:
+                current_chunk_parts.append(b_text)
+                current_chunk_len = projected_len
+            else:
+                if current_chunk_parts:
+                    chunks.append("\n\n".join(current_chunk_parts).strip())
+                current_chunk_parts = [b_text]
+                current_chunk_len = b_len
 
-        return final_chunks
+        if current_chunk_parts:
+            chunks.append("\n\n".join(current_chunk_parts).strip())
+
+        return chunks
 
     def _apply_overlap(self, raw_chunks: List[str]) -> List[str]:
         """Apply sliding window overlap across adjacent chunks."""

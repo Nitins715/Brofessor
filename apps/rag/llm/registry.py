@@ -27,7 +27,7 @@ def get_system_ai_config() -> Dict[str, Any]:
     return {
         "llm_provider": saved.get("llm_provider") or getattr(settings, "LLM_PROVIDER", "ollama"),
         "gemini_api_key": saved.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", ""),
-        "gemini_model": saved.get("gemini_model") or getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash"),
+        "gemini_model": saved.get("gemini_model") or getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash"),
         "openai_api_key": saved.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", ""),
         "openai_model": saved.get("openai_model") or getattr(settings, "OPENAI_MODEL", "gpt-4o-mini"),
         "openai_base_url": saved.get("openai_base_url") or getattr(settings, "OPENAI_BASE_URL", "https://api.openai.com/v1"),
@@ -49,22 +49,26 @@ def save_system_ai_config(updates: Dict[str, Any]) -> Dict[str, Any]:
 def get_llm_provider(provider_name: Optional[str] = None) -> BaseLLMProvider:
     """
     Factory resolving active LLM generation provider.
-    Supported: 'gemini', 'openai', 'ollama', 'mock'.
+    Supported: 'gemini', 'openai', 'ollama', 'mock', 'auto'.
+    Auto-priority: Uses Cloud (Gemini/OpenAI) by default if API key is provided,
+    otherwise automatically falls back to Local Ollama for every task.
+    No manual user selection required.
     """
     ai_cfg = get_system_ai_config()
-    provider = provider_name or ai_cfg.get("llm_provider") or getattr(settings, "LLM_PROVIDER", "ollama")
-    normalized = provider.lower().strip()
+    normalized = (provider_name or "").lower().strip()
 
     if normalized in ("mock", "test"):
         return MockLLMProvider()
-    elif normalized in ("gemini", "google"):
+
+    # Explicit provider requests
+    if normalized in ("gemini", "google"):
         return GeminiLLMProvider(
-            api_key=ai_cfg.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", ""),
-            model_name=ai_cfg.get("gemini_model") or getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash"),
+            api_key=(ai_cfg.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", "")).strip(),
+            model_name=ai_cfg.get("gemini_model") or getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash"),
         )
-    elif normalized in ("openai", "openrouter", "groq", "cloud"):
+    elif normalized in ("openai", "openrouter", "groq"):
         return OpenAILLMProvider(
-            api_key=ai_cfg.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", ""),
+            api_key=(ai_cfg.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", "")).strip(),
             model_name=ai_cfg.get("openai_model") or getattr(settings, "OPENAI_MODEL", "gpt-4o-mini"),
             base_url=ai_cfg.get("openai_base_url") or getattr(settings, "OPENAI_BASE_URL", "https://api.openai.com/v1"),
         )
@@ -73,5 +77,24 @@ def get_llm_provider(provider_name: Optional[str] = None) -> BaseLLMProvider:
             base_url=ai_cfg.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
             model_name=ai_cfg.get("ollama_model") or getattr(settings, "OLLAMA_MODEL", "llama3.2"),
         )
+
+    # AUTO PRIORITY: Use cloud by default if available, else local Ollama
+    gemini_key = (ai_cfg.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", "")).strip()
+    openai_key = (ai_cfg.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", "")).strip()
+
+    if gemini_key:
+        return GeminiLLMProvider(
+            api_key=gemini_key,
+            model_name=ai_cfg.get("gemini_model") or getattr(settings, "GEMINI_MODEL", "gemini-3.6-flash"),
+        )
+    elif openai_key:
+        return OpenAILLMProvider(
+            api_key=openai_key,
+            model_name=ai_cfg.get("openai_model") or getattr(settings, "OPENAI_MODEL", "gpt-4o-mini"),
+            base_url=ai_cfg.get("openai_base_url") or getattr(settings, "OPENAI_BASE_URL", "https://api.openai.com/v1"),
+        )
     else:
-        return OllamaLLMProvider()
+        return OllamaLLMProvider(
+            base_url=ai_cfg.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
+            model_name=ai_cfg.get("ollama_model") or getattr(settings, "OLLAMA_MODEL", "llama3.2"),
+        )

@@ -173,7 +173,8 @@ class AssessmentEngineService:
             assessment = attempt.assessment
             skill = assessment.skill
             topic = assessment.topic or (skill.topic if skill else None)
-            questions = list(assessment.questions.all().order_by("order"))
+            target_count = assessment.target_questions_count or 10
+            questions = list(assessment.questions.filter(order__lte=target_count).order_by("order"))
 
             # Check if any questions were unsubmitted, grade them with empty response
             existing_answers = {a.question_id: a for a in attempt.answers.all()}
@@ -186,8 +187,12 @@ class AssessmentEngineService:
                         llm_provider=llm_provider,
                     )
 
-            # Reload answers
-            answers = list(attempt.answers.select_related("question").order_by("question__order"))
+            # Reload answers only up to target count
+            answers = list(
+                attempt.answers.filter(question__order__lte=target_count)
+                .select_related("question")
+                .order_by("question__order")
+            )
 
             total_possible = sum(Decimal(str(q.points)) for q in questions)
             total_awarded = sum(a.score_awarded for a in answers)

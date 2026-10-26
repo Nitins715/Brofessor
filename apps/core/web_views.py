@@ -825,6 +825,18 @@ class SourceRetryView(LoginRequiredMixin, View):
         return redirect("web-source-detail", pk=pk)
 
 
+class SourceDeleteView(LoginRequiredMixin, View):
+    """Delete a knowledge source and all its related documents and chunks."""
+    login_url = "/login/"
+
+    def post(self, request, pk):
+        source = get_object_or_404(Source, pk=pk)
+        source_name = source.name
+        source.delete()
+        messages.success(request, f"Source '{source_name}' was successfully deleted.")
+        return redirect("web-sources")
+
+
 class AssessmentsView(LoginRequiredMixin, View):
     """Diagnostic assessments listing with trends, attempts history, and test launcher."""
     login_url = "/login/"
@@ -992,8 +1004,8 @@ class AssessmentResultView(LoginRequiredMixin, View):
 
         assessment = attempt.assessment
         skill = assessment.skill
-        topic = assessment.topic or (skill.topic if skill else None)
-        questions = list(assessment.questions.all().order_by("order"))
+        target_count = assessment.target_questions_count or 10
+        questions = list(assessment.questions.filter(order__lte=target_count).order_by("order"))
         answers_map = {a.question_id: a for a in attempt.answers.select_related("question").all()}
 
         answers_breakdown = []
@@ -1163,12 +1175,30 @@ class ChatView(LoginRequiredMixin, View):
         return render(request, "pages/chat.html", context)
 
 
-class KnowledgeGapsView(LoginRequiredMixin, View):
-    """Identified knowledge gaps grouped by severity and actionable remediation recommendations."""
+class KnowledgeGraphView(LoginRequiredMixin, View):
+    """
+    Personal Performance Knowledge Graph & Question Memory View:
+    1. Need-to-Learn Queue: Diagnostic questions answered incorrectly, queued for re-testing.
+    2. Mastered Graph: Questions answered correctly and retained.
+    3. Retains roadmap gaps and recommendations for curriculum alignment.
+    """
     login_url = "/login/"
 
     def get(self, request):
+        from apps.knowledge.services.knowledge_graph import KnowledgeGraphService
+
         active_domain = Domain.objects.filter(is_selected=True).first() or Domain.objects.first()
+        active_tab = request.GET.get("tab", "")
+
+        # 1. Performance Memory Data
+        knowledge_stats = KnowledgeGraphService.get_user_knowledge_stats(domain=active_domain)
+        need_to_learn_items = KnowledgeGraphService.get_need_to_learn_queue(domain=active_domain)
+        mastered_items = KnowledgeGraphService.get_mastered_nodes(domain=active_domain)
+
+        if not active_tab:
+            active_tab = "need_to_learn" if need_to_learn_items else "mastered"
+
+        # 2. Existing Gap & Recommendation data for backward compatibility
         gaps_qs = KnowledgeGap.objects.filter(status=KnowledgeGap.Status.ACTIVE).select_related("skill", "topic").prefetch_related("recommendations").order_by("-identified_at")
 
         if active_domain:
@@ -1214,8 +1244,12 @@ class KnowledgeGapsView(LoginRequiredMixin, View):
         recommendations = Recommendation.objects.filter(status=Recommendation.Status.PENDING).select_related("skill", "topic", "assessment", "source").order_by("-created_at")[:6]
 
         context = {
-            "current_nav": "gaps",
+            "current_nav": "knowledge_graph",
+            "active_tab": active_tab,
             "active_domain": active_domain,
+            "knowledge_stats": knowledge_stats,
+            "need_to_learn_items": need_to_learn_items,
+            "mastered_items": mastered_items,
             "high_gaps": high_gaps,
             "medium_gaps": medium_gaps,
             "low_gaps": low_gaps,
@@ -1224,6 +1258,9 @@ class KnowledgeGapsView(LoginRequiredMixin, View):
             "recommendations": recommendations,
         }
         return render(request, "pages/gaps.html", context)
+
+
+KnowledgeGapsView = KnowledgeGraphView
 
 
 class SettingsView(LoginRequiredMixin, View):
@@ -1250,7 +1287,6 @@ class SettingsView(LoginRequiredMixin, View):
 
         if action == "save_ai":
             from apps.rag.llm import save_system_ai_config
-            provider = request.POST.get("llm_provider", "ollama").strip()
             gemini_key = request.POST.get("gemini_api_key", "").strip()
             gemini_model = request.POST.get("gemini_model", "gemini-1.5-flash").strip()
             ollama_url = request.POST.get("ollama_base_url", "").strip()
@@ -1259,14 +1295,18 @@ class SettingsView(LoginRequiredMixin, View):
             is_docker = os.getenv("DOCKER_CONTAINER") == "1" or os.path.exists("/.dockerenv")
             default_ollama = "http://host.docker.internal:11434" if is_docker else "http://127.0.0.1:11434"
             updates = {
-                "llm_provider": provider,
+                "llm_provider": "auto",
                 "gemini_api_key": gemini_key,
                 "gemini_model": gemini_model or "gemini-1.5-flash",
                 "ollama_base_url": ollama_url or default_ollama,
-                "ollama_model": ollama_model or "gemma3:4b",
+                "ollama_model": ollama_model or "llama3.2",
             }
             save_system_ai_config(updates)
-            messages.success(request, f"AI Provider settings updated: active provider is '{provider.upper()}'.")
+            if gemini_key:
+                status_msg = f"Cloud (Gemini: {gemini_model or 'gemini-1.5-flash'}) active by default for all tasks, with Local (Ollama) fallback."
+            else:
+                status_msg = f"Local model (Ollama: {ollama_model or 'llama3.2'}) active for all tasks."
+            messages.success(request, f"AI configuration saved. {status_msg}")
             return redirect("web-settings")
 
         new_username = request.POST.get("username", "").strip()

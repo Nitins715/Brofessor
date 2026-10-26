@@ -83,50 +83,26 @@
     </form>
   </div>
 
-  {# AI Provider & Large-Task Model Configuration #}
+  {# AI Provider & Dual-Model Configuration #}
   <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm space-y-5">
     <div>
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">AI Provider & Large-Task Model</h3>
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase font-semibold
-          {% if ai_config.llm_provider == 'gemini' %}bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60
-          {% else %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60{% endif %}">
-          <span class="w-1.5 h-1.5 rounded-full {% if ai_config.llm_provider == 'gemini' %}bg-indigo-500{% else %}bg-emerald-500{% endif %}"></span>
-          Active: {{ ai_config.llm_provider|default:"ollama"|upper }}
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">AI Model Credentials &amp; Smart Routing</h3>
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold
+          {% if ai_config.gemini_api_key %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60
+          {% else %}bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60{% endif %}">
+          <span class="w-1.5 h-1.5 rounded-full {% if ai_config.gemini_api_key %}bg-emerald-500 animate-pulse{% else %}bg-indigo-500{% endif %}"></span>
+          {% if ai_config.gemini_api_key %}Active: Cloud Primary (Gemini) • Local Fallback (Ollama){% else %}Active: Local Model (Ollama){% endif %}
         </span>
       </div>
-      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-        Configures the LLM for high-reasoning tasks: AI Chat, Concept Extraction, and Assessment Question Generation.
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+        Brofessor securely stores both your Cloud and Local credentials. At generation time, it automatically uses Cloud (Gemini) by default whenever an API key is provided, and seamlessly falls back to your local Ollama model if unconfigured or offline — no manual switching needed.
       </p>
     </div>
 
     <form action="{% url 'web-settings' %}" method="post" class="space-y-4">
       {% csrf_token %}
       <input type="hidden" name="action" value="save_ai">
-
-      {# Provider Choice #}
-      <div class="space-y-2">
-        <label class="block text-xs font-medium text-zinc-700 dark:text-zinc-300">Choose Provider</label>
-        <div class="grid grid-cols-2 gap-3">
-          <label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-smooth
-            {% if ai_config.llm_provider == 'ollama' or not ai_config.llm_provider %}border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800/40{% else %}border-zinc-200 dark:border-zinc-800{% endif %}">
-            <input type="radio" name="llm_provider" value="ollama" {% if ai_config.llm_provider == 'ollama' or not ai_config.llm_provider %}checked{% endif %} class="text-indigo-600 focus:ring-0">
-            <div>
-              <span class="block text-xs font-semibold text-zinc-900 dark:text-zinc-100">Ollama (Local Offline)</span>
-              <span class="block text-[11px] text-zinc-400">Runs locally via Ollama daemon</span>
-            </div>
-          </label>
-
-          <label class="flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-smooth
-            {% if ai_config.llm_provider == 'gemini' %}border-zinc-900 dark:border-white bg-zinc-50 dark:bg-zinc-800/40{% else %}border-zinc-200 dark:border-zinc-800{% endif %}">
-            <input type="radio" name="llm_provider" value="gemini" {% if ai_config.llm_provider == 'gemini' %}checked{% endif %} class="text-indigo-600 focus:ring-0">
-            <div>
-              <span class="block text-xs font-semibold text-zinc-900 dark:text-zinc-100">Google Gemini (Cloud)</span>
-              <span class="block text-[11px] text-zinc-400">High speed & intelligence via API</span>
-            </div>
-          </label>
-        </div>
-      </div>
 
       {# Gemini Settings #}
       <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-3">
@@ -159,13 +135,10 @@
               <select id="gemini_preset_select"
                       onchange="onGeminiPresetChange(this.value)"
                       class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 focus:border-indigo-500 focus:outline-none transition-smooth">
-                <option value="gemini-1.5-flash" {% if ai_config.gemini_model == 'gemini-1.5-flash' %}selected{% endif %}>gemini-1.5-flash (Fast &amp; Recommended)</option>
-                <option value="gemini-2.0-flash" {% if ai_config.gemini_model == 'gemini-2.0-flash' %}selected{% endif %}>gemini-2.0-flash (Latest Next-Gen)</option>
-                <option value="gemini-1.5-pro" {% if ai_config.gemini_model == 'gemini-1.5-pro' %}selected{% endif %}>gemini-1.5-pro (High Reasoning Capacity)</option>
-                <option value="gemini-1.5-flash-8b" {% if ai_config.gemini_model == 'gemini-1.5-flash-8b' %}selected{% endif %}>gemini-1.5-flash-8b (Lightweight / High Throughput)</option>
-                <option value="gemini-2.0-flash-exp" {% if ai_config.gemini_model == 'gemini-2.0-flash-exp' %}selected{% endif %}>gemini-2.0-flash-exp (Experimental)</option>
-                <option value="gemini-2.5-flash" {% if ai_config.gemini_model == 'gemini-2.5-flash' %}selected{% endif %}>gemini-2.5-flash (Preview)</option>
-                <option value="custom" {% if ai_config.gemini_model and ai_config.gemini_model != 'gemini-1.5-flash' and ai_config.gemini_model != 'gemini-2.0-flash' and ai_config.gemini_model != 'gemini-1.5-pro' and ai_config.gemini_model != 'gemini-1.5-flash-8b' and ai_config.gemini_model != 'gemini-2.0-flash-exp' and ai_config.gemini_model != 'gemini-2.5-flash' %}selected{% endif %}>Custom Model (Custom Entry)...</option>
+                <option value="gemini-3.6-flash" {% if ai_config.gemini_model == 'gemini-3.6-flash' %}selected{% endif %}>gemini-3.6-flash (Fastest Next-Gen • Recommended)</option>
+                <option value="gemini-3.5-flash" {% if ai_config.gemini_model == 'gemini-3.5-flash' %}selected{% endif %}>gemini-3.5-flash (Stable Next-Gen Flash)</option>
+                <option value="gemini-3.5-flash-lite" {% if ai_config.gemini_model == 'gemini-3.5-flash-lite' %}selected{% endif %}>gemini-3.5-flash-lite (High Throughput / Low Latency)</option>
+                <option value="custom" {% if ai_config.gemini_model and ai_config.gemini_model != 'gemini-3.6-flash' and ai_config.gemini_model != 'gemini-3.5-flash' and ai_config.gemini_model != 'gemini-3.5-flash-lite' %}selected{% endif %}>Custom Model (Custom Entry)...</option>
               </select>
             </div>
 
@@ -174,8 +147,8 @@
               <input type="text"
                      name="gemini_model"
                      id="gemini_model"
-                     placeholder="e.g. gemini-1.5-flash"
-                     value="{{ ai_config.gemini_model|default:'gemini-1.5-flash' }}"
+                     placeholder="e.g. gemini-3.6-flash"
+                     value="{{ ai_config.gemini_model|default:'gemini-3.6-flash' }}"
                      oninput="onGeminiInputManual(this.value)"
                      class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 focus:border-indigo-500 focus:outline-none transition-smooth font-mono">
             </div>

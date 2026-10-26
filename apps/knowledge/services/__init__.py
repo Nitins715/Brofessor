@@ -8,6 +8,7 @@ from .mastery import (
 )
 from .gaps import KnowledgeGapService
 from .recommendations import RecommendationService
+from .knowledge_graph import KnowledgeGraphService
 from .knowledge_model import (
     PersonalKnowledgeModelService,
     SkillEvidenceSummary,
@@ -26,6 +27,7 @@ __all__ = [
     "DEFAULT_MASTERY_CONFIG",
     "KnowledgeGapService",
     "RecommendationService",
+    "KnowledgeGraphService",
     "PersonalKnowledgeModelService",
     "SkillEvidenceSummary",
     "KnowledgeProfileSummary",

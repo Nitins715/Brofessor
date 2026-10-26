@@ -77,6 +77,7 @@ class RAGChatRequestSerializer(serializers.Serializer):
     query = serializers.CharField(required=True, allow_blank=False, max_length=2000)
     conversation_id = serializers.UUIDField(required=False, allow_null=True, default=None)
     domain_id = serializers.UUIDField(required=False, allow_null=True, default=None)
+    allow_web_search = serializers.BooleanField(required=False, default=False)
     retrieval_top_k = serializers.IntegerField(required=False, default=10, min_value=1, max_value=50)
     rerank_top_k = serializers.IntegerField(required=False, default=4, min_value=1, max_value=20)
     source_types = serializers.ListField(
@@ -111,6 +112,8 @@ class RAGChatResponseSerializer(serializers.Serializer):
     citations = CitationSerializer(many=True)
     retrieved_count = serializers.IntegerField()
     reranked_count = serializers.IntegerField()
+    response_source = serializers.CharField(required=False, default="documents")
+    can_search_web = serializers.BooleanField(required=False, default=False)
     tokens_used = serializers.IntegerField(allow_null=True)
     error = serializers.CharField(allow_null=True, required=False)
     metadata = serializers.DictField()

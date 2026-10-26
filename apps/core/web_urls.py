@@ -16,12 +16,14 @@ from .web_views import (
     SourcesView,
     SourceDetailView,
     SourceRetryView,
+    SourceDeleteView,
     AssessmentsView,
     StartSkillAssessmentView,
     AssessmentTakeView,
     AssessmentResultView,
     ChatView,
     KnowledgeGapsView,
+    KnowledgeGraphView,
     SettingsView,
     ReseedRoadmapView,
     SelectActiveDomainView,
@@ -53,6 +55,7 @@ urlpatterns = [
     path("sources/", SourcesView.as_view(), name="web-sources"),
     path("sources/<uuid:pk>/", SourceDetailView.as_view(), name="web-source-detail"),
     path("sources/<uuid:pk>/retry/", SourceRetryView.as_view(), name="web-source-retry"),
+    path("sources/<uuid:pk>/delete/", SourceDeleteView.as_view(), name="web-source-delete"),
 
     # Assessments Flow & Results
     path("assessments/", AssessmentsView.as_view(), name="web-assessments"),
@@ -61,8 +64,9 @@ urlpatterns = [
     path("assessments/<uuid:pk>/take/", AssessmentTakeView.as_view(), name="web-assessment-take"),
     path("assessments/attempts/<uuid:attempt_id>/result/", AssessmentResultView.as_view(), name="web-assessment-result"),
 
-    # AI Knowledge Assistant & Gaps
+    # AI Knowledge Assistant & Knowledge Graph
     path("chat/", ChatView.as_view(), name="web-chat"),
+    path("knowledge-graph/", KnowledgeGraphView.as_view(), name="web-knowledge-graph"),
     path("gaps/", KnowledgeGapsView.as_view(), name="web-gaps"),
     path("settings/", SettingsView.as_view(), name="web-settings"),
     path("settings/reseed/", ReseedRoadmapView.as_view(), name="web-reseed"),

@@ -98,14 +98,14 @@
           AI Chat
         </a>
 
-        {# Knowledge Gaps #}
-        <a href="{% url 'web-gaps' %}"
+        {# Knowledge Graph #}
+        <a href="{% url 'web-knowledge-graph' %}"
            class="flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-lg transition-smooth
-           {% if current_nav == 'gaps' %}bg-zinc-200/70 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold{% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50{% endif %}">
+           {% if current_nav == 'knowledge_graph' or current_nav == 'gaps' %}bg-zinc-200/70 dark:bg-zinc-800 text-zinc-900 dark:text-white font-semibold{% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/50{% endif %}">
           <svg class="w-4 h-4 text-zinc-500 dark:text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
           </svg>
-          Knowledge Gaps
+          Knowledge Graph
         </a>
 
         {# Divider #}

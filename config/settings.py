@@ -251,10 +251,13 @@ if REDIS_URL and REDIS_URL.lower() != "none":
         }
     }
 else:
+    cache_dir = os.path.join(DATA_DIR, "cache")
+    os.makedirs(cache_dir, exist_ok=True)
     CACHES = {
         "default": {
-            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-            "LOCATION": "brofessor-local-cache",
+            "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+            "LOCATION": cache_dir,
+            "TIMEOUT": 300,
         }
     }
 
@@ -284,7 +287,7 @@ OLLAMA_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text")
 
 # Google Gemini API Configuration (for Cloud Large-Task Reasoning)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
 
 # Embedding Configuration

@@ -345,7 +345,13 @@ function retryGenerate() {
 
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatOptionText(text) {
+  if (!text) return '';
+  const escaped = escapeHtml(text);
+  return escaped.replace(/`([^`]+)`/g, '<code class="px-1 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 font-mono text-xs">$1</code>');
 }
 
 function renderFormattedPrompt(text) {
@@ -429,7 +435,7 @@ function renderQuestion(q) {
         ${opt.key}
       </span>
       <span class="text-xs sm:text-sm text-zinc-800 dark:text-zinc-200 leading-normal flex-1">
-        ${opt.text}
+        ${formatOptionText(opt.text)}
       </span>
     `;
 

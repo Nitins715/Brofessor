@@ -119,10 +119,22 @@
               {{ src.status }}
             </span>
 
-            <a href="/sources/{{ src.id }}/"
-               class="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
-              Details &rarr;
-            </a>
+            <div class="flex items-center gap-1.5">
+              <a href="/sources/{{ src.id }}/"
+                 class="px-2.5 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth">
+                Details &rarr;
+              </a>
+              <form action="{% url 'web-source-delete' src.id %}" method="post" class="inline" onsubmit="return confirm('Delete source \'{{ src.name|escapejs }}\'? This will delete all its processed documents and vector chunks.');">
+                {% csrf_token %}
+                <button type="submit"
+                        title="Delete Source"
+                        class="p-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-rose-600 hover:border-rose-300 dark:hover:border-rose-900/60 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-smooth">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </form>
+            </div>
           </div>
 
         </div>

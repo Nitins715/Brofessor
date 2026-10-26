@@ -95,6 +95,7 @@ class RAGChatView(APIView):
             query=data["query"],
             conversation_id=data.get("conversation_id"),
             domain_id=data.get("domain_id"),
+            allow_web_search=data.get("allow_web_search", False),
             retrieval_top_k=data.get("retrieval_top_k"),
             rerank_top_k=data.get("rerank_top_k"),
             filters=filters,

@@ -45,11 +45,13 @@ class AssessmentProviderResolver:
     @classmethod
     def get_provider_for_difficulty(
         cls,
-        difficulty: str,
+        difficulty: str = "easy",
         override_provider: Optional[BaseLLMProvider] = None,
     ) -> BaseLLMProvider:
         """
         Resolves the LLM provider for the given assessment difficulty level.
+        Auto-priority: Cloud (Gemini/OpenAI) by default if available,
+        otherwise automatically falls back to Local Ollama. No user selection needed.
         """
         if override_provider is not None:
             return override_provider
@@ -70,12 +72,13 @@ class AssessmentProviderResolver:
         if global_provider in ("mock", "test"):
             return MockLLMProvider()
 
-        if diff_norm == "easy":
-            return cls._resolve_ollama(ai_cfg, diff_norm)
-        elif diff_norm in ("medium", "hard"):
+        gemini_key = (ai_cfg.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", "")).strip()
+        openai_key = (ai_cfg.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", "")).strip()
+
+        # Auto-routing: Cloud by default if credentials exist, else local Ollama
+        if gemini_key or openai_key:
             return cls._resolve_cloud(ai_cfg, diff_norm)
         else:
-            # Default to Easy / Ollama
             return cls._resolve_ollama(ai_cfg, diff_norm)
 
     @classmethod
@@ -170,32 +173,15 @@ class AssessmentProviderResolver:
             )
 
     @classmethod
-    def get_provider_info(cls, difficulty: str) -> Dict[str, Any]:
+    def get_provider_info(cls, difficulty: str = "easy") -> Dict[str, Any]:
         """Returns non-sensitive provider summary for UI display."""
         diff_norm = (difficulty or "easy").lower().strip()
         ai_cfg = get_system_ai_config()
 
-        if diff_norm in ("basic", "beginner"):
-            diff_norm = "easy"
-        elif diff_norm in ("intermediate",):
-            diff_norm = "medium"
-        elif diff_norm in ("advanced", "expert"):
-            diff_norm = "hard"
+        gemini_key = (ai_cfg.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", "")).strip()
+        openai_key = (ai_cfg.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", "")).strip()
 
-        if diff_norm == "easy":
-            return {
-                "difficulty": "easy",
-                "tier_name": "Easy (Local-first)",
-                "provider": "ollama",
-                "model": ai_cfg.get("ollama_model") or getattr(settings, "OLLAMA_MODEL", "llama3.2"),
-                "is_local": True,
-                "endpoint": ai_cfg.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
-                "is_configured": bool(ai_cfg.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "")),
-            }
-        else:
-            gemini_key = ai_cfg.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", "")
-            openai_key = ai_cfg.get("openai_api_key") or getattr(settings, "OPENAI_API_KEY", "")
-            is_configured = bool(gemini_key or openai_key)
+        if gemini_key or openai_key:
             provider_type = "gemini" if gemini_key or not openai_key else "openai"
             model_name = (
                 (ai_cfg.get("gemini_model") or getattr(settings, "GEMINI_MODEL", "gemini-1.5-flash"))
@@ -204,9 +190,19 @@ class AssessmentProviderResolver:
             )
             return {
                 "difficulty": diff_norm,
-                "tier_name": f"{diff_norm.title()} (Cloud LLM)",
+                "tier_name": f"{diff_norm.title()} (Cloud: {provider_type.upper()})",
                 "provider": provider_type,
                 "model": model_name,
                 "is_local": False,
-                "is_configured": is_configured,
+                "is_configured": True,
+            }
+        else:
+            return {
+                "difficulty": diff_norm,
+                "tier_name": f"{diff_norm.title()} (Local: Ollama)",
+                "provider": "ollama",
+                "model": ai_cfg.get("ollama_model") or getattr(settings, "OLLAMA_MODEL", "llama3.2"),
+                "is_local": True,
+                "endpoint": ai_cfg.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
+                "is_configured": bool(ai_cfg.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "")),
             }

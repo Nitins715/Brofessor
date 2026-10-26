@@ -25,6 +25,8 @@ class RAGResult:
     citations: List[Dict[str, Any]]
     retrieved_count: int
     reranked_count: int
+    response_source: str = "documents"  # "parametric", "documents", "web", "web_prompt"
+    can_search_web: bool = False
     tokens_used: Optional[int] = None
     error: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
@@ -38,6 +40,8 @@ class RAGResult:
             "citations": self.citations,
             "retrieved_count": self.retrieved_count,
             "reranked_count": self.reranked_count,
+            "response_source": self.response_source,
+            "can_search_web": self.can_search_web,
             "tokens_used": self.tokens_used,
             "error": self.error,
             "metadata": self.metadata,
@@ -57,6 +61,7 @@ class RAGService:
         query: str,
         conversation_id: Optional[Union[str, uuid.UUID]] = None,
         domain_id: Optional[Union[str, uuid.UUID]] = None,
+        allow_web_search: bool = False,
         retrieval_top_k: Optional[int] = None,
         rerank_top_k: Optional[int] = None,
         filters: Optional[Dict[str, Any]] = None,
@@ -99,6 +104,7 @@ class RAGService:
         initial_state: RAGState = {
             "query": query,
             "conversation_id": str(conversation.id),
+            "allow_web_search": allow_web_search,
             "filters": active_filters,
             "retrieval_top_k": retrieval_k,
             "rerank_top_k": rerank_k,
@@ -114,8 +120,13 @@ class RAGService:
         citations = final_state.get("citations", [])
         tokens_used = final_state.get("tokens_used")
         error_msg = final_state.get("error")
+        response_source = final_state.get("response_source", "documents")
+        can_search_web = bool(final_state.get("can_search_web", False))
+
         meta = final_state.get("metadata", {})
         meta["total_pipeline_ms"] = round((time.time() - start_time) * 1000, 2)
+        meta["response_source"] = response_source
+        meta["can_search_web"] = can_search_web
 
         # 4. Record Assistant Message
         assistant_message = Message.objects.create(
@@ -155,6 +166,8 @@ class RAGService:
             citations=citations,
             retrieved_count=len(final_state.get("retrieved_chunks", [])),
             reranked_count=len(final_state.get("reranked_chunks", [])),
+            response_source=response_source,
+            can_search_web=can_search_web,
             tokens_used=tokens_used,
             error=error_msg,
             metadata=meta,
