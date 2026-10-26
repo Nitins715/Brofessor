@@ -41,6 +41,9 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://0.0.0.0:8000",
 ]
+env_csrf = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+if env_csrf:
+    CSRF_TRUSTED_ORIGINS.extend([origin.strip() for origin in env_csrf.split(",") if origin.strip()])
 
 
 
