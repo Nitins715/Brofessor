@@ -1,24 +1,31 @@
 # Brofessor 🧠
 
-> **Brofessor** is a local-first, privacy-respecting Personal Knowledge System (PKS) and AI learning assistant designed to transform fragmented learning materials into structured knowledge, personal mastery tracking, and grounded conversational discovery.
+> **Brofessor** is a production-ready, local-first Personal Knowledge System (PKS), adaptive learning engine, and advanced LangGraph RAG assistant. It transforms raw notes, documents, and web resources into structured curricula, tracks personal mastery, and conducts interactive assessments with complete data privacy.
+
+[![Docker Image](https://img.shields.io/badge/docker-nitins715%2Fbrofessor-blue?logo=docker)](https://hub.docker.com/r/nitins715/brofessor)
+[![Docker Pulls](https://img.shields.io/badge/docker%20pulls-40%2B-brightgreen?logo=docker)](https://hub.docker.com/r/nitins715/brofessor)
+[![Architecture](https://img.shields.io/badge/architecture-local--first%20%7C%20hybrid-orange.svg)](https://github.com/Nitins715/Brofessor)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ---
 
 ## Table of Contents
 
 - [Overview](#overview)
+- [Key Features](#key-features)
+- [Application Showcase](#-application-showcase)
 - [System Architecture](#system-architecture)
   - [High-Level Architecture Diagram](#high-level-architecture-diagram)
+- [Advanced LangGraph RAG Pipeline](#advanced-langgraph-rag-pipeline)
+  - [RAG State Graph Workflow Diagram](#rag-state-graph-workflow-diagram)
+- [Personal Knowledge Model & Knowledge Graph](#personal-knowledge-model--knowledge-graph)
+  - [Knowledge Graph & Remediation Loop](#knowledge-graph--remediation-loop)
 - [Database Architecture](#database-architecture)
   - [Entity Relationship (ER) Diagram](#entity-relationship-er-diagram)
-- [RAG Pipeline Architecture](#rag-pipeline-architecture)
-  - [RAG Workflow Diagram](#rag-workflow-diagram)
-- [Knowledge Model Architecture](#knowledge-model-architecture)
-  - [Evidence & Mastery Flow Diagram](#evidence--mastery-flow-diagram)
 - [Technology Stack](#technology-stack)
 - [Project Directory Structure](#project-directory-structure)
-- [Setup Instructions](#setup-instructions)
-  - [Option A: Standalone Single Docker Container (Recommended)](#option-a-standalone-single-docker-container-recommended)
+- [Setup & Deployment](#setup--deployment)
+  - [Option A: Public Docker Container (Instant Run — Recommended)](#option-a-public-docker-container-instant-run--recommended)
   - [Option B: Local Python Development Setup](#option-b-local-python-development-setup)
   - [Option C: Multi-Container Stack (Docker Compose)](#option-c-multi-container-stack-docker-compose)
 - [Running Automated Tests](#running-automated-tests)
@@ -30,52 +37,103 @@
 
 ## Overview
 
-Brofessor acts as an intelligent academic mentor and study partner for software engineers, students, and lifelong learners. Instead of treating study notes and documentation as passive bookmarks, Brofessor:
+Brofessor acts as an intelligent academic mentor and study partner for software engineers, students, and researchers. Instead of treating study notes and documentation as passive bookmarks, Brofessor:
 
-1. **Ingests Diverse Content**: Raw notes, web articles, PDFs, YouTube transcripts, and markdown curricula.
-2. **Normalizes, Chunks & Embeds**: Uses deterministic recursive splitting and local dense embeddings (384-dimensional `bge-small-en-v1.5` or Ollama).
-3. **Retrieves with Grounded RAG**: Implements hybrid vector search with reciprocal reranking and strict citation provenance before synthesis.
-4. **Maintains a Personal Knowledge Model**: Extracts concepts, technologies, and skills, mapping them into structured learning roadmaps (`Domain → Topic → Skill → RoadmapNode`).
-5. **Evaluates Mastery & Detects Gaps**: Generates dynamic diagnostics (MCQ, conceptual, code questions), scores learner attempts, calculates multi-source weighted mastery, and highlights critical knowledge gaps with actionable next steps.
+1. **Ingests Diverse Content**: Processes raw markdown notes, web articles, PDFs, and YouTube transcripts with intelligent deduplication.
+2. **Adaptive Semantic Chunking & Embeddings**: Normalizes text into cohesive semantic chunks embedded locally via 384-dimensional `BAAI/bge-small-en-v1.5` or Ollama embeddings.
+3. **Advanced LangGraph RAG (Adaptive, Self-RAG & CRAG)**: Routes questions adaptively between direct parametric knowledge, hybrid document retrieval (dense vector + lexical BM25), reciprocal rank fusion (RRF), self-evaluating document grading, and corrective web search fallback.
+4. **Interactive Knowledge Graph & Mastery**: Visualizes learning progress dynamically. Correctly answered questions reinforce mastery nodes, while incorrect answers populate the "Need to Learn" queue for targeted remediation without repeating mastered questions.
+5. **Contextual Question Generator**: Dynamically generates strictly capped 10-question diagnostic assessments with embedded code snippets, distractor explanations, and concept tags.
+
+---
+
+## Key Features
+
+- **🚀 1-Command Public Docker Image**: Pre-packaged on Docker Hub (`nitins715/brofessor:latest`) with automated database migration, curriculum seeding, and static collection.
+- **⚡ Resilient Multi-Model LLM Pool**:
+  - **Cloud Primary (Gemini Fast Pool)**: Cycles seamlessly through `gemini-3.6-flash`, `gemini-3.5-flash`, and `gemini-3.5-flash-lite` with snappy 8-second timeouts and automatic failover.
+  - **Local Privacy Fallback (Ollama)**: Automatically falls back to local models (`llama3.2`, `gemma3`) if no cloud API key is configured or when offline.
+  - **OpenAI / Custom Compatible**: Full support for OpenAI (`gpt-4o-mini`), Groq, or OpenRouter endpoints.
+- **🔄 Advanced LangGraph State Machine**: State-based RAG workflow featuring query transformation, adaptive query complexity classification, document grading, hallucination detection, and interactive web search permission.
+- **📊 Adaptive Knowledge Graph**: Replaces static gap reports with an interactive knowledge graph tracking mastered concepts versus remediation items across all assessment attempts.
+- **🛡️ Thread-Safe Distributed Caching**: Utilizes shared `/data/cache` file-based caching across multi-threaded Gunicorn worker processes, avoiding isolated memory lock collisions.
+
+---
+
+## 📸 Application Showcase
+
+### 1. Dashboard & Learning Analytics
+> Real-time tracking of knowledge coverage, active skillset breakdown, past test performance, and intelligent recommended next actions.
+
+![Dashboard & Analytics](images/image1.png)
+
+---
+
+### 2. Interactive Curriculum Roadmap
+> Hierarchical learning progression (`Domain → Topic → Skill`) with custom syllabus import, topic priority tiers (P0, P1, P2), and direct skill assessment launch.
+
+![Curriculum Roadmap](images/image2.png)
+
+---
+
+### 3. Personal Knowledge Graph (Performance Memory)
+> Question-level mastery graph tracking mastered concepts versus the "Need to Learn" remediation queue for targeted practice without repeating mastered questions.
+
+![Personal Knowledge Graph](images/image5.png)
+
+---
+
+### 4. Skill Diagnostics & Assessments
+> Strict 10-question sequential diagnostics with automated LLM scoring, embedded code snippets, pass thresholds, and performance trends.
+
+![Skill Diagnostics & Assessments](images/image4.png)
+
+---
+
+### 5. Multi-Modal Knowledge Library & Sources
+> Centralized repository for ingesting and managing raw notes, PDFs, web articles, and video transcripts powering your local RAG index.
+
+![Knowledge Library & Sources](images/image3.png)
 
 ---
 
 ## System Architecture
 
-Brofessor is designed around a modular, decoupled architecture where presentation, domain logic, asynchronous task processing, persistence, and local AI engines interact cleanly.
+Brofessor is designed around a decoupled, local-first architecture where the web interface, domain logic, state-graph RAG workflow, persistence layer, and inference engines interact seamlessly.
 
 ### High-Level Architecture Diagram
 
 ```mermaid
 flowchart TD
     subgraph UI["User Interfaces"]
-        WebUI["Web UI (Tailwind + Django Templates)\n/dashboard, /roadmap, /assessments, /chat"]
-        REST["REST API Clients\n/api/* & /api/v1/* (OpenAPI 3.0)"]
+        WebUI["Web UI (Tailwind CSS + Alpine/Vanilla JS + Django Templates)\n/dashboard, /roadmap, /assessments, /chat, /knowledge-graph"]
+        REST["REST API Clients\n/api/* & /api/v1/* (OpenAPI 3.0 / Swagger UI)"]
     end
 
-    subgraph Core["Core Application Server (Django / Gunicorn)"]
-        Router["URL Routing & Auth (Single-User Local Session)"]
-        RoadmapApp["Roadmap Engine\n(Domains, Topics, Skills, DAG)"]
-        KnowledgeApp["Personal Knowledge Engine\n(Evidence, Mastery, Gaps)"]
-        AssessmentApp["Assessment Engine\n(Diagnostics, Attempts, Scoring)"]
-        SourcesApp["Source Ingestion Service\n(PDF, Note, Article, YouTube)"]
-        RAGApp["RAG Service & Chat Engine\n(Vector Search, Reranking, Prompting)"]
+    subgraph Core["Application Server (Django / Gunicorn Workers)"]
+        Router["URL Routing & Auth (Single-User Local Workspace)"]
+        RoadmapApp["Roadmap Engine\n(Domains, Topics, Skills, Curriculum DAG)"]
+        KnowledgeApp["Knowledge Graph Engine\n(Evidence, Mastery, Remediation Graph)"]
+        AssessmentApp["Sequential Assessment Engine\n(10-Q Hard Cap, Code Snippets, Scoring)"]
+        SourcesApp["Source Ingestion Service\n(PDF, Notes, Web Articles, YouTube)"]
+        RAGApp["LangGraph RAG Workflow Engine\n(Adaptive Router, Self-RAG Grader, CRAG)"]
     end
 
-    subgraph Async["Asynchronous Task Pipeline (Optional/Celery)"]
-        Redis["Redis Broker & Result Backend\n(Port 6379)"]
-        Workers["Celery Workers\n(Ingestion, Chunking, Embedding)"]
+    subgraph Caching["Cache & Concurrency Layer"]
+        SharedCache["Shared FileBasedCache / Redis\n(/data/cache atomic locks across Gunicorn workers)"]
     end
 
-    subgraph Storage["Persistence & Local Storage Layer"]
-        DB[(Relational DB: PostgreSQL + pgvector OR SQLite)]
-        DiskStore["Host Persistent Volume (/data)\nDatabase, Media, Cache, Logs"]
+    subgraph Storage["Persistence & Volume Layer"]
+        DB[(Relational DB: SQLite / PostgreSQL + pgvector)]
+        DiskStore["Host Persistent Volume (/data)\nDatabase, Media, Cache, Logs, AI Config"]
     end
 
-    subgraph AI["Local AI & Embedding Inference"]
-        Ollama["Ollama Daemon\n(llama3.2 @ http://localhost:11434)"]
-        Embedder["Hugging Face FastEmbed\n(BAAI/bge-small-en-v1.5 - 384d)"]
-        MockAI["Deterministic Mock Provider\n(Zero-dependency Fallback for CI/Tests)"]
+    subgraph AI["Multi-Tier Inference Layer"]
+        GeminiPool["Gemini Fast Pool\n(gemini-3.6-flash -> gemini-3.5-flash -> gemini-3.5-flash-lite)"]
+        OllamaLocal["Local Ollama Daemon\n(llama3.2 @ http://localhost:11434)"]
+        OpenAICloud["OpenAI / Groq Endpoints\n(gpt-4o-mini / Compatible)"]
+        FastEmbed["HuggingFace FastEmbed\n(BAAI/bge-small-en-v1.5 - 384d)"]
+        MockAI["Deterministic Mock Provider\n(Zero-dependency fallback for CI/Tests)"]
     end
 
     UI --> Router
@@ -85,9 +143,8 @@ flowchart TD
     Router --> SourcesApp
     Router --> RAGApp
 
-    SourcesApp -.->|Async Queue| Redis
-    Redis -.-> Workers
-    Workers --> DB
+    RAGApp <--> SharedCache
+    AssessmentApp <--> SharedCache
 
     RoadmapApp --> DB
     KnowledgeApp --> DB
@@ -96,18 +153,97 @@ flowchart TD
     RAGApp --> DB
     DB --> DiskStore
 
-    RAGApp <--> Ollama
-    RAGApp <--> Embedder
-    AssessmentApp <--> Ollama
-    KnowledgeApp <--> Ollama
-    RAGApp -.->|Fallback| MockAI
+    RAGApp --> GeminiPool
+    RAGApp --> OllamaLocal
+    RAGApp --> OpenAICloud
+    RAGApp --> FastEmbed
+    RAGApp -.->|CI / Fallback| MockAI
+    AssessmentApp --> GeminiPool
+    AssessmentApp --> OllamaLocal
 ```
+
+---
+
+## Advanced LangGraph RAG Pipeline
+
+Brofessor incorporates state-of-the-art RAG paradigms—including **Adaptive RAG**, **Modular RAG**, **Self-RAG**, and **Corrective RAG (CRAG)**—implemented as a compiled LangGraph state graph.
+
+### RAG State Graph Workflow Diagram
+
+```mermaid
+flowchart TD
+    Start([User Query]) --> RouterNode{Adaptive Router}
+
+    RouterNode -->|Conversational / Syntax| ParametricNode[Parametric Knowledge Node\nDirect LLM generation with 0 retrieval overhead]
+    RouterNode -->|Live / External Search| WebSearchNode[Web Search Node\nLive internet retrieval & synthesis]
+    RouterNode -->|Domain / Document Inquiry| TransformNode[Query Transformation Node\nRewriting & multi-query expansion for hard queries]
+
+    TransformNode --> HybridRetrieval[Hybrid Retrieval Node\nDense Vector Search + Lexical BM25]
+    HybridRetrieval --> RerankNode[Reranking Node\nReciprocal Rank Fusion RRF Scoring]
+    RerankNode --> GraderNode[Self-RAG Document Grader\nEvaluates relevance of top chunks]
+
+    GraderNode --> RelevantCheck{Context Relevant?}
+    RelevantCheck -->|Yes: Sufficient Context| BuildContext[Build Context & Grounding Node]
+    RelevantCheck -->|No: Insufficient / Off-Topic| CRAGNode{CRAG Fallback\nUser Allowed Web Search?}
+
+    CRAGNode -->|Yes| WebSearchNode
+    CRAGNode -->|No| PromptUserWeb[Prompt User for Web Search Permission]
+
+    BuildContext --> GroundedGen[Grounded Generation Node\nInline Citation Attribution [Source N]]
+    
+    ParametricNode --> End([Deliver Verified Answer])
+    GroundedGen --> End
+    WebSearchNode --> End
+    PromptUserWeb --> End
+```
+
+### Pipeline Highlights:
+1. **Adaptive Query Router**: Classifies incoming questions into `PARAMETRIC` (greeting/simple syntax), `RETRIEVAL` (local documents), or `WEB_SEARCH`. Straightforward queries bypass unnecessary rewriting to minimize latency.
+2. **Hybrid Retrieval + Reciprocal Rank Fusion (RRF)**: Combines dense vector cosine similarities (384-dimensional embeddings) with lexical text matches, scoring results via RRF.
+3. **Self-RAG Grader**: Inspects retrieved chunks before generation. If chunks are irrelevant, prevents hallucinated answers.
+4. **Corrective RAG (CRAG)**: If the local knowledge base has insufficient evidence, Brofessor either queries external search or presents an interactive permission button: *"Search the Web for this Answer"*.
+5. **Cloud Fast Pool with Instant Failover**: Cloud queries cycle sequentially through the fastest Gemini 3.x models (`gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3.5-flash-lite`) with an 8-second cutoff per model.
+
+---
+
+## Personal Knowledge Model & Knowledge Graph
+
+Brofessor moves beyond static gap listings by generating an **interactive user Knowledge Graph**.
+
+### Knowledge Graph & Remediation Loop
+
+```mermaid
+flowchart LR
+    subgraph Assessment["1. Dynamic Diagnostic Testing"]
+        TestEngine["Sequential Generator\n(Strict 10-Q Batch Cap)"]
+        UserAttempt["User Takes Assessment\n(MCQ with Code Snippets)"]
+        Evaluation["Automated Scoring\n(Passing Threshold: 70%)"]
+        TestEngine --> UserAttempt --> Evaluation
+    end
+
+    subgraph KnowledgeGraph["2. Knowledge Graph State Tracking"]
+        MasteredQueue["Mastered Nodes\n(Questions answered correctly\nmastery % increments)"]
+        RemediationQueue["Need to Learn Queue\n(Questions answered incorrectly\nqueued for remediation)"]
+        Evaluation -->|Correct| MasteredQueue
+        Evaluation -->|Incorrect| RemediationQueue
+    end
+
+    subgraph Adaptation["3. Smart Deduplication & Curriculum Progress"]
+        ContextPrompt["Sequential Context Prompt\nFilters previously seen questions"]
+        RemediationQueue -->|Targeted Re-test| ContextPrompt
+        MasteredQueue -->|Prevent Duplicate| ContextPrompt
+        ContextPrompt --> TestEngine
+    end
+```
+
+- **Mastery Queue**: Questions answered correctly establish verified evidence points, advancing the learner's skill mastery tier (`Beginner` $\to$ `Intermediate` $\to$ `Advanced` $\to$ `Expert`).
+- **Need to Learn Queue**: Concepts or questions missed are flagged in the interactive Knowledge Graph. Subsequent diagnostic assessments prioritize these gaps while ensuring identical questions are not repeated once mastered.
 
 ---
 
 ## Database Architecture
 
-The relational schema strictly separates raw ingested evidence from calculated mastery metrics, while maintaining a hierarchical curriculum DAG (`Domain → Topic → Skill`).
+The schema strictly separates raw ingested content from empirical evidence, calculated mastery records, and the curriculum hierarchy (`Domain → Topic → Skill → RoadmapNode`).
 
 ### Entity Relationship (ER) Diagram
 
@@ -131,7 +267,7 @@ erDiagram
     Skill ||--o{ KnowledgeGap : "exhibits"
     Skill ||--o{ Recommendation : "targets"
 
-    Assessment ||--o{ Question : "consists of"
+    Assessment ||--o{ Question : "contains (Max 10)"
     Assessment ||--o{ Attempt : "evaluated via"
     Attempt ||--o{ Answer : "contains"
     Question ||--o{ Answer : "answered by"
@@ -139,6 +275,7 @@ erDiagram
     Topic ||--o{ Assessment : "tested by"
 
     Conversation ||--o{ Message : "contains"
+    Message ||--o{ RetrievedChunk : "grounded with"
 
     Domain {
         uuid id PK
@@ -147,27 +284,23 @@ erDiagram
         boolean is_selected
         boolean is_active
     }
-
     Topic {
         uuid id PK
         uuid domain_id FK
         string name
         string slug
         string priority "P0, P1, P2"
-        int estimated_effort_hours
         int order
     }
-
     Skill {
         uuid id PK
         uuid topic_id FK
         string name
         string slug
-        string difficulty_level "beginner, intermediate, advanced"
-        string priority "P0, P1, P2"
-        int estimated_effort_hours
+        string difficulty_level
+        json key_concepts
+        json learning_objectives
     }
-
     RoadmapNode {
         uuid id PK
         uuid domain_id FK
@@ -175,22 +308,18 @@ erDiagram
         uuid skill_id FK
         int order
     }
-
     RoadmapProgress {
         uuid id PK
         uuid node_id FK
         string status "not_started, in_progress, completed, mastered"
-        boolean is_current
         datetime completed_at
     }
-
     Source {
         uuid id PK
         string name
         string source_type "note, article, pdf, youtube"
         string status "pending, completed, failed"
     }
-
     DocumentChunk {
         uuid id PK
         uuid document_id FK
@@ -198,7 +327,6 @@ erDiagram
         int chunk_index
         vector embedding "384-dimensional"
     }
-
     Evidence {
         uuid id PK
         uuid skill_id FK
@@ -207,24 +335,22 @@ erDiagram
         decimal confidence_weight
         datetime recorded_at
     }
-
     CalculatedMastery {
         uuid id PK
         uuid skill_id FK
         decimal mastery_score "0.0 - 100.0%"
-        string mastery_level "beginner, intermediate, advanced, expert"
+        string mastery_level
         decimal knowledge_coverage
         decimal confidence_score
     }
-
     Assessment {
         uuid id PK
         uuid skill_id FK
         string title
         string difficulty_level
         decimal passing_score
+        int target_questions_count "Fixed 10"
     }
-
     Attempt {
         uuid id PK
         uuid assessment_id FK
@@ -237,107 +363,19 @@ erDiagram
 
 ---
 
-## RAG Pipeline Architecture
-
-Brofessor utilizes a grounded, multi-stage Retrieval-Augmented Generation pipeline. Retrieval combines dense vector search with lexical reranking and citation tracking to prevent hallucinations.
-
-### RAG Workflow Diagram
-
-```mermaid
-flowchart LR
-    subgraph Ingestion["1. Document Ingestion"]
-        RawDoc["Raw Input\n(PDF / Note / Article / Video)"]
-        Parser["Text Extractor &\nSanitizer"]
-        Chunker["Recursive Splitter\n(500 tokens, 50 overlap)"]
-        EmbedGen["Embedding Model\n(bge-small 384d)"]
-        VecStore[("Vector DB\npgvector / SQLite")]
-
-        RawDoc --> Parser --> Chunker --> EmbedGen --> VecStore
-    end
-
-    subgraph Query["2. Query Processing & Retrieval"]
-        UserQ["User Prompt"]
-        QEmbed["Query Normalizer &\nEmbedding"]
-        VectorSearch["Cosine Similarity Search\n(Top-K Candidates: 10)"]
-        Reranker["Reciprocal Rank Fusion\n(Vector + Lexical Reranker)"]
-        TopChunks["Top Grounded Chunks\n(Top-N: 4, Budget: 4k chars)"]
-
-        UserQ --> QEmbed --> VectorSearch
-        VecStore -.-> VectorSearch
-        VectorSearch --> Reranker --> TopChunks
-    end
-
-    subgraph Generation["3. Synthesis & Attribution"]
-        PromptAssembler["Grounded System Prompt\n(Context + Constraints)"]
-        LLM["Local LLM Engine\n(Ollama: llama3.2)"]
-        Attribution["Citation Engine\n[Doc:Chunk#]"]
-        FinalAnswer["Verified Grounded Answer\n+ Interactive Citations"]
-
-        TopChunks --> PromptAssembler
-        UserQ --> PromptAssembler
-        PromptAssembler --> LLM --> Attribution --> FinalAnswer
-    end
-```
-
----
-
-## Knowledge Model Architecture
-
-The Personal Knowledge Model separates raw empirical evidence from computed mastery metrics. It computes a unified score, identifies gaps, and generates targeted remediation recommendations.
-
-### Evidence & Mastery Flow Diagram
-
-```mermaid
-flowchart TD
-    subgraph Inputs["Multi-Modal Learning Evidence Base"]
-        E1["User-Declared Knowledge\n(Weight: 10%)"]
-        E2["Ingested Reading & Notes\n(Weight: 20%)"]
-        E3["Practical Code & Projects\n(Weight: 30%)"]
-        E4["Validated Diagnostics / Tests\n(Weight: 40%)"]
-    end
-
-    subgraph Engine["Mastery & Calibration Engine"]
-        Decay["Freshness Decay &\nDiversity Dampener"]
-        WeightedSum["Weighted Evidence Aggregator\nScore = Sum(Weight * Accuracy)"]
-        Confidence["Confidence Calculator\n(Evidence Count + Diversity Factor)"]
-        MasteryClassifier["Mastery Tier Classifier\nBeginner (<40%) | Intermediate (40-69%)\nAdvanced (70-89%) | Expert (90%+)"]
-
-        E1 --> WeightedSum
-        E2 --> WeightedSum
-        E3 --> WeightedSum
-        E4 --> WeightedSum
-        WeightedSum --> Decay --> Confidence --> MasteryClassifier
-    end
-
-    subgraph Outputs["Knowledge Model Outputs"]
-        ScoreOutput["Calculated Mastery Record\n(Score %, Level, Coverage %)"]
-        GapDetector{"Score < Target OR\nPrerequisites Missing?"}
-        GapRecord["Active Knowledge Gap\n(Severity: Critical / High / Medium)"]
-        RecEngine["Recommendation Service"]
-        Actions["Actionable Learning Items:\n- 'Take Diagnostic Test'\n- 'Review Vector Indexing'\n- 'Next Skill in Roadmap'"]
-
-        MasteryClassifier --> ScoreOutput
-        ScoreOutput --> GapDetector
-        GapDetector -->|Yes| GapRecord --> RecEngine --> Actions
-        GapDetector -->|No| RoadmapProgressUpdated["Roadmap Progress Updated\n(Node: Mastered / Completed)"]
-    end
-```
-
----
-
 ## Technology Stack
 
 | Layer | Component | Description |
 |---|---|---|
-| **Backend Framework** | Django 5.x & Django REST Framework | Clean REST API design, modular app architecture, ORM |
+| **Backend Framework** | Django 5.x & Django REST Framework | REST API design, modular app architecture, ORM |
+| **RAG Orchestration** | LangGraph & LangChain Core | State-graph managing query transformation, hybrid retrieval, self-grading & CRAG |
 | **Database** | SQLite3 (Single Container) / PostgreSQL 16 + pgvector | Relational schemas + 384-dimensional cosine vector indexing |
-| **Async Tasks & Queues** | Celery 5.x & Redis 7.x (Optional) | Non-blocking ingestion, chunking, and background vector embeddings |
-| **Embedding Model** | Hugging Face `BAAI/bge-small-en-v1.5` | Fast, deterministic 384-dimensional semantic text representations |
-| **Local LLM Engine** | Ollama (`llama3.2`) | Local-first inference for answer synthesis, question generation, and grading |
-| **RAG Orchestration** | LangGraph & LangChain Core | Deterministic state machine managing query transformation, retrieval, and reranking |
-| **Frontend / Web UI** | Tailwind CSS + Vanilla JS + Django Templates | Responsive dark-mode dashboard, interactive roadmap tree, diagnostic test runner |
-| **API Documentation** | `drf-spectacular` | OpenAPI 3.0 specification (`schema.yml`) and interactive Swagger / Redoc UI |
-| **Containerization** | Docker & Docker Compose | Self-contained single-image container (`brofessor:latest`) or multi-service compose |
+| **Caching & Concurrency** | Shared `FileBasedCache` / Redis | Multi-worker atomic lock synchronization on `/data/cache` |
+| **AI LLM Inference** | Gemini Fast Pool (`gemini-3.6/3.5-flash`) / Ollama (`llama3.2`) / OpenAI | Multi-model failover with 8s cutoff, local Ollama fallback, and mock testing provider |
+| **Embedding Engine** | Hugging Face FastEmbed (`BAAI/bge-small-en-v1.5`) | Fast, local 384-dimensional semantic text representations |
+| **Web UI & Styling** | Tailwind CSS + Vanilla JS + Django Templates | Dark-mode dashboard, interactive roadmap, assessment runner, and chat |
+| **API Documentation** | `drf-spectacular` | OpenAPI 3.0 specification (`schema.yml`) and Swagger / Redoc UI |
+| **Containerization** | Docker & Docker Compose | Single-container image (`nitins715/brofessor:latest`) published on Docker Hub |
 
 ---
 
@@ -347,71 +385,60 @@ flowchart TD
 Brofessor/
 ├── apps/
 │   ├── accounts/             # User model and profile management
-│   ├── assessments/          # Question generation, attempts, scoring, and evaluation
-│   ├── core/                 # Shared base models, logging, exceptions, web views
-│   ├── knowledge/            # Concepts, evidence items, calculated mastery, knowledge gaps
-│   ├── mastery/              # Mastery calculation, evidence weights, gap analysis, recommendations
-│   ├── processing/           # Extractors, chunking, embedding service, Celery pipeline tasks
-│   ├── rag/                  # Query processor, vector retrieval, reranker, LangGraph RAG workflow
-│   ├── roadmap/              # Domains, Topics, Skills, Roadmap Nodes, and user progress
-│   └── sources/              # Multi-format source ingestion (PDF, text, article, YouTube)
+│   ├── assessments/          # Question generation, strict 10-Q capping, scoring, and attempts
+│   ├── core/                 # Shared base models, logging, exceptions, responsive web views
+│   ├── knowledge/            # Concepts, evidence items, calculated mastery, and Knowledge Graph
+│   ├── mastery/              # Mastery calculation, evidence weights, and recommendations
+│   ├── processing/           # Text extractors, semantic chunking, and embedding pipeline
+│   ├── rag/                  # LangGraph workflow, Adaptive Router, Hybrid Retrieval, Web Search
+│   │   ├── query_processing/ # Adaptive query classifier and query rewriting
+│   │   ├── services/         # Hybrid retrieval, web search, conversation persistence
+│   │   ├── workflow/         # LangGraph state machine, DocumentGrader, HallucinationChecker
+│   │   └── llm/              # Gemini fast pool, Ollama, OpenAI, and Mock LLM providers
+│   ├── roadmap/              # Domains, Topics, Skills, Roadmap Nodes, and DAG progress
+│   └── sources/              # Multi-format source ingestion (PDF, text, web articles, YouTube)
 ├── config/
-│   ├── __init__.py           # Celery application hook
-│   ├── celery.py             # Celery application configuration
-│   ├── settings.py           # Production-ready Django configuration with environment overrides
+│   ├── settings.py           # Hardened Django settings with environment overrides & CSRF support
 │   ├── urls.py               # Root URL configuration (/api/*, /api/v1/*, swagger, redoc)
 │   └── wsgi.py
-├── data/                     # Persistent local database & media directory (mapped to host)
-├── templates/                # Server-rendered HTML templates
+├── data/                     # Persistent local storage (DB, cache, media, logs) mapped to host
+├── templates/                # Server-rendered templates
 │   ├── layouts/              # Base layout, navbar, sidebar, theme tokens
-│   ├── pages/                # Dashboard, Roadmap, Knowledge, Assessments, Chat, Sources
-│   └── components/           # Reusable UI cards, modal dialogs, indicators
+│   └── pages/                # Dashboard, Roadmap, Knowledge Graph, Assessments, Chat, Settings
 ├── static/                   # Static CSS, JS, and font assets
 ├── Dockerfile                # Production single-container image definition
-├── entrypoint.sh             # Startup migration, seeding, and Gunicorn launcher
+├── entrypoint.sh             # Startup migration, curriculum seeding, and Gunicorn launcher
 ├── docker-compose.yml        # Multi-container orchestration (postgres, redis, web, celery)
 ├── manage.py                 # Django management CLI
 ├── requirements.txt          # Python runtime dependencies
-├── schema.yml                # Generated OpenAPI 3.0 schema
-├── .env.example              # Environment variables template
 └── README.md                 # Complete system documentation
 ```
 
 ---
 
-## Setup Instructions
+## Setup & Deployment
 
-### Option A: Standalone Single Docker Container (Recommended)
+### Option A: Public Docker Container (Instant Run — Recommended)
 
-Brofessor runs as a **single, zero-setup Docker container**. User data, database, uploaded files, and learning history persist directly on your host machine:
+Brofessor is published publicly on **Docker Hub**. Run the entire application locally with zero Python configuration:
 
 ```bash
-# 1. Build the image locally
-docker build -t brofessor:latest .
+# Pull the latest verified image
+docker pull nitins715/brofessor:latest
 
-# 2. Run the container mapping your host directory to /data
-# Windows PowerShell:
-docker run -it -p 8000:8000 -v ${PWD}/data:/data brofessor:latest
-
-# Linux / macOS:
-docker run -it -p 8000:8000 -v $(pwd)/data:/data brofessor:latest
+# Run the container with persistent host storage
+docker run -d \
+  --name brofessor \
+  -p 8000:8000 \
+  -v brofessor_data:/data \
+  nitins715/brofessor:latest
 ```
 
-When started, Brofessor displays its startup banner:
-```text
-================================================================================
-  Brofessor: Personal Knowledge System (Local-First Edition)
-================================================================================
-  Status:         READY & RUNNING
-  Access URL:     http://localhost:8000/
-  Container Port: 8000
-  Local Storage:  /data (Mapped to your host PC disk)
-  Authentication: Single-User Local Workspace (No password required)
-================================================================================
-```
+Open your browser to: **`http://localhost:8000/`**
 
-- Open in your browser: `http://localhost:8000/`
-- Direct access: Automatically opens into your local workspace with pre-seeded canonical roadmaps.
+- **Pre-Seeded Data**: Automatically migrates database schemas and seeds standard computer science curricula (AI & Machine Learning / Data Science).
+- **Persistent Storage**: All notes, assessments, and AI configuration persist across container restarts inside the `brofessor_data` volume.
+- **AI Configuration**: Navigate to the **Settings** tab in the web UI to enter your free Google Gemini API key or point to local Ollama (`http://host.docker.internal:11434`).
 
 ---
 
@@ -419,9 +446,9 @@ When started, Brofessor displays its startup banner:
 
 #### Prerequisites
 - **Python**: 3.11, 3.12, or 3.13
-- **Ollama** (Optional for local LLM generation; deterministic mock provider available as fallback)
+- **Ollama** (Optional for local offline LLM generation; Mock provider available for testing)
 
-#### 1. Environment Setup (`.venv`)
+#### 1. Environment Setup
 ```powershell
 # Windows PowerShell
 python -m venv .venv
@@ -438,51 +465,35 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-#### 2. Configuration (`.env`)
-```powershell
-copy .env.example .env     # Windows
-cp .env.example .env       # Linux / macOS
+#### 2. Configure Environment (`.env`)
+```bash
+cp .env.example .env
 ```
-
-Key environment options in `.env`:
+Key settings in `.env`:
 ```ini
-DJANGO_SECRET_KEY=brofessor-insecure-dev-secret-key-change-in-production
+DJANGO_SECRET_KEY=your-secure-secret-key
 DJANGO_DEBUG=True
 DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
 
-# Database Settings (defaults to SQLite in data/brofessor.sqlite3)
+# Database (defaults to SQLite in data/brofessor.sqlite3)
 DB_ENGINE=sqlite
 DATA_DIR=./data
 
-# Local AI / Ollama
-LLM_PROVIDER=ollama
+# AI Provider Settings
+LLM_PROVIDER=auto
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-3.6-flash
 OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.2
-
-# Embedding Configuration
-EMBEDDING_PROVIDER=huggingface
-EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
-EMBEDDING_DIMENSIONS=384
-
-# RAG Pipeline
-RAG_RETRIEVAL_TOP_K=10
-RAG_RERANK_TOP_K=4
-LOG_LEVEL=INFO
 ```
 
-#### 3. Local AI Setup (Ollama)
-```bash
-ollama pull llama3.2
-```
-Ensure Ollama is running at `http://127.0.0.1:11434`. If Ollama is unreachable, Brofessor falls back gracefully to its rule-based parser and mock AI provider without crashing.
-
-#### 4. Run Migrations & Seed Roadmaps
+#### 3. Run Migrations & Seed Curricula
 ```bash
 python manage.py migrate
 python manage.py seed_domain_roadmaps
 ```
 
-#### 5. Start the Web Server
+#### 4. Launch the Web Server
 ```bash
 python manage.py runserver 127.0.0.1:8000
 ```
@@ -492,10 +503,9 @@ Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) in your browser.
 
 ### Option C: Multi-Container Stack (Docker Compose)
 
-For multi-service architectures using dedicated PostgreSQL with `pgvector` and Redis Celery workers:
+For scaling with dedicated PostgreSQL (`pgvector`) and Redis Celery workers:
 
 ```bash
-# Run PostgreSQL + Redis + Web + Celery Worker
 docker compose up --build
 ```
 
@@ -503,20 +513,20 @@ docker compose up --build
 
 ## Running Automated Tests
 
-Brofessor includes comprehensive test suites covering curriculum validation, roadmap DAG traversal, RAG query pipelines, and frontend views:
+Brofessor includes comprehensive test suites covering curriculum validation, roadmap DAG traversal, RAG query pipelines, and assessment capping:
 
 ```bash
-# Run complete test suite
+# Run all tests (42/42 passing)
 python manage.py test
 
-# Run roadmap & curriculum tests
-python manage.py test apps.roadmap
+# Run RAG & LangGraph workflow tests
+python manage.py test apps.rag
 
-# Run web frontend & analytics tests
+# Run Assessment engine & sequential generator tests
+python manage.py test apps.assessments
+
+# Run web frontend & dashboard tests
 python manage.py test apps.core
-
-# Run RAG & processing tests
-python manage.py test apps.rag apps.processing
 ```
 
 ---
@@ -528,111 +538,60 @@ All endpoints are available under `/api/` and versioned `/api/v1/` routes. Inter
 - **Redoc UI**: [http://127.0.0.1:8000/api/redoc/](http://127.0.0.1:8000/api/redoc/)
 - **OpenAPI 3.0 Schema**: [http://127.0.0.1:8000/api/schema/](http://127.0.0.1:8000/api/schema/)
 
-### 1. Knowledge Sources & Ingestion (`/api/sources/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/sources/` | List all registered knowledge sources |
-| `POST` | `/api/sources/note/` | Ingest user raw notes or manual knowledge |
-| `POST` | `/api/sources/article/` | Extract and ingest article from URL |
-| `POST` | `/api/sources/pdf/` | Upload and process PDF document |
-| `POST` | `/api/sources/youtube/` | Fetch YouTube video transcript and ingest |
-| `GET` | `/api/sources/<id>/` | Retrieve source metadata and processing status |
-| `POST` | `/api/sources/<id>/retry/` | Retry failed extraction/ingestion pipeline |
+### Core API Endpoints
 
-### 2. Processing & Background Tasks (`/api/processing/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/processing/status/<source_id>/` | Detailed chunking and embedding progress for a source |
-| `POST` | `/api/processing/retry/<source_id>/` | Re-queue embedding generation |
-| `GET` | `/api/processing/jobs/<task_id>/` | Query Celery `AsyncResult` execution state |
-
-### 3. RAG & Conversational AI (`/api/rag/` & `/api/conversations/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/rag/query/` | Execute end-to-end grounded query (Retrieve $\to$ Rerank $\to$ LLM Answer) |
-| `GET` | `/api/conversations/` | List user conversation threads |
-| `POST` | `/api/conversations/` | Create a new conversation session |
-| `POST` | `/api/conversations/<id>/messages/` | Post a message within an existing conversation thread |
-
-### 4. Roadmaps (`/api/roadmap/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` / `POST` | `/api/roadmap/domains/` | List or create learning domains |
-| `GET` / `POST` | `/api/roadmap/topics/` | List or create topics within domains |
-| `GET` / `POST` | `/api/roadmap/skills/` | List or create skills within topics |
-| `POST` | `/api/roadmap/import-custom/` | Import custom text/document roadmap with smart deduplication |
-| `GET` | `/api/roadmap/graph/<domain_id>/` | Retrieve complete directed learning graph |
-| `GET` / `POST` | `/api/roadmap/user-progress/` | Track user completion percentage and active node |
-
-### 5. Structured Knowledge (`/api/knowledge/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/knowledge/concepts/` | Extracted concepts across all sources |
-| `GET` | `/api/knowledge/evidence/` | List recorded knowledge evidence snippets |
-| `GET` | `/api/knowledge/by-skill/<skill_id>/` | All evidence and concepts associated with a skill |
-| `POST` | `/api/knowledge/extract/<source_id>/` | Trigger AI concept extraction for a source |
-
-### 6. Assessments & Scoring (`/api/assessments/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/assessments/questions/generate/` | Generate tailored questions (MCQ / Conceptual / Code) for a skill |
-| `POST` | `/api/assessments/attempts/start/` | Start an assessment session |
-| `POST` | `/api/assessments/attempts/<id>/submit/` | Submit answers for automatic LLM scoring and feedback |
-| `GET` | `/api/assessments/scores/<skill_id>/` | Retrieve historical scores and performance analytics |
-
-### 7. Mastery & Recommendations (`/api/mastery/` & `/api/recommendations/`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/mastery/skills/<skill_id>/` | View weighted mastery score and level (`Beginner` to `Expert`) |
-| `POST` | `/api/mastery/recalculate/<skill_id>/` | Trigger recalculation based on updated evidence |
-| `GET` | `/api/mastery/gaps/` | List identified knowledge gaps |
-| `GET` | `/api/recommendations/` | Prioritized learning recommendations based on gaps |
+| Category | Method | Endpoint | Description |
+|---|---|---|---|
+| **RAG & Chat** | `POST` | `/api/v1/rag/chat/` | Execute end-to-end LangGraph RAG query with citation tracking |
+| **Conversations** | `GET` / `POST` | `/api/v1/conversations/` | List or create conversation threads |
+| **Sources** | `GET` / `POST` | `/api/sources/` | Ingest PDFs, notes, web articles, and YouTube transcripts |
+| **Sources** | `DELETE` | `/api/sources/<id>/delete/` | Delete ingested knowledge source and cascade chunk vectors |
+| **Roadmaps** | `GET` | `/api/roadmap/graph/<domain_id>/` | Retrieve complete directed learning roadmap graph |
+| **Assessments** | `POST` | `/api/assessments/questions/generate/` | Generate 10-question assessment batch for a skill |
+| **Assessments** | `POST` | `/api/assessments/attempts/<id>/submit/` | Submit answers for automatic LLM evaluation and scoring |
+| **Knowledge Graph**| `GET` | `/api/knowledge/graph/` | Retrieve user performance graph (Mastered vs. Need to Learn) |
+| **Mastery** | `GET` | `/api/mastery/skills/<skill_id>/` | View weighted mastery score and level (`Beginner` to `Expert`) |
 
 ---
 
 ## Key Technical Decisions
 
-1. **Local-First & Absolute Privacy Preservation**:
-   All student notes, learning histories, and documents remain strictly on the user's local machine. The local LLM (`llama3.2` via Ollama) and local embedding models (`bge-small-en-v1.5`) run without transmitting sensitive learning data or queries to external third-party cloud APIs.
-
-2. **Unified Persistent Storage (`/data`)**:
-   Instead of forcing users to configure external database servers, Brofessor uses a single host-mounted `/data` volume. This encapsulates SQLite/PostgreSQL, media uploads, cache, and logs, allowing zero-friction Docker container operation while preventing data loss between container restarts or image upgrades.
-
-3. **Separation of Raw Evidence from Computed Mastery**:
-   Mastery scores are not static fields updated arbitrarily. The system enforces an immutable evidence stream (`Evidence`) linked to raw sources and assessment attempts. Calculated mastery scores (`CalculatedMastery`) and knowledge gaps (`KnowledgeGap`) are derived idempotently from this evidence stream using transparent weighting:
-   - User declarations: 10%
-   - Reading/notes materials: 20%
-   - Practical projects & code: 30%
-   - Verified diagnostic assessments: 40%
-
-4. **Multi-Stage Grounded RAG with Reciprocal Reranking**:
-   To prevent hallucinations in academic discovery, retrieval executes in strict stages:
-   - High-recall dense vector search retrieves top 10 candidates.
-   - Lexical + Vector reciprocal rank fusion re-ranks candidates down to top 4.
-   - Context budget compression (< 4,000 characters) avoids context stuffing.
-   - LLM synthesis mandates inline citations `[Doc:Chunk#]`.
-
-5. **Pluggable AI & Embedding Provider Architecture**:
-   All AI model interactions are mediated through abstract provider interfaces (`BaseLLMProvider`, `BaseEmbeddingProvider`). The runtime switches seamlessly between `OllamaProvider`, `HuggingFaceEmbeddingProvider`, and deterministic `MockProvider` instances for instant, offline unit test execution without network calls.
-
-6. **Hierarchical DAG Curriculum with Smart Deduplication**:
-   Curricula follow a canonical hierarchy (`Domain → Topic → Skill → RoadmapNode`) with directed prerequisite validation. Custom user roadmaps (text or documents) are parsed, compared against canonical nodes via slug and semantic matching, and appended without duplicate entries.
+1. **Local-First with Zero-Friction Cloud Hybrid Fallback**:
+   Student notes and assessment attempts remain strictly on the local workstation. When cloud reasoning is configured, Brofessor uses a pool of the newest low-latency models (`gemini-3.6-flash`, `gemini-3.5-flash`) with strict 8-second timeouts, falling back to local Ollama if offline.
+2. **LangGraph State Machine for Deterministic RAG**:
+   Instead of brittle linear chains, the RAG pipeline is orchestrated via a compiled LangGraph state graph. This enables conditional edge routing, query transformation, document relevance grading, and corrective search fallback with full transparency.
+3. **Thread-Safe Shared Caching (`FileBasedCache`)**:
+   To avoid multi-process race conditions in Gunicorn where in-memory caches cannot share assessment locks, Brofessor uses a unified `/data/cache` file-based cache ensuring atomic generation locks across all workers.
+4. **Strict Assessment Batch Capping (10-Question Hard Cap)**:
+   Assessment generation enforces strict database re-validation under atomic transactions. No assessment can ever generate or evaluate more than the target 10 questions, protecting learner score integrity.
+5. **Interactive Knowledge Graph Over Static Gap Lists**:
+   Learners retain full visibility over their mastery journey through a dynamic Knowledge Graph where correctly answered questions reinforce mastered nodes and incorrect answers feed directly into focused remediation queues.
 
 ---
 
 ## Troubleshooting & FAQ
 
-#### 1. Connection refused to Ollama (`127.0.0.1:11434`)
-- Check that the Ollama daemon is running: `ollama list`
-- If running Brofessor inside Docker and Ollama on the host machine, set `OLLAMA_BASE_URL=http://host.docker.internal:11434` in `.env`.
-- For offline tests and lightweight development, Brofessor automatically falls back to its built-in rule-based parser and mock AI provider without crashing.
+#### 1. How do I configure my Gemini API Key?
+Open Brofessor in your browser, click on **Settings** in the sidebar, paste your API key in the **Gemini API Key** field, and click **Save Settings**. Brofessor will automatically activate the fast cloud model pool.
 
-#### 2. Viewing Application Logs
-All logs include structured ISO timestamps and are written to both the terminal and `logs/brofessor.log`:
+#### 2. How do I connect to local Ollama running on my host machine?
+If you are running Brofessor inside Docker and Ollama directly on your host machine:
+- Set **Ollama Base URL** in Settings to: `http://host.docker.internal:11434`
+- Make sure Ollama is serving requests: `ollama run llama3.2`
+
+#### 3. How do I deploy Brofessor on a cloud server or custom domain?
+Set the `DJANGO_ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` environment variables to your domain:
 ```bash
-tail -f logs/brofessor.log             # Linux / macOS
-Get-Content -Wait logs/brofessor.log   # Windows PowerShell
+docker run -d \
+  -p 8000:8000 \
+  -e DJANGO_ALLOWED_HOSTS="my-brofessor.up.railway.app,example.com" \
+  -e CSRF_TRUSTED_ORIGINS="https://my-brofessor.up.railway.app,https://example.com" \
+  -v brofessor_data:/data \
+  nitins715/brofessor:latest
 ```
 
-#### 3. Custom Roadmap Import
-You can paste any text syllabus or learning goals in the **Curriculum Roadmap** page via the **Import Custom Roadmap** button. The system automatically extracts domain topics and skills, checking against existing nodes to prevent duplicates.
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
