@@ -18,10 +18,10 @@ class AdaptiveRouter:
     3. WEB_SEARCH: Explicit requests for live external web information.
     """
 
-    ROUTER_SYSTEM_PROMPT = """You are a query routing specialist for an AI assistant.
+    ROUTER_SYSTEM_PROMPT = """You are a query routing specialist for an AI knowledge assistant.
 Analyze the user's input and classify it into exactly ONE routing category:
-- "PARAMETRIC": Simple conversational greetings (e.g. "hello", "how are you"), common mathematical calculations (e.g. "what is 5 * 12"), basic standard programming questions without needing local files (e.g. "what does len() do in Python").
-- "RETRIEVAL": Any question seeking specific explanations, documents, course material, user notes, uploaded PDFs, domain skills, or detailed technical learning topics.
+- "PARAMETRIC": ONLY pure conversational greetings (e.g. "hello", "how are you"), social pleasantries (e.g. "thanks", "bye"), bot identity/persona questions (e.g. "who are you"), or simple arithmetic calculations (e.g. "what is 5 * 12"). Do NOT classify technical, coding, conceptual, or informational questions as PARAMETRIC.
+- "RETRIEVAL": ALL technical questions, programming and coding queries (e.g. questions about Python, syntax, functions, variables, classes, data structures, algorithms), conceptual explanations, documentation queries, user notes, uploaded PDFs, domain skills, and internal knowledge. When in doubt, ALWAYS choose RETRIEVAL so stored sources and documents are searched.
 - "WEB_SEARCH": Questions explicitly asking to search the internet or asking about recent live news/events outside normal knowledge.
 
 Return ONLY a JSON object in this format:
@@ -42,7 +42,9 @@ Return ONLY a JSON object in this format:
         clean_words = set(re.findall(r"\b[a-z]+\b", clean))
         greeting_words = {
             "hi", "hello", "hey", "there", "howdy", "greetings",
-            "good", "morning", "afternoon", "evening", "who", "are", "you", "help"
+            "good", "morning", "afternoon", "evening", "who", "are", "you", "help",
+            "thanks", "thank", "bye", "goodbye", "brofessor", "bro", "assistant",
+            "for", "the", "a", "an", "to", "my", "your", "i", "am", "doing", "how"
         }
         if clean_words and clean_words.issubset(greeting_words):
             return {"category": "PARAMETRIC", "reason": "Conversational greeting"}
@@ -52,6 +54,25 @@ Return ONLY a JSON object in this format:
 
         if any(trigger in clean for trigger in ("search web", "search internet", "google it", "look up on web")):
             return {"category": "WEB_SEARCH", "reason": "Explicit web search instruction"}
+
+        # Fast heuristics for knowledge/technical questions: route directly to RETRIEVAL
+        technical_keywords = {
+            "python", "code", "coding", "function", "functions", "variable", "variables",
+            "class", "classes", "object", "objects", "loop", "loops", "list", "lists",
+            "dict", "dictionary", "dictionaries", "tuple", "tuples", "set", "sets",
+            "repl", "integer", "string", "float", "boolean", "type", "types", "typecasting",
+            "import", "module", "modules", "package", "packages", "library", "libraries",
+            "syntax", "operator", "operators", "condition", "recursion", "generator", "yield",
+            "decorator", "lambda", "async", "await", "coroutine", "thread", "process",
+            "sql", "database", "postgres", "postgresql", "index", "indexing", "vector",
+            "embedding", "embeddings", "rag", "model", "neural", "attention", "transformer",
+            "document", "documents", "pdf", "file", "note", "notes", "handbook", "chapter"
+        }
+        if clean_words.intersection(technical_keywords):
+            return {"category": "RETRIEVAL", "reason": "Technical domain keyword match"}
+
+        if re.match(r"^(what is|what are|how to|how do|how does|explain|describe|tell me about|difference between|compare|can you explain)\b", clean):
+            return {"category": "RETRIEVAL", "reason": "Informational inquiry seeking explanation"}
 
         # Use active LLM for nuanced classification
         active_llm = llm_provider or get_llm_provider()

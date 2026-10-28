@@ -83,6 +83,22 @@ class AdaptiveRouterTestCase(TestCase):
         )
         self.assertEqual(result["category"], "RETRIEVAL")
 
+    def test_programming_and_conceptual_queries_route_to_retrieval(self):
+        queries = [
+            "What is Python?",
+            "What is REPL?",
+            "Explain variables and data types",
+            "What is an integer in python?",
+            "How do single-line comments work in Python?",
+        ]
+        for q in queries:
+            result = AdaptiveRouter.classify(q)
+            self.assertEqual(
+                result["category"],
+                "RETRIEVAL",
+                f"Query '{q}' should route to RETRIEVAL instead of PARAMETRIC",
+            )
+
 
 class DocumentGraderTestCase(TestCase):
     """Tests for Self-RAG relevance grading and hallucination verification."""

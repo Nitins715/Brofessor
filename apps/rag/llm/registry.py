@@ -52,10 +52,11 @@ def get_llm_provider(provider_name: Optional[str] = None) -> BaseLLMProvider:
     Supported: 'gemini', 'openai', 'ollama', 'mock', 'auto'.
     Auto-priority: Uses Cloud (Gemini/OpenAI) by default if API key is provided,
     otherwise automatically falls back to Local Ollama for every task.
-    No manual user selection required.
+    Respects user configured provider in ai_config.json if explicitly specified.
     """
     ai_cfg = get_system_ai_config()
-    normalized = (provider_name or "").lower().strip()
+    chosen_provider = provider_name or ai_cfg.get("llm_provider") or "auto"
+    normalized = chosen_provider.lower().strip()
 
     if normalized in ("mock", "test"):
         return MockLLMProvider()

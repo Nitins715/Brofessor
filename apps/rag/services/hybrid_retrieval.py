@@ -125,7 +125,7 @@ class HybridRetrievalService:
         )
 
         # 2. Sparse / Keyword Candidates via BM25
-        # Retrieve candidate chunk records for BM25 ranking
+        # Retrieve candidate chunk records for BM25 ranking across all documents
         queryset = DocumentChunk.objects.select_related("document", "document__source")
         if source_ids:
             queryset = queryset.filter(document__source_id__in=source_ids)
@@ -135,8 +135,32 @@ class HybridRetrievalService:
             clean_types = [t.lower() for t in source_types]
             queryset = queryset.filter(document__source__source_type__in=clean_types)
 
-        all_candidate_chunks = list(queryset[:100])
+        from django.db.models import Q
         bm25_scorer = BM25Scorer()
+        query_tokens = bm25_scorer.tokenize(query)
+
+        candidate_chunks_dict = {}
+        # Include chunks containing query terms across the corpus
+        if query_tokens:
+            token_filter = Q()
+            for t in query_tokens[:8]:
+                token_filter |= Q(content__icontains=t)
+            matching_chunks = list(queryset.filter(token_filter)[:200])
+            for c in matching_chunks:
+                candidate_chunks_dict[str(c.id)] = c
+
+        # Always include dense candidates so they get evaluated by BM25 too
+        dense_chunk_ids = [res.chunk_id for res in dense_candidates]
+        if dense_chunk_ids:
+            for c in queryset.filter(id__in=dense_chunk_ids):
+                candidate_chunks_dict[str(c.id)] = c
+
+        # Fallback if no specific keyword matches yet (e.g. semantic-only query)
+        if not candidate_chunks_dict:
+            for c in queryset[:100]:
+                candidate_chunks_dict[str(c.id)] = c
+
+        all_candidate_chunks = list(candidate_chunks_dict.values())
         bm25_ranked = bm25_scorer.score_corpus(query, all_candidate_chunks)
 
         # 3. Reciprocal Rank Fusion (RRF)

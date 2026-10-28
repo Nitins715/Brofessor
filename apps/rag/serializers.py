@@ -70,6 +70,7 @@ class CitationSerializer(serializers.Serializer):
     page = serializers.IntegerField(required=False, allow_null=True)
     timestamp = serializers.CharField(required=False, allow_null=True)
     snippet = serializers.CharField()
+    content = serializers.CharField(required=False, allow_blank=True)
 
 
 class RAGChatRequestSerializer(serializers.Serializer):

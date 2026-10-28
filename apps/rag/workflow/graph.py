@@ -20,10 +20,10 @@ from apps.rag.workflow.grader import DocumentGrader, HallucinationChecker
 logger = logging.getLogger("brofessor")
 
 GROUNDED_SYSTEM_PROMPT = """You are Brofessor, an intelligent, local-first personal knowledge assistant.
-Answer the user's question accurately and thoroughly using ONLY the provided context from the user's knowledge base.
+Answer the user's question accurately and thoroughly using the provided context from the user's knowledge base and internal documents.
 
 Guidelines:
-1. Base your answer strictly on the provided context sources. Do NOT invent, assume, or extrapolate facts.
+1. Base your answer primarily on the provided context sources. Use the knowledge base to directly explain concepts, provide definitions, and show code examples.
 2. Refer to the sources by their citation bracket (e.g., [Source 1], [Source 2]).
 3. Be concise, clear, and structured in your explanations."""
 
@@ -190,32 +190,50 @@ def create_rag_graph(
     def document_grading_node(state: RAGState) -> Dict[str, Any]:
         query = state.get("query", "")
         reranked = state.get("reranked_chunks", [])
-        candidate_search_results = [r.search_result for r in reranked]
-
-        if not candidate_search_results:
+        if not reranked:
             return {
                 "graded_chunks": [],
                 "grading_status": "INSUFFICIENT",
             }
 
+        candidate_search_results = [r.search_result for r in reranked]
+
         # For simple/direct queries, fast-track top reranked chunks without multi-LLM latency
         is_hard = QueryComplexityClassifier.is_hard(query)
         if not is_hard:
-            logger.info(f"Query is straightforward, fast-tracking {len(candidate_search_results)} reranked chunks.")
+            logger.info(f"Query is straightforward, fast-tracking {len(reranked)} reranked chunks.")
             return {
-                "graded_chunks": candidate_search_results,
+                "graded_chunks": reranked,
                 "grading_status": "RELEVANT",
             }
 
-        relevant_chunks, status = DocumentGrader.filter_and_evaluate(
+        relevant_search_results, status = DocumentGrader.filter_and_evaluate(
             query=query,
             chunks=candidate_search_results,
             llm_provider=active_llm,
         )
-        logger.info(f"DocumentGrader evaluated chunks: {len(relevant_chunks)}/{len(candidate_search_results)} relevant. Status: {status}")
+        logger.info(f"DocumentGrader evaluated chunks: {len(relevant_search_results)}/{len(candidate_search_results)} relevant. Status: {status}")
+
+        if status == "RELEVANT" and relevant_search_results:
+            relevant_ids = {r.chunk_id for r in relevant_search_results}
+            kept_reranked = [r for r in reranked if r.search_result.chunk_id in relevant_ids]
+            return {
+                "graded_chunks": kept_reranked or reranked,
+                "grading_status": "RELEVANT",
+            }
+
+        # If strict LLM grader returned insufficient, verify if top reranked chunks have solid vector similarity
+        solid_chunks = [r for r in reranked if r.search_result.similarity_score >= 0.35]
+        if solid_chunks:
+            logger.info(f"Retaining {len(solid_chunks)} chunks with solid vector similarity (>= 0.35) despite strict grading.")
+            return {
+                "graded_chunks": solid_chunks,
+                "grading_status": "RELEVANT",
+            }
+
         return {
-            "graded_chunks": relevant_chunks,
-            "grading_status": status,
+            "graded_chunks": [],
+            "grading_status": "INSUFFICIENT",
         }
 
     # =========================================================================
@@ -377,6 +395,7 @@ def create_rag_graph(
             return {
                 "response_text": res.text,
                 "response_source": "documents",
+                "citations": citations,
                 "tokens_used": res.tokens_used,
                 "metadata": {
                     **(state.get("metadata") or {}),
