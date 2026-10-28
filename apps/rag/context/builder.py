@@ -25,6 +25,7 @@ class Citation:
     page: Optional[int] = None
     timestamp: Optional[str] = None
     snippet: str = ""
+    content: str = ""
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -44,7 +45,9 @@ class Citation:
             "rank": self.rank,
             "similarity_score": round(self.similarity_score, 4),
             "snippet": self.snippet,
+            "content": self.content or self.snippet,
         }
+
         if self.rerank_score is not None:
             data["rerank_score"] = round(self.rerank_score, 4)
         if self.page is not None:
@@ -159,6 +162,7 @@ class ContextBuilder:
                             page=page,
                             timestamp=str(timestamp) if timestamp is not None else None,
                             snippet=clean_content[:150] + "...",
+                            content=clean_content,
                             metadata=metadata,
                         )
                     )
@@ -183,6 +187,7 @@ class ContextBuilder:
                     page=page,
                     timestamp=str(timestamp) if timestamp is not None else None,
                     snippet=clean_content[:150] + ("..." if len(clean_content) > 150 else ""),
+                    content=clean_content,
                     metadata=metadata,
                 )
             )

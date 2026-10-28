@@ -317,16 +317,20 @@ def create_rag_graph(
     # =========================================================================
     def build_context_node(state: RAGState) -> Dict[str, Any]:
         graded_chunks = state.get("graded_chunks", [])
-        # Wrap into pseudo-RerankResult for ContextBuilder compatibility
-        rerank_items = [
-            RerankResult(
-                search_result=c,
-                rerank_score=c.similarity_score,
-                original_rank=idx + 1,
-                rerank_rank=idx + 1,
-            )
-            for idx, c in enumerate(graded_chunks)
-        ]
+        rerank_items = []
+        for idx, c in enumerate(graded_chunks):
+            if isinstance(c, RerankResult):
+                rerank_items.append(c)
+            else:
+                rerank_items.append(
+                    RerankResult(
+                        search_result=c,
+                        rerank_score=getattr(c, "similarity_score", 1.0),
+                        original_rank=idx + 1,
+                        new_rank=idx + 1,
+                    )
+                )
+
 
         built_ctx = ctx_builder.build(rerank_items)
         serialized_citations = [c.to_dict() for c in built_ctx.citations]

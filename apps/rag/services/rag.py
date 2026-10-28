@@ -141,22 +141,30 @@ class RAGService:
             },
         )
 
-        # 5. Persist grounding RetrievedChunk references
+        # 5. Persist grounding RetrievedChunk references safely
         retrieved_chunk_objects = []
         for citation in citations:
             chunk_id = citation.get("chunk_id")
             if chunk_id:
-                retrieved_chunk_objects.append(
-                    RetrievedChunk(
-                        message=assistant_message,
-                        chunk_id=chunk_id,
-                        similarity_score=citation.get("similarity_score"),
-                        rank=citation.get("rank", 1),
+                try:
+                    valid_uuid = uuid.UUID(str(chunk_id))
+                    retrieved_chunk_objects.append(
+                        RetrievedChunk(
+                            message=assistant_message,
+                            chunk_id=valid_uuid,
+                            similarity_score=citation.get("similarity_score"),
+                            rank=citation.get("rank", 1),
+                        )
                     )
-                )
+                except (ValueError, TypeError):
+                    continue
 
         if retrieved_chunk_objects:
-            RetrievedChunk.objects.bulk_create(retrieved_chunk_objects)
+            try:
+                RetrievedChunk.objects.bulk_create(retrieved_chunk_objects, ignore_conflicts=True)
+            except Exception as e:
+                logger.warning(f"Could not persist RetrievedChunk references: {e}")
+
 
         return RAGResult(
             conversation_id=str(conversation.id),

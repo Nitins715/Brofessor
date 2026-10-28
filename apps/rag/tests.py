@@ -168,6 +168,38 @@ class AdvancedRAGWorkflowIntegrationTestCase(TestCase):
             self.assertEqual(result.citations[0]["source_uri"], "https://finance.example.com/nvda")
             self.assertIn("$145", result.answer)
 
+    def test_grounded_document_pipeline_with_citations_and_content(self):
+        mock_llm = MockRAGLLMProvider(canned_response="Docker image creation involves build, tag, and push.")
+        mock_search_results = [
+            SearchResult(
+                chunk_id="chunk-123",
+                document_id="doc-123",
+                source_id="src-123",
+                content="The docker image lifecycle includes build, tag, push, run, and rm.",
+                chunk_index=0,
+                similarity_score=0.88,
+                distance=0.12,
+                source_name="Docker Architecture Guide",
+                document_title="Docker Lifecycle",
+                source_type="article",
+                source_uri="https://example.com/docker",
+            )
+        ]
+
+
+        with patch.object(HybridRetrievalService, "search", return_value=mock_search_results):
+            result = RAGService.ask(
+                query="what are parts of docker image lifecycle creation",
+                llm_provider=mock_llm,
+            )
+            self.assertEqual(result.response_source, "documents")
+            self.assertTrue(len(result.citations) >= 1)
+            first_citation = result.citations[0]
+            self.assertEqual(first_citation["chunk_id"], "chunk-123")
+            self.assertIn("build, tag, push", first_citation["content"])
+            self.assertIn("Docker", result.answer)
+
+
 
 class ParagraphChunkerTestCase(TestCase):
     """Tests semantic and paragraph-aware document chunking."""

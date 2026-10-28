@@ -467,15 +467,50 @@ function appendAssistantMessage(text, citations, responseSource, canSearchWeb, o
       `;
     }).join('');
 
+    const chunkCards = citations.map((c, idx) => {
+      const srcName = c.source ? (c.source.name || c.source.title || 'Source') : (c.document_title || c.source_name || 'Source');
+      const snippetText = c.content || c.snippet || 'No text snippet available.';
+      const score = c.rerank_score !== undefined && c.rerank_score !== null ? `RRF: ${c.rerank_score}` : (c.similarity_score ? `Sim: ${c.similarity_score}` : '');
+
+      return `
+        <div class="p-2.5 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 text-xs space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+            <span class="font-semibold text-zinc-800 dark:text-zinc-200">#${idx + 1} · ${escapeHtml(srcName)} ${c.chunk_index !== undefined ? `(Chunk ${c.chunk_index})` : ''}</span>
+            ${score ? `<span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[10px]">${score}</span>` : ''}
+          </div>
+          <div class="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono leading-relaxed bg-white dark:bg-zinc-950/70 p-2 rounded border border-zinc-100 dark:border-zinc-800 whitespace-pre-wrap max-h-48 overflow-y-auto">
+            ${escapeHtml(snippetText)}
+          </div>
+        </div>
+      `;
+    }).join('');
+
     citationsHtml = `
-      <div class="pt-2 space-y-1.5 border-t border-zinc-200/60 dark:border-zinc-800/60 mt-2">
-        <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Citations:</span>
+      <div class="pt-2 space-y-2 border-t border-zinc-200/60 dark:border-zinc-800/60 mt-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Sources:</span>
+        </div>
         <div class="flex flex-wrap gap-1.5">
           ${citationChips}
         </div>
+        <details class="group mt-2 border-t border-zinc-200/40 dark:border-zinc-800/40 pt-1.5">
+          <summary class="cursor-pointer text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-between select-none py-1">
+            <span class="inline-flex items-center gap-1 font-mono">
+              <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+              <span>View Retrieved Chunks (${citations.length})</span>
+            </span>
+            <span class="text-[10px] text-zinc-400 font-normal group-open:hidden">Click to preview text</span>
+          </summary>
+          <div class="mt-2 space-y-2 pt-1">
+            ${chunkCards}
+          </div>
+        </details>
       </div>
     `;
   }
+
 
   // Interactive Web Search Button if CRAG flagged insufficient doc coverage
   let webSearchActionHtml = '';
@@ -632,8 +667,13 @@ async function handleChatSubmit(e) {
         document.getElementById('active-conv-title').textContent = data.query.substring(0, 30) + '...';
       }
     } else {
+      let errDetail = 'Server returned error ' + res.status;
+      try {
+        const errJson = await res.json();
+        errDetail = errJson.error || errJson.detail || JSON.stringify(errJson);
+      } catch (e) {}
       appendAssistantMessage(
-        `Based on your learning evidence and current curriculum for ${activeSkillName || 'AI & Engineering'}: I have logged your question.`,
+        `⚠️ RAG Pipeline Notice: ${errDetail}`,
         [],
         'parametric',
         true,
@@ -644,7 +684,7 @@ async function handleChatSubmit(e) {
     hideSteppedLoading();
     sendBtn.disabled = false;
     appendAssistantMessage(
-      `Assistant note: Response retrieved. To query specific documents, make sure knowledge sources are added in the Sources tab.`,
+      `⚠️ Connection Error: Unable to communicate with Brofessor server (${err.message}).`,
       [],
       'parametric',
       false,

@@ -1,8 +1,12 @@
+import logging
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from drf_spectacular.utils import extend_schema
+
+logger = logging.getLogger("brofessor")
+
 
 from .models import Conversation, Message
 from .serializers import (
@@ -91,17 +95,36 @@ class RAGChatView(APIView):
             "min_similarity": data.get("min_similarity"),
         }
 
-        rag_result = RAGService.ask(
-            query=data["query"],
-            conversation_id=data.get("conversation_id"),
-            domain_id=data.get("domain_id"),
-            allow_web_search=data.get("allow_web_search", False),
-            retrieval_top_k=data.get("retrieval_top_k"),
-            rerank_top_k=data.get("rerank_top_k"),
-            filters=filters,
-        )
+        try:
+            rag_result = RAGService.ask(
+                query=data["query"],
+                conversation_id=data.get("conversation_id"),
+                domain_id=data.get("domain_id"),
+                allow_web_search=data.get("allow_web_search", False),
+                retrieval_top_k=data.get("retrieval_top_k"),
+                rerank_top_k=data.get("rerank_top_k"),
+                filters=filters,
+            )
+            return Response(rag_result.to_dict(), status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error executing RAG pipeline for query '{data['query'][:40]}': {e}", exc_info=True)
+            return Response(
+                {
+                    "conversation_id": str(data.get("conversation_id") or ""),
+                    "message_id": "",
+                    "query": data["query"],
+                    "answer": f"⚠️ An error occurred during RAG pipeline execution: {str(e)}",
+                    "citations": [],
+                    "retrieved_count": 0,
+                    "reranked_count": 0,
+                    "response_source": "documents",
+                    "can_search_web": True,
+                    "error": str(e),
+                    "metadata": {},
+                },
+                status=status.HTTP_200_OK,
+            )
 
-        return Response(rag_result.to_dict(), status=status.HTTP_200_OK)
 
 
 class ConversationListView(APIView):
