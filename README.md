@@ -124,7 +124,7 @@ flowchart TD
     end
 
     subgraph Storage["Persistence & Volume Layer"]
-        DB[(Relational DB: SQLite / PostgreSQL + pgvector)]
+        DB[("Relational DB: SQLite / PostgreSQL + pgvector")]
         DiskStore["Host Persistent Volume (/data)\nDatabase, Media, Cache, Logs, AI Config"]
     end
 
@@ -172,26 +172,26 @@ Brofessor incorporates state-of-the-art RAG paradigms—including **Adaptive RAG
 
 ```mermaid
 flowchart TD
-    Start([User Query]) --> RouterNode{Adaptive Router}
+    Start(["User Query"]) --> RouterNode{"Adaptive Router"}
 
-    RouterNode -->|Conversational / Syntax| ParametricNode[Parametric Knowledge Node\nDirect LLM generation with 0 retrieval overhead]
-    RouterNode -->|Live / External Search| WebSearchNode[Web Search Node\nLive internet retrieval & synthesis]
-    RouterNode -->|Domain / Document Inquiry| TransformNode[Query Transformation Node\nRewriting & multi-query expansion for hard queries]
+    RouterNode -->|Conversational / Syntax| ParametricNode["Parametric Knowledge Node\nDirect LLM generation with 0 retrieval overhead"]
+    RouterNode -->|Live / External Search| WebSearchNode["Web Search Node\nLive internet retrieval & synthesis"]
+    RouterNode -->|Domain / Document Inquiry| TransformNode["Query Transformation Node\nRewriting & multi-query expansion for hard queries"]
 
-    TransformNode --> HybridRetrieval[Hybrid Retrieval Node\nDense Vector Search + Lexical BM25]
-    HybridRetrieval --> RerankNode[Reranking Node\nReciprocal Rank Fusion RRF Scoring]
-    RerankNode --> GraderNode[Self-RAG Document Grader\nEvaluates relevance of top chunks]
+    TransformNode --> HybridRetrieval["Hybrid Retrieval Node\nDense Vector Search + Lexical BM25"]
+    HybridRetrieval --> RerankNode["Reranking Node\nReciprocal Rank Fusion RRF Scoring"]
+    RerankNode --> GraderNode["Self-RAG Document Grader\nEvaluates relevance of top chunks"]
 
-    GraderNode --> RelevantCheck{Context Relevant?}
-    RelevantCheck -->|Yes: Sufficient Context| BuildContext[Build Context & Grounding Node]
-    RelevantCheck -->|No: Insufficient / Off-Topic| CRAGNode{CRAG Fallback\nUser Allowed Web Search?}
+    GraderNode --> RelevantCheck{"Context Relevant?"}
+    RelevantCheck -->|Yes: Sufficient Context| BuildContext["Build Context & Grounding Node"]
+    RelevantCheck -->|No: Insufficient / Off-Topic| CRAGNode{"CRAG Fallback\nUser Allowed Web Search?"}
 
     CRAGNode -->|Yes| WebSearchNode
-    CRAGNode -->|No| PromptUserWeb[Prompt User for Web Search Permission]
+    CRAGNode -->|No| PromptUserWeb["Prompt User for Web Search Permission"]
 
-    BuildContext --> GroundedGen[Grounded Generation Node\nInline Citation Attribution [Source N]]
+    BuildContext --> GroundedGen["Grounded Generation Node\nInline Citation Attribution [Source N]"]
     
-    ParametricNode --> End([Deliver Verified Answer])
+    ParametricNode --> End(["Deliver Verified Answer"])
     GroundedGen --> End
     WebSearchNode --> End
     PromptUserWeb --> End
