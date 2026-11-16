@@ -10,7 +10,7 @@ from apps.rag.embeddings import get_embedding_provider, BaseEmbeddingProvider
 
 @dataclass
 class SearchResult:
-    """Standardized vector retrieval result item with provenance metadata."""
+    """Standardized vector retrieval result item with provenance and hierarchical metadata."""
     chunk_id: str
     chunk_index: int
     content: str
@@ -22,6 +22,9 @@ class SearchResult:
     source_name: str
     source_type: str
     source_uri: str
+    chunk_level: str = "child"
+    parent_chunk_id: Optional[str] = None
+    parent_content: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
@@ -29,6 +32,9 @@ class SearchResult:
             "chunk_id": self.chunk_id,
             "chunk_index": self.chunk_index,
             "content": self.content,
+            "chunk_level": self.chunk_level,
+            "parent_chunk_id": self.parent_chunk_id,
+            "parent_content": self.parent_content,
             "similarity_score": round(self.similarity_score, 4),
             "distance": round(self.distance, 4),
             "document": {
@@ -93,7 +99,7 @@ class RetrievalService:
             # Native PostgreSQL pgvector cosine distance query
             annotated_qs = (
                 queryset.annotate(distance=CosineDistance("embedding", query_vector))
-                .select_related("document", "document__source")
+                .select_related("document", "document__source", "parent_chunk")
                 .order_by("distance")[:top_k]
             )
 
@@ -107,10 +113,12 @@ class RetrievalService:
 
                 doc = chunk.document
                 src = doc.source if doc else None
+                parent_chunk = chunk.parent_chunk
 
                 enriched_meta = {
                     **(chunk.metadata or {}),
                     "token_count": chunk.token_count,
+                    "chunk_level": chunk.chunk_level,
                 }
 
                 results.append(
@@ -126,6 +134,9 @@ class RetrievalService:
                         source_name=src.name if src else "",
                         source_type=src.source_type if src else "",
                         source_uri=src.uri if src else "",
+                        chunk_level=chunk.chunk_level,
+                        parent_chunk_id=str(parent_chunk.id) if parent_chunk else None,
+                        parent_content=parent_chunk.content if parent_chunk else None,
                         metadata=enriched_meta,
                     )
                 )
@@ -153,7 +164,7 @@ class RetrievalService:
                 return float(max(0.0, min(1.0, 1.0 - cos_sim)))
 
             scored_chunks = []
-            for chunk in queryset.select_related("document", "document__source"):
+            for chunk in queryset.select_related("document", "document__source", "parent_chunk"):
                 dist = compute_cosine_distance(chunk.embedding, query_vector)
                 similarity = max(0.0, min(1.0, 1.0 - dist))
                 if min_similarity is not None and similarity < min_similarity:
@@ -165,10 +176,12 @@ class RetrievalService:
             for dist, similarity, chunk in scored_chunks[:top_k]:
                 doc = chunk.document
                 src = doc.source if doc else None
+                parent_chunk = chunk.parent_chunk
 
                 enriched_meta = {
                     **(chunk.metadata or {}),
                     "token_count": chunk.token_count,
+                    "chunk_level": chunk.chunk_level,
                 }
 
                 results.append(
@@ -184,6 +197,9 @@ class RetrievalService:
                         source_name=src.name if src else "",
                         source_type=src.source_type if src else "",
                         source_uri=src.uri if src else "",
+                        chunk_level=chunk.chunk_level,
+                        parent_chunk_id=str(parent_chunk.id) if parent_chunk else None,
+                        parent_content=parent_chunk.content if parent_chunk else None,
                         metadata=enriched_meta,
                     )
                 )

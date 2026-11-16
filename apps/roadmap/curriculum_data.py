@@ -13,13 +13,6 @@ DOMAINS_DATA = [
         "is_active": True,
         "is_selected": True,
     },
-    {
-        "name": "Data Science",
-        "slug": "data-science",
-        "description": "Rigorous, interview-oriented roadmap for Data Science covering foundational CS, advanced SQL, data preparation, EDA, causal experimentation/A-B testing, applied ML, time series forecasting, and business analytics.",
-        "is_active": True,
-        "is_selected": False,
-    },
 ]
 
 # Shared Foundation Topics (linked to both AI/ML and Data Science)

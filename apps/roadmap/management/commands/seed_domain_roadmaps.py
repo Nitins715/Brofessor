@@ -120,8 +120,8 @@ class Command(BaseCommand):
                             stats["domains_unchanged"] += 1
                     domains_by_slug[d_data["slug"]] = domain
 
-                aiml_domain = domains_by_slug["artificial-intelligence-machine-learning"]
-                ds_domain = domains_by_slug["data-science"]
+                aiml_domain = domains_by_slug.get("artificial-intelligence-machine-learning")
+                ds_domain = domains_by_slug.get("data-science")
 
                 # 3. Seed Shared Foundation Topics (linked to both AI/ML and Data Science)
                 self.stdout.write("\nSeeding Shared CSE Foundation (linked to both domains)...")
@@ -167,8 +167,8 @@ class Command(BaseCommand):
                         else:
                             stats["topics_unchanged"] += 1
 
-                    # Ensure additional_domains includes Data Science
-                    if not topic.additional_domains.filter(id=ds_domain.id).exists():
+                    # Ensure additional_domains includes Data Science if active
+                    if ds_domain and not topic.additional_domains.filter(id=ds_domain.id).exists():
                         topic.additional_domains.add(ds_domain)
 
                     shared_topics.append((topic, t_data))
@@ -218,50 +218,51 @@ class Command(BaseCommand):
                             stats["topics_unchanged"] += 1
                     aiml_topics.append((topic, t_data))
 
-                # 5. Seed Data Science Specialization Topics
-                self.stdout.write("Seeding Data Science Specialization Topics...")
+                # 5. Seed Data Science Specialization Topics (only if Data Science domain exists)
                 ds_topics = []
-                for t_data in DATA_SCIENCE_SPECIALIZATION_TOPICS:
-                    topic, created = Topic.objects.get_or_create(
-                        domain=ds_domain,
-                        slug=t_data["slug"],
-                        defaults={
-                            "name": t_data["name"],
-                            "description": t_data["description"],
-                            "priority": t_data.get("priority", "P0"),
-                            "learning_objectives": t_data.get("learning_objectives", []),
-                            "estimated_effort_hours": t_data.get("estimated_effort_hours", 0),
-                            "order": t_data.get("order", 0),
-                        },
-                    )
-                    if created:
-                        stats["topics_created"] += 1
-                    else:
-                        updated = False
-                        if topic.name != t_data["name"]:
-                            topic.name = t_data["name"]
-                            updated = True
-                        if topic.description != t_data["description"]:
-                            topic.description = t_data["description"]
-                            updated = True
-                        if topic.priority != t_data.get("priority", "P0"):
-                            topic.priority = t_data.get("priority", "P0")
-                            updated = True
-                        if topic.learning_objectives != t_data.get("learning_objectives", []):
-                            topic.learning_objectives = t_data.get("learning_objectives", [])
-                            updated = True
-                        if topic.estimated_effort_hours != t_data.get("estimated_effort_hours", 0):
-                            topic.estimated_effort_hours = t_data.get("estimated_effort_hours", 0)
-                            updated = True
-                        if topic.order != t_data.get("order", 0):
-                            topic.order = t_data.get("order", 0)
-                            updated = True
-                        if updated:
-                            topic.save()
-                            stats["topics_updated"] += 1
+                if ds_domain:
+                    self.stdout.write("Seeding Data Science Specialization Topics...")
+                    for t_data in DATA_SCIENCE_SPECIALIZATION_TOPICS:
+                        topic, created = Topic.objects.get_or_create(
+                            domain=ds_domain,
+                            slug=t_data["slug"],
+                            defaults={
+                                "name": t_data["name"],
+                                "description": t_data["description"],
+                                "priority": t_data.get("priority", "P0"),
+                                "learning_objectives": t_data.get("learning_objectives", []),
+                                "estimated_effort_hours": t_data.get("estimated_effort_hours", 0),
+                                "order": t_data.get("order", 0),
+                            },
+                        )
+                        if created:
+                            stats["topics_created"] += 1
                         else:
-                            stats["topics_unchanged"] += 1
-                    ds_topics.append((topic, t_data))
+                            updated = False
+                            if topic.name != t_data["name"]:
+                                topic.name = t_data["name"]
+                                updated = True
+                            if topic.description != t_data["description"]:
+                                topic.description = t_data["description"]
+                                updated = True
+                            if topic.priority != t_data.get("priority", "P0"):
+                                topic.priority = t_data.get("priority", "P0")
+                                updated = True
+                            if topic.learning_objectives != t_data.get("learning_objectives", []):
+                                topic.learning_objectives = t_data.get("learning_objectives", [])
+                                updated = True
+                            if topic.estimated_effort_hours != t_data.get("estimated_effort_hours", 0):
+                                topic.estimated_effort_hours = t_data.get("estimated_effort_hours", 0)
+                                updated = True
+                            if topic.order != t_data.get("order", 0):
+                                topic.order = t_data.get("order", 0)
+                                updated = True
+                            if updated:
+                                topic.save()
+                                stats["topics_updated"] += 1
+                            else:
+                                stats["topics_unchanged"] += 1
+                        ds_topics.append((topic, t_data))
 
                 # 6. Seed Skills & RoadmapNodes across all topics
                 self.stdout.write("\nSeeding individual skills and roadmap nodes...")

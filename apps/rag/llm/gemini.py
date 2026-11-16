@@ -1,5 +1,6 @@
+import json
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterator, Optional
 import requests
 from django.conf import settings
 from .base import BaseLLMProvider, LLMResponse
@@ -128,4 +129,72 @@ class GeminiLLMProvider(BaseLLMProvider):
         )
         logger.error(api_down_msg)
         raise RuntimeError(api_down_msg)
+
+    def generate_stream(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        if not self._api_key:
+            raise ValueError(
+                "Gemini API key is not configured. Please add your GEMINI_API_KEY in Settings."
+            )
+
+        models_to_try = [
+            self._model_name,
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-1.5-flash",
+        ]
+        seen = set()
+        deduped_models = []
+        for m in models_to_try:
+            if m and m not in seen:
+                seen.add(m)
+                deduped_models.append(m)
+
+        generation_config: Dict[str, Any] = {"temperature": temperature}
+        payload: Dict[str, Any] = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": generation_config,
+        }
+        if system_prompt:
+            payload["system_instruction"] = {"parts": [{"text": system_prompt}]}
+
+        for model in deduped_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={self._api_key}"
+            try:
+                response = requests.post(
+                    url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    stream=True,
+                    timeout=self.timeout,
+                )
+                if response.status_code == 200:
+                    for line in response.iter_lines(decode_unicode=True):
+                        if line and line.startswith("data: "):
+                            data_str = line[6:].strip()
+                            try:
+                                chunk = json.loads(data_str)
+                                candidates = chunk.get("candidates", [])
+                                if candidates:
+                                    parts = candidates[0].get("content", {}).get("parts", [])
+                                    for part in parts:
+                                        t = part.get("text", "")
+                                        if t:
+                                            yield t
+                            except Exception:
+                                continue
+                    return
+            except Exception as e:
+                logger.warning(f"Gemini streaming failed on model [{model}]: {e}. Trying next model...")
+
+        # Fallback to standard generate
+        resp = self.generate(prompt=prompt, system_prompt=system_prompt, temperature=temperature, **kwargs)
+        words = resp.text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")
 

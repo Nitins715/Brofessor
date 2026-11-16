@@ -13,6 +13,22 @@ export DATA_DIR="$DATA_DIR"
 export DOCKER_CONTAINER=1
 export PYTHONUNBUFFERED=1
 
+# Wait for PostgreSQL to become fully ready if running with postgresql
+if [ "$DB_ENGINE" = "postgresql" ]; then
+    echo "Waiting for PostgreSQL at $DB_HOST:${DB_PORT:-5432}..."
+    max_retries=30
+    count=0
+    while ! python -c "import socket; s = socket.socket(); s.settimeout(2); s.connect(('$DB_HOST', int('${DB_PORT:-5432}')))" 2>/dev/null; do
+        count=$((count+1))
+        if [ "$count" -ge "$max_retries" ]; then
+            echo "Error: Timed out waiting for PostgreSQL to start."
+            exit 1
+        fi
+        sleep 1
+    done
+    echo "PostgreSQL is reachable and accepting connections."
+fi
+
 echo "Applying database migrations..."
 python manage.py migrate --noinput
 

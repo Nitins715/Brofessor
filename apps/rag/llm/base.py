@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterator, Optional
 
 
 @dataclass
@@ -37,3 +37,16 @@ class BaseLLMProvider(ABC):
     ) -> LLMResponse:
         """Generate response text for the given prompt and system instructions."""
         pass
+
+    def generate_stream(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        """Stream response tokens as an iterator of strings."""
+        resp = self.generate(prompt, system_prompt=system_prompt, temperature=temperature, **kwargs)
+        words = resp.text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")

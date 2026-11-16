@@ -400,134 +400,135 @@ function appendUserMessage(text) {
   feed.scrollTop = feed.scrollHeight;
 }
 
-function appendAssistantMessage(text, citations, responseSource, canSearchWeb, originalQuery) {
-  const feed = document.getElementById('chat-messages');
-  const botDiv = document.createElement('div');
-  botDiv.className = 'flex items-start gap-3 max-w-2xl';
-
-  // Smart routing badge
-  let badgeHtml = '';
+function buildBadgeHtml(responseSource) {
   if (responseSource === 'parametric') {
-    badgeHtml = `
+    return `
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60">
         <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
         Parametric Knowledge (Direct)
       </span>
     `;
   } else if (responseSource === 'web') {
-    badgeHtml = `
+    return `
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60">
         <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
         Web Search Verified (DuckDuckGo)
       </span>
     `;
   } else if (responseSource === 'web_prompt') {
-    badgeHtml = `
+    return `
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/60">
         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
         Corrective RAG (CRAG) Notice
       </span>
     `;
   } else {
-    badgeHtml = `
+    return `
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
         Knowledge Base (Hybrid + Self-RAG Graded)
       </span>
     `;
   }
+}
 
-  // Citations chips
-  let citationsHtml = '';
-  if (citations && citations.length > 0) {
-    const citationChips = citations.map(c => {
-      const srcName = c.source ? (c.source.name || c.source.title || 'Source') : (c.document_title || c.source_name || 'Source');
-      const srcId = c.source ? (c.source.id || '') : '';
-      const srcUri = c.source_uri || (c.source && c.source.uri) || '';
-      let locRef = '';
-      if (c.page) {
-        locRef = ` · p.${c.page}`;
-      } else if (c.timestamp) {
-        locRef = ` · ${c.timestamp}`;
-      } else if (c.chunk_index !== undefined) {
-        locRef = ` · chunk ${c.chunk_index}`;
-      }
+function buildCitationsHtml(citations) {
+  if (!citations || citations.length === 0) return '';
+  const citationChips = citations.map(c => {
+    const srcName = c.source ? (c.source.name || c.source.title || 'Source') : (c.document_title || c.source_name || 'Source');
+    const srcId = c.source ? (c.source.id || '') : '';
+    const srcUri = c.source_uri || (c.source && c.source.uri) || '';
+    let locRef = '';
+    if (c.page) {
+      locRef = ` · p.${c.page}`;
+    } else if (c.timestamp) {
+      locRef = ` · ${c.timestamp}`;
+    } else if (c.chunk_index !== undefined) {
+      locRef = ` · chunk ${c.chunk_index}`;
+    }
 
-      const href = srcUri.startsWith('http') ? srcUri : (srcId ? `/sources/${srcId}/` : '#');
-      const targetAttr = srcUri.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : '';
+    const href = srcUri.startsWith('http') ? srcUri : (srcId ? `/sources/${srcId}/` : '#');
+    const targetAttr = srcUri.startsWith('http') ? 'target="_blank" rel="noopener noreferrer"' : '';
 
-      return `
-        <a href="${href}" ${targetAttr}
-           class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 transition-smooth">
-          <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <span class="truncate max-w-xs">${escapeHtml(srcName)}${locRef}</span>
-        </a>
-      `;
-    }).join('');
+    return `
+      <a href="${href}" ${targetAttr}
+         class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 text-[11px] font-mono text-zinc-700 dark:text-zinc-300 transition-smooth">
+        <svg class="w-3 h-3 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span class="truncate max-w-xs">${escapeHtml(srcName)}${locRef}</span>
+      </a>
+    `;
+  }).join('');
 
-    const chunkCards = citations.map((c, idx) => {
-      const srcName = c.source ? (c.source.name || c.source.title || 'Source') : (c.document_title || c.source_name || 'Source');
-      const snippetText = c.content || c.snippet || 'No text snippet available.';
-      const score = c.rerank_score !== undefined && c.rerank_score !== null ? `RRF: ${c.rerank_score}` : (c.similarity_score ? `Sim: ${c.similarity_score}` : '');
+  const chunkCards = citations.map((c, idx) => {
+    const srcName = c.source ? (c.source.name || c.source.title || 'Source') : (c.document_title || c.source_name || 'Source');
+    const snippetText = c.content || c.snippet || 'No text snippet available.';
+    const score = c.rerank_score !== undefined && c.rerank_score !== null ? `RRF: ${c.rerank_score}` : (c.similarity_score ? `Sim: ${c.similarity_score}` : '');
 
-      return `
-        <div class="p-2.5 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 text-xs space-y-1.5">
-          <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
-            <span class="font-semibold text-zinc-800 dark:text-zinc-200">#${idx + 1} · ${escapeHtml(srcName)} ${c.chunk_index !== undefined ? `(Chunk ${c.chunk_index})` : ''}</span>
-            ${score ? `<span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[10px]">${score}</span>` : ''}
-          </div>
-          <div class="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono leading-relaxed bg-white dark:bg-zinc-950/70 p-2 rounded border border-zinc-100 dark:border-zinc-800 whitespace-pre-wrap max-h-48 overflow-y-auto">
-            ${escapeHtml(snippetText)}
-          </div>
+    return `
+      <div class="p-2.5 rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-900/60 text-xs space-y-1.5">
+        <div class="flex items-center justify-between text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+          <span class="font-semibold text-zinc-800 dark:text-zinc-200">#${idx + 1} · ${escapeHtml(srcName)} ${c.chunk_index !== undefined ? `(Chunk ${c.chunk_index})` : ''}</span>
+          ${score ? `<span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-[10px]">${score}</span>` : ''}
         </div>
-      `;
-    }).join('');
-
-    citationsHtml = `
-      <div class="pt-2 space-y-2 border-t border-zinc-200/60 dark:border-zinc-800/60 mt-2">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Sources:</span>
+        <div class="text-[11px] text-zinc-700 dark:text-zinc-300 font-mono leading-relaxed bg-white dark:bg-zinc-950/70 p-2 rounded border border-zinc-100 dark:border-zinc-800 whitespace-pre-wrap max-h-48 overflow-y-auto">
+          ${escapeHtml(snippetText)}
         </div>
-        <div class="flex flex-wrap gap-1.5">
-          ${citationChips}
-        </div>
-        <details class="group mt-2 border-t border-zinc-200/40 dark:border-zinc-800/40 pt-1.5">
-          <summary class="cursor-pointer text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-between select-none py-1">
-            <span class="inline-flex items-center gap-1 font-mono">
-              <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-              </svg>
-              <span>View Retrieved Chunks (${citations.length})</span>
-            </span>
-            <span class="text-[10px] text-zinc-400 font-normal group-open:hidden">Click to preview text</span>
-          </summary>
-          <div class="mt-2 space-y-2 pt-1">
-            ${chunkCards}
-          </div>
-        </details>
       </div>
     `;
-  }
+  }).join('');
 
-
-  // Interactive Web Search Button if CRAG flagged insufficient doc coverage
-  let webSearchActionHtml = '';
-  if (canSearchWeb && originalQuery) {
-    webSearchActionHtml = `
-      <div class="mt-3 pt-3 border-t border-zinc-200/80 dark:border-zinc-800">
-        <button type="button"
-                onclick="executeConfirmedWebSearch('${escapeHtml(originalQuery)}')"
-                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-smooth shadow-sm">
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-          <span>Search the Web for this Answer</span>
-        </button>
+  return `
+    <div class="pt-2 space-y-2 border-t border-zinc-200/60 dark:border-zinc-800/60 mt-2">
+      <div class="flex items-center justify-between">
+        <span class="text-[10px] font-mono uppercase text-zinc-400 font-semibold block">Grounding Sources:</span>
       </div>
-    `;
-  }
+      <div class="flex flex-wrap gap-1.5">
+        ${citationChips}
+      </div>
+      <details class="group mt-2 border-t border-zinc-200/40 dark:border-zinc-800/40 pt-1.5">
+        <summary class="cursor-pointer text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-between select-none py-1">
+          <span class="inline-flex items-center gap-1 font-mono">
+            <svg class="w-3.5 h-3.5 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span>View Retrieved Chunks (${citations.length})</span>
+          </span>
+          <span class="text-[10px] text-zinc-400 font-normal group-open:hidden">Click to preview text</span>
+        </summary>
+        <div class="mt-2 space-y-2 pt-1">
+          ${chunkCards}
+        </div>
+      </details>
+    </div>
+  `;
+}
+
+function buildWebSearchActionHtml(query) {
+  if (!query) return '';
+  return `
+    <div class="mt-3 pt-3 border-t border-zinc-200/80 dark:border-zinc-800">
+      <button type="button"
+              onclick="executeConfirmedWebSearch('${escapeHtml(query)}')"
+              class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium transition-smooth shadow-sm">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <span>Search the Web for this Answer</span>
+      </button>
+    </div>
+  `;
+}
+
+function appendAssistantMessage(text, citations, responseSource, canSearchWeb, originalQuery) {
+  const feed = document.getElementById('chat-messages');
+  const botDiv = document.createElement('div');
+  botDiv.className = 'flex items-start gap-3 max-w-2xl';
+
+  const badgeHtml = buildBadgeHtml(responseSource);
+  const citationsHtml = buildCitationsHtml(citations);
+  const webSearchActionHtml = canSearchWeb ? buildWebSearchActionHtml(originalQuery) : '';
 
   botDiv.innerHTML = `
     <div class="w-6 h-6 rounded-md bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center text-xs font-bold shrink-0 mt-1">
@@ -549,45 +550,82 @@ function appendAssistantMessage(text, citations, responseSource, canSearchWeb, o
   feed.scrollTop = feed.scrollHeight;
 }
 
-// Stepped Loading Simulation for Advanced RAG pipeline
-let stepTimer = null;
-function showSteppedLoading() {
+function createStreamingAssistantMessage(responseSource) {
+  const feed = document.getElementById('chat-messages');
+  const botDiv = document.createElement('div');
+  botDiv.className = 'flex items-start gap-3 max-w-2xl';
+
+  const badgeContainer = document.createElement('div');
+  badgeContainer.className = 'flex items-center gap-2';
+  badgeContainer.innerHTML = buildBadgeHtml(responseSource);
+
+  const bubbleDiv = document.createElement('div');
+  bubbleDiv.className = 'p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-100 dark:border-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap';
+
+  const contentSpan = document.createElement('span');
+  contentSpan.className = 'font-normal';
+
+  const cursor = document.createElement('span');
+  cursor.className = 'inline-block w-1.5 h-3.5 ml-0.5 align-middle bg-zinc-800 dark:bg-zinc-200 animate-pulse';
+
+  bubbleDiv.appendChild(contentSpan);
+  bubbleDiv.appendChild(cursor);
+
+  const bodyContainer = document.createElement('div');
+  bodyContainer.className = 'space-y-1.5 flex-1 min-w-0';
+  bodyContainer.appendChild(badgeContainer);
+  bodyContainer.appendChild(bubbleDiv);
+
+  botDiv.innerHTML = `
+    <div class="w-6 h-6 rounded-md bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 flex items-center justify-center text-xs font-bold shrink-0 mt-1">
+      B
+    </div>
+  `;
+  botDiv.appendChild(bodyContainer);
+  feed.appendChild(botDiv);
+  feed.scrollTop = feed.scrollHeight;
+
+  return {
+    botDiv,
+    badgeContainer,
+    bubbleDiv,
+    contentSpan,
+    cursor
+  };
+}
+
+// Stepped Loading for Advanced RAG pipeline
+function showSteppedLoading(initialText) {
   const loader = document.getElementById('chat-stepped-loader');
   const stepText = document.getElementById('loader-step-text');
   loader.classList.remove('hidden');
+  stepText.textContent = initialText || 'Classifying query intent (Adaptive RAG)...';
+}
 
-  stepText.textContent = 'Classifying query intent (Adaptive RAG)...';
-  
-  stepTimer = setTimeout(() => {
-    stepText.textContent = 'Running Hybrid Retrieval (Dense Vector + BM25)...';
-    stepTimer = setTimeout(() => {
-      stepText.textContent = 'Evaluating document relevance & Self-RAG grading...';
-      stepTimer = setTimeout(() => {
-        stepText.textContent = 'Synthesizing verified response...';
-      }, 700);
-    }, 700);
-  }, 600);
+function updateSteppedLoading(text) {
+  const stepText = document.getElementById('loader-step-text');
+  if (stepText) stepText.textContent = text;
 }
 
 function hideSteppedLoading() {
-  if (stepTimer) clearTimeout(stepTimer);
   const loader = document.getElementById('chat-stepped-loader');
   loader.classList.add('hidden');
 }
 
-async function executeConfirmedWebSearch(query) {
-  showSteppedLoading();
-  const stepText = document.getElementById('loader-step-text');
-  if (stepText) stepText.textContent = 'Executing external Web Search (DuckDuckGo)...';
+async function streamRagRequest(payload, query) {
+  const sendBtn = document.getElementById('chat-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  showSteppedLoading('Classifying query intent (Adaptive RAG)...');
+
+  let assistantMsg = null;
+  let citations = [];
+  let responseSource = 'documents';
+  let fullText = '';
+  let canSearchWeb = false;
 
   try {
-    const payload = {
-      query: query,
-      conversation_id: currentConversationId || undefined,
-      allow_web_search: true
-    };
-
-    const res = await fetch('/api/v1/rag/chat/', {
+    const res = await fetch('/api/v1/rag/chat/stream/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -596,17 +634,169 @@ async function executeConfirmedWebSearch(query) {
       body: JSON.stringify(payload)
     });
 
-    hideSteppedLoading();
-    if (res.ok) {
-      const data = await res.json();
-      appendAssistantMessage(data.answer, data.citations || [], 'web', false, query);
-    } else {
-      appendAssistantMessage('Unable to complete web search at this time.', [], 'parametric', false, query);
+    if (!res.ok) {
+      hideSteppedLoading();
+      if (sendBtn) sendBtn.disabled = false;
+      let errDetail = 'Server returned error ' + res.status;
+      try {
+        const errJson = await res.json();
+        errDetail = errJson.error || errJson.detail || JSON.stringify(errJson);
+      } catch (e) {}
+      appendAssistantMessage(
+        `⚠️ RAG Pipeline Notice: ${errDetail}`,
+        [],
+        'parametric',
+        true,
+        query
+      );
+      return;
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+
+      for (const part of parts) {
+        if (!part.trim()) continue;
+        const lines = part.split('\n');
+        let eventType = 'message';
+        let dataText = '';
+
+        for (const line of lines) {
+          if (line.startsWith('event:')) {
+            eventType = line.slice(6).trim();
+          } else if (line.startsWith('data:')) {
+            dataText += (dataText ? '\n' : '') + line.slice(5).trim();
+          }
+        }
+
+        if (!dataText) continue;
+
+        let data = {};
+        try {
+          data = JSON.parse(dataText);
+        } catch (e) {
+          console.warn("SSE JSON parse error:", dataText, e);
+          continue;
+        }
+
+        if (eventType === 'conversation') {
+          if (data.conversation_id) {
+            currentConversationId = data.conversation_id;
+            const delActiveBtn = document.getElementById('btn-delete-active-conv');
+            if (delActiveBtn) delActiveBtn.classList.remove('hidden');
+            const clearBtn = document.getElementById('btn-clear-all-chats');
+            if (clearBtn) clearBtn.classList.remove('hidden');
+          }
+          if (data.title) {
+            document.getElementById('active-conv-title').textContent = data.title;
+          }
+        } else if (eventType === 'stage') {
+          updateSteppedLoading(data.label || 'Processing...');
+        } else if (eventType === 'citations') {
+          citations = data.citations || [];
+          if (data.response_source) {
+            responseSource = data.response_source;
+          }
+          if (assistantMsg) {
+            assistantMsg.badgeContainer.innerHTML = buildBadgeHtml(responseSource);
+          }
+        } else if (eventType === 'token') {
+          hideSteppedLoading();
+          if (!assistantMsg) {
+            assistantMsg = createStreamingAssistantMessage(responseSource);
+          }
+          fullText += data.token;
+          assistantMsg.contentSpan.textContent = fullText;
+          const feed = document.getElementById('chat-messages');
+          feed.scrollTop = feed.scrollHeight;
+        } else if (eventType === 'done') {
+          hideSteppedLoading();
+          if (data.response_source) {
+            responseSource = data.response_source;
+          }
+          if (data.can_search_web !== undefined) {
+            canSearchWeb = Boolean(data.can_search_web);
+          }
+          if (!assistantMsg) {
+            assistantMsg = createStreamingAssistantMessage(responseSource);
+            assistantMsg.contentSpan.textContent = fullText;
+          }
+          if (assistantMsg.cursor) {
+            assistantMsg.cursor.remove();
+          }
+          assistantMsg.badgeContainer.innerHTML = buildBadgeHtml(responseSource);
+
+          if (citations && citations.length > 0) {
+            const citDiv = document.createElement('div');
+            citDiv.innerHTML = buildCitationsHtml(citations);
+            assistantMsg.bubbleDiv.appendChild(citDiv);
+          }
+
+          if (canSearchWeb && query) {
+            const webDiv = document.createElement('div');
+            webDiv.innerHTML = buildWebSearchActionHtml(query);
+            assistantMsg.bubbleDiv.appendChild(webDiv);
+          }
+
+          if (data.conversation_id) {
+            currentConversationId = data.conversation_id;
+            const delActiveBtn = document.getElementById('btn-delete-active-conv');
+            if (delActiveBtn) delActiveBtn.classList.remove('hidden');
+            const clearBtn = document.getElementById('btn-clear-all-chats');
+            if (clearBtn) clearBtn.classList.remove('hidden');
+          }
+
+          const feed = document.getElementById('chat-messages');
+          feed.scrollTop = feed.scrollHeight;
+        } else if (eventType === 'error') {
+          hideSteppedLoading();
+          if (assistantMsg && assistantMsg.cursor) {
+            assistantMsg.cursor.remove();
+          }
+          appendAssistantMessage(
+            `⚠️ Pipeline Error: ${data.error || 'Unknown error occurred'}`,
+            [],
+            'parametric',
+            true,
+            query
+          );
+        }
+      }
     }
   } catch (err) {
     hideSteppedLoading();
-    appendAssistantMessage('Web search connection error: ' + err.message, [], 'parametric', false, query);
+    if (assistantMsg && assistantMsg.cursor) {
+      assistantMsg.cursor.remove();
+    }
+    appendAssistantMessage(
+      `⚠️ Connection Error: Unable to communicate with Brofessor server (${err.message}).`,
+      [],
+      'parametric',
+      false,
+      query
+    );
+  } finally {
+    hideSteppedLoading();
+    if (sendBtn) sendBtn.disabled = false;
   }
+}
+
+async function executeConfirmedWebSearch(query) {
+  const payload = {
+    query: query,
+    conversation_id: currentConversationId || undefined,
+    allow_web_search: true
+  };
+  await streamRagRequest(payload, query);
 }
 
 async function handleChatSubmit(e) {
@@ -620,77 +810,15 @@ async function handleChatSubmit(e) {
   input.value = '';
   input.style.height = 'auto';
 
-  // Show dynamic stepped loading indicator
-  showSteppedLoading();
-  const sendBtn = document.getElementById('chat-send-btn');
-  sendBtn.disabled = true;
-
-  try {
-    const payload = {
-      query: query,
-      conversation_id: currentConversationId || undefined
-    };
-
-    if (activeSkillId) {
-      payload.skill_id = activeSkillId;
-    }
-
-    const res = await fetch('/api/v1/rag/chat/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': window.getCsrfToken()
-      },
-      body: JSON.stringify(payload)
-    });
-
-    hideSteppedLoading();
-    sendBtn.disabled = false;
-
-    if (res.ok) {
-      const data = await res.json();
-      currentConversationId = data.conversation_id;
-      const delActiveBtn = document.getElementById('btn-delete-active-conv');
-      if (delActiveBtn) delActiveBtn.classList.remove('hidden');
-      const clearBtn = document.getElementById('btn-clear-all-chats');
-      if (clearBtn) clearBtn.classList.remove('hidden');
-      appendAssistantMessage(
-        data.answer,
-        data.citations || [],
-        data.response_source || 'documents',
-        Boolean(data.can_search_web),
-        data.query || query
-      );
-      
-      // Update active title if first message
-      if (data.query) {
-        document.getElementById('active-conv-title').textContent = data.query.substring(0, 30) + '...';
-      }
-    } else {
-      let errDetail = 'Server returned error ' + res.status;
-      try {
-        const errJson = await res.json();
-        errDetail = errJson.error || errJson.detail || JSON.stringify(errJson);
-      } catch (e) {}
-      appendAssistantMessage(
-        `⚠️ RAG Pipeline Notice: ${errDetail}`,
-        [],
-        'parametric',
-        true,
-        query
-      );
-    }
-  } catch (err) {
-    hideSteppedLoading();
-    sendBtn.disabled = false;
-    appendAssistantMessage(
-      `⚠️ Connection Error: Unable to communicate with Brofessor server (${err.message}).`,
-      [],
-      'parametric',
-      false,
-      query
-    );
+  const payload = {
+    query: query,
+    conversation_id: currentConversationId || undefined
+  };
+  if (activeSkillId) {
+    payload.skill_id = activeSkillId;
   }
+
+  await streamRagRequest(payload, query);
 }
 
 function escapeHtml(string) {

@@ -1,6 +1,7 @@
+import json
 import logging
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterator, List, Optional
 import requests
 from django.conf import settings
 from .base import BaseLLMProvider, LLMResponse
@@ -173,3 +174,64 @@ class OllamaLLMProvider(BaseLLMProvider):
             f"Ollama server is unreachable at {self._base_url} (also tried {candidate_urls}). "
             f"If running inside Docker, ensure host Ollama is running and accessible via http://host.docker.internal:11434."
         ) from last_error
+
+    def generate_stream(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        candidate_urls = self._get_candidate_urls()
+        last_error = None
+
+        for candidate_url in candidate_urls:
+            url = f"{candidate_url}/api/generate"
+            resolved_model = self._resolve_best_model(candidate_url)
+            self._model_name = resolved_model
+
+            num_threads = min(8, max(2, os.cpu_count() or 4))
+            max_tokens = kwargs.get("max_tokens") or 2500
+
+            payload = {
+                "model": self._model_name,
+                "prompt": prompt,
+                "stream": True,
+                "keep_alive": "30m",
+                "options": {
+                    "temperature": temperature,
+                    "num_predict": max_tokens,
+                    "num_thread": num_threads,
+                },
+            }
+            if kwargs.get("json_mode") or "json" in (system_prompt or "").lower() or "json" in prompt.lower():
+                payload["format"] = "json"
+
+            if system_prompt:
+                payload["system"] = system_prompt
+
+            try:
+                response = requests.post(url, json=payload, stream=True, timeout=self.timeout)
+                if response.status_code == 200:
+                    for line in response.iter_lines(decode_unicode=True):
+                        if line:
+                            try:
+                                chunk = json.loads(line)
+                                token = chunk.get("response", "")
+                                if token:
+                                    yield token
+                                if chunk.get("done"):
+                                    break
+                            except Exception:
+                                continue
+                    return
+            except Exception as e:
+                logger.warning(f"Ollama streaming connection error at {candidate_url}: {e}")
+                last_error = e
+                continue
+
+        # Fallback to non-streaming
+        resp = self.generate(prompt=prompt, system_prompt=system_prompt, temperature=temperature, **kwargs)
+        words = resp.text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")

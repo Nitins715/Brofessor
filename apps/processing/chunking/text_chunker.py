@@ -1,16 +1,18 @@
 import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from .config import ChunkingConfig
 
 
 @dataclass
 class ChunkData:
-    """Represents a generated text chunk with metadata."""
+    """Represents a generated text chunk with metadata and hierarchy info."""
     chunk_index: int
     content: str
     token_count: int
     metadata: Dict[str, Any] = field(default_factory=dict)
+    chunk_level: str = "child"  # "parent" or "child"
+    parent_index: Optional[int] = None
 
 
 class TextChunker:
@@ -67,11 +69,12 @@ class TextChunker:
                     })
         return blocks
 
-    def _split_text(self, text: str, separators: List[str]) -> List[str]:
+    def _split_text(self, text: str, separators: Optional[List[str]] = None, chunk_size: Optional[int] = None) -> List[str]:
         """
         Paragraph & Semantic-Aware chunking:
         Groups cohesive paragraphs up to chunk_size without arbitrary mid-sentence cuts.
         """
+        target_size = chunk_size or self.config.chunk_size
         blocks = self._extract_blocks(text)
         if not blocks:
             return []
@@ -85,7 +88,7 @@ class TextChunker:
             b_len = len(b_text)
 
             # If a single block (e.g. large code block or huge paragraph) exceeds chunk_size
-            if b_len > self.config.chunk_size:
+            if b_len > target_size:
                 # Flush existing chunk parts
                 if current_chunk_parts:
                     chunks.append("\n\n".join(current_chunk_parts).strip())
@@ -97,7 +100,7 @@ class TextChunker:
                 sub_accum: List[str] = []
                 sub_len = 0
                 for line in sub_lines:
-                    if sub_len + len(line) + 1 <= self.config.chunk_size:
+                    if sub_len + len(line) + 1 <= target_size:
                         sub_accum.append(line)
                         sub_len += len(line) + 1
                     else:
@@ -113,7 +116,7 @@ class TextChunker:
 
             # Check if adding this block fits within the chunk size
             projected_len = current_chunk_len + (2 if current_chunk_parts else 0) + b_len
-            if projected_len <= self.config.chunk_size:
+            if projected_len <= target_size:
                 current_chunk_parts.append(b_text)
                 current_chunk_len = projected_len
             else:
@@ -127,9 +130,10 @@ class TextChunker:
 
         return chunks
 
-    def _apply_overlap(self, raw_chunks: List[str]) -> List[str]:
+    def _apply_overlap(self, raw_chunks: List[str], chunk_overlap: Optional[int] = None) -> List[str]:
         """Apply sliding window overlap across adjacent chunks."""
-        if self.config.chunk_overlap <= 0 or len(raw_chunks) <= 1:
+        target_overlap = chunk_overlap if chunk_overlap is not None else self.config.chunk_overlap
+        if target_overlap <= 0 or len(raw_chunks) <= 1:
             return raw_chunks
 
         overlapped_chunks = []
@@ -138,7 +142,7 @@ class TextChunker:
                 overlapped_chunks.append(chunk)
             else:
                 prev_chunk = raw_chunks[i - 1]
-                overlap_text = prev_chunk[-self.config.chunk_overlap :]
+                overlap_text = prev_chunk[-target_overlap:]
                 # Break clean on space if possible
                 first_space = overlap_text.find(" ")
                 if first_space != -1 and first_space < len(overlap_text) - 10:
@@ -221,3 +225,72 @@ class TextChunker:
             )
 
         return result
+
+    def chunk_hierarchical(
+        self,
+        text: str,
+        base_metadata: Optional[Dict[str, Any]] = None,
+        segments: Optional[List[Any]] = None,
+    ) -> Tuple[List[ChunkData], List[ChunkData]]:
+        """
+        Produce two-tier hierarchical chunks ("Small-to-Big" Retrieval):
+        1. Parent Chunks: Larger context sections (e.g. 1200 chars) retaining broad topic coherence.
+        2. Child Chunks: Tightly focused semantic sub-chunks (e.g. 300 chars) linked to their parent chunk.
+
+        Returns:
+            Tuple[List[ChunkData], List[ChunkData]]: (parent_chunks, child_chunks)
+        """
+        base_meta = base_metadata or {}
+        if not text.strip():
+            return [], []
+
+        # 1. Generate Parent Chunks
+        raw_parents = self._split_text(text, chunk_size=self.config.parent_chunk_size)
+        parent_texts = self._apply_overlap(raw_parents, chunk_overlap=self.config.parent_chunk_overlap)
+
+        parent_chunks: List[ChunkData] = []
+        child_chunks: List[ChunkData] = []
+        child_global_idx = 0
+
+        for p_idx, p_text in enumerate(parent_texts):
+            p_meta = dict(base_meta)
+            p_meta["chunk_level"] = "parent"
+            p_meta["char_length"] = len(p_text)
+            p_meta["parent_index"] = p_idx
+
+            p_chunk = ChunkData(
+                chunk_index=p_idx,
+                content=p_text,
+                token_count=self.estimate_tokens(p_text),
+                metadata=p_meta,
+                chunk_level="parent",
+                parent_index=None,
+            )
+            parent_chunks.append(p_chunk)
+
+            # 2. Generate Child Sub-Chunks from this Parent Chunk
+            raw_children = self._split_text(p_text, chunk_size=self.config.child_chunk_size)
+            child_texts = self._apply_overlap(raw_children, chunk_overlap=self.config.child_chunk_overlap)
+
+            if not child_texts:
+                child_texts = [p_text]
+
+            for c_idx, c_text in enumerate(child_texts):
+                c_meta = dict(base_meta)
+                c_meta["chunk_level"] = "child"
+                c_meta["char_length"] = len(c_text)
+                c_meta["parent_chunk_index"] = p_idx
+                c_meta["child_local_index"] = c_idx
+
+                c_chunk = ChunkData(
+                    chunk_index=child_global_idx,
+                    content=c_text,
+                    token_count=self.estimate_tokens(c_text),
+                    metadata=c_meta,
+                    chunk_level="child",
+                    parent_index=p_idx,
+                )
+                child_chunks.append(c_chunk)
+                child_global_idx += 1
+
+        return parent_chunks, child_chunks

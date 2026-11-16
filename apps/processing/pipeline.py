@@ -87,11 +87,22 @@ class IngestionPipeline:
                 "uri": source.uri,
                 **extraction_result.metadata,
             }
-            chunks_data = chunker.chunk(
-                text=cleaned_text,
-                base_metadata=base_meta,
-                segments=extraction_result.segments,
-            )
+
+            if chunker.config.enable_hierarchical:
+                parents_data, children_data = chunker.chunk_hierarchical(
+                    text=cleaned_text,
+                    base_metadata=base_meta,
+                    segments=extraction_result.segments,
+                )
+                total_chunks_count = len(parents_data) + len(children_data)
+            else:
+                parents_data = []
+                children_data = chunker.chunk(
+                    text=cleaned_text,
+                    base_metadata=base_meta,
+                    segments=extraction_result.segments,
+                )
+                total_chunks_count = len(children_data)
 
             # 4. Atomic Database Persistence
             with transaction.atomic():
@@ -103,7 +114,10 @@ class IngestionPipeline:
                         "content_hash": content_hash,
                         "metadata": {
                             **extraction_result.metadata,
-                            "chunk_count": len(chunks_data),
+                            "chunk_count": total_chunks_count,
+                            "parent_chunk_count": len(parents_data),
+                            "child_chunk_count": len(children_data),
+                            "is_hierarchical": bool(parents_data),
                             "total_chars": len(cleaned_text),
                         },
                     },
@@ -112,17 +126,51 @@ class IngestionPipeline:
                 # Replace old chunks if re-processing
                 DocumentChunk.objects.filter(document=document).delete()
 
-                chunk_objects = [
-                    DocumentChunk(
-                        document=document,
-                        chunk_index=chunk.chunk_index,
-                        content=chunk.content,
-                        token_count=chunk.token_count,
-                        metadata=chunk.metadata,
-                    )
-                    for chunk in chunks_data
-                ]
-                DocumentChunk.objects.bulk_create(chunk_objects)
+                chunk_objects = []
+                if parents_data:
+                    parent_objs = [
+                        DocumentChunk(
+                            document=document,
+                            chunk_index=p.chunk_index,
+                            chunk_level=DocumentChunk.ChunkLevel.PARENT,
+                            content=p.content,
+                            token_count=p.token_count,
+                            metadata=p.metadata,
+                        )
+                        for p in parents_data
+                    ]
+                    created_parents = DocumentChunk.objects.bulk_create(parent_objs)
+                    parent_map = {p.chunk_index: p for p in created_parents}
+
+                    child_offset = len(parents_data)
+                    for c in children_data:
+                        parent_ref = parent_map.get(c.parent_index)
+                        chunk_objects.append(
+                            DocumentChunk(
+                                document=document,
+                                parent_chunk=parent_ref,
+                                chunk_index=child_offset + c.chunk_index,
+                                chunk_level=DocumentChunk.ChunkLevel.CHILD,
+                                content=c.content,
+                                token_count=c.token_count,
+                                metadata=c.metadata,
+                            )
+                        )
+                    created_children = DocumentChunk.objects.bulk_create(chunk_objects)
+                    chunk_objects.extend(created_parents)
+                else:
+                    chunk_objects = [
+                        DocumentChunk(
+                            document=document,
+                            chunk_index=chunk.chunk_index,
+                            chunk_level=DocumentChunk.ChunkLevel.CHILD,
+                            content=chunk.content,
+                            token_count=chunk.token_count,
+                            metadata=chunk.metadata,
+                        )
+                        for chunk in children_data
+                    ]
+                    DocumentChunk.objects.bulk_create(chunk_objects)
 
                 # Generate embeddings for the newly created chunks
                 try:
@@ -133,6 +181,18 @@ class IngestionPipeline:
                         f"Automatic embedding deferred or failed for document {document.id}: {emb_exc}"
                     )
                     embedded_count = 0
+
+                # Extract and index Knowledge Graph entities and relationships
+                graph_edges_count = 0
+                try:
+                    from apps.rag.services.graph_service import KnowledgeGraphService
+                    target_chunks = created_parents if parents_data else chunk_objects[:5]
+                    for chk in target_chunks:
+                        edges = KnowledgeGraphService.index_chunk(chk)
+                        graph_edges_count += len(edges)
+                    logger.info(f"Knowledge Graph extraction indexed {graph_edges_count} edges for document {document.id}")
+                except Exception as kg_exc:
+                    logger.warning(f"Knowledge Graph indexing deferred or failed for document {document.id}: {kg_exc}")
 
                 # Mark completed
                 source.status = Source.ProcessingStatus.COMPLETED

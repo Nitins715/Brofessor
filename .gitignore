@@ -58,6 +58,7 @@ logs/
 
 # Scratch & temporary workspace files
 scratch/
+questions.md
 
 # IDE & OS files
 .vscode/

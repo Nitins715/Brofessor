@@ -83,31 +83,45 @@
     </form>
   </div>
 
-  {# AI Provider & Dual-Model Configuration #}
+  {# API Provider & Observability Configuration (Single Source of Truth) #}
   <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm space-y-5">
     <div>
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">AI Model Credentials &amp; Smart Routing</h3>
-        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold
-          {% if ai_config.gemini_api_key %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60
-          {% else %}bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60{% endif %}">
-          <span class="w-1.5 h-1.5 rounded-full {% if ai_config.gemini_api_key %}bg-emerald-500 animate-pulse{% else %}bg-indigo-500{% endif %}"></span>
-          {% if ai_config.gemini_api_key %}Active: Cloud Primary (Gemini) • Local Fallback (Ollama){% else %}Active: Local Model (Ollama){% endif %}
-        </span>
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">API Credentials &amp; Model Routing</h3>
+        <div class="flex items-center gap-2">
+          <span id="settings-gemini-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold
+            {% if ai_config.gemini_api_key %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60
+            {% else %}bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60{% endif %}">
+            <span class="w-1.5 h-1.5 rounded-full {% if ai_config.gemini_api_key %}bg-emerald-500 animate-pulse{% else %}bg-indigo-500{% endif %}"></span>
+            {% if ai_config.gemini_api_key %}Cloud Active (Gemini){% else %}Local Model (Ollama){% endif %}
+          </span>
+          <span id="settings-langsmith-badge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold
+            {% if ai_config.langsmith_api_key %}bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60
+            {% else %}bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700{% endif %}">
+            <span class="w-1.5 h-1.5 rounded-full {% if ai_config.langsmith_api_key %}bg-emerald-500 animate-pulse{% else %}bg-zinc-400{% endif %}"></span>
+            {% if ai_config.langsmith_api_key %}LangSmith Tracing Active{% else %}LangSmith Inactive{% endif %}
+          </span>
+        </div>
       </div>
       <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-        Brofessor securely stores both your Cloud and Local credentials. At generation time, it automatically uses Cloud (Gemini) by default whenever an API key is provided, and seamlessly falls back to your local Ollama model if unconfigured or offline — no manual switching needed.
+        Brofessor securely stores your API keys and local configuration in one single place. It automatically routes queries to Cloud Gemini when provided, traces RAG runs to LangSmith, and seamlessly falls back to local Ollama if offline.
       </p>
     </div>
 
-    <form action="{% url 'web-settings' %}" method="post" class="space-y-4">
+    <form action="{% url 'web-settings' %}" method="post" id="settings-ai-form" class="space-y-4">
       {% csrf_token %}
       <input type="hidden" name="action" value="save_ai">
 
-      {# Gemini Settings #}
+      {# 1. Gemini Credentials #}
       <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-3">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">Google Gemini API Options</span>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">1. Google Gemini API</span>
+            <span id="gemini-live-status-pill" class="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-zinc-400">
+              <span class="w-1.5 h-1.5 rounded-full {% if ai_config.gemini_api_key %}bg-emerald-500{% else %}bg-zinc-400{% endif %}"></span>
+              {% if ai_config.gemini_api_key %}Configured{% else %}Optional{% endif %}
+            </span>
+          </div>
           <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline">
             Get free Gemini API Key &rarr;
           </a>
@@ -115,12 +129,23 @@
 
         <div class="space-y-1">
           <label for="gemini_api_key" class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Gemini API Key</label>
-          <input type="password"
-                 name="gemini_api_key"
-                 id="gemini_api_key"
-                 placeholder="Paste your AIzaSy... key here"
-                 value="{{ ai_config.gemini_api_key|default:'' }}"
-                 class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 focus:border-indigo-500 focus:outline-none transition-smooth font-mono">
+          <div class="relative">
+            <input type="password"
+                   name="gemini_api_key"
+                   id="gemini_api_key"
+                   placeholder="Paste your AIzaSy... key here"
+                   value="{{ ai_config.gemini_api_key|default:'' }}"
+                   class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 pr-9 focus:border-indigo-500 focus:outline-none transition-smooth font-mono">
+            <button type="button"
+                    onclick="toggleInputVisibility('gemini_api_key')"
+                    title="Toggle Visibility"
+                    class="absolute right-2 top-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div class="space-y-1.5">
@@ -153,19 +178,59 @@
                      class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 focus:border-indigo-500 focus:outline-none transition-smooth font-mono">
             </div>
           </div>
-
-          <p class="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5 mt-1">
-            <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>You can select a preset or type any custom model name. If a model returns 404 or unsupported on your key/tier, Brofessor automatically falls back to <code>gemini-1.5-flash</code>.</span>
-          </p>
         </div>
       </div>
 
-      {# Ollama Options #}
+      {# 2. LangSmith Observability Credentials #}
       <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-3">
-        <span class="block text-xs font-semibold text-zinc-900 dark:text-zinc-100">Local Ollama Options</span>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-zinc-900 dark:text-zinc-100">2. LangSmith Observability &amp; Golden Dataset Tracing</span>
+            <span id="langsmith-live-status-pill" class="inline-flex items-center gap-1 text-[10px] font-mono font-medium text-zinc-400">
+              <span class="w-1.5 h-1.5 rounded-full {% if ai_config.langsmith_api_key %}bg-emerald-500{% else %}bg-zinc-400{% endif %}"></span>
+              {% if ai_config.langsmith_api_key %}Configured{% else %}Optional{% endif %}
+            </span>
+          </div>
+          <a href="https://smith.langchain.com" target="_blank" rel="noopener noreferrer" class="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline">
+            Get LangSmith API Key &rarr;
+          </a>
+        </div>
+
+        <div class="space-y-1">
+          <label for="langsmith_api_key" class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">LangSmith API Key</label>
+          <div class="relative">
+            <input type="password"
+                   name="langsmith_api_key"
+                   id="langsmith_api_key"
+                   placeholder="Paste your lsv2_pt_... key here"
+                   value="{{ ai_config.langsmith_api_key|default:'' }}"
+                   class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 pr-9 focus:border-indigo-500 focus:outline-none transition-smooth font-mono">
+            <button type="button"
+                    onclick="toggleInputVisibility('langsmith_api_key')"
+                    title="Toggle Visibility"
+                    class="absolute right-2 top-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label for="langsmith_project" class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Target Project Name</label>
+          <input type="text"
+                 name="langsmith_project"
+                 id="langsmith_project"
+                 placeholder="brofessor-rag"
+                 value="{{ ai_config.langsmith_project|default:'brofessor-rag' }}"
+                 class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 focus:border-indigo-500 focus:outline-none transition-smooth font-mono">
+        </div>
+      </div>
+
+      {# 3. Local Ollama Fallback #}
+      <div class="p-4 rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/40 space-y-3">
+        <span class="block text-xs font-semibold text-zinc-900 dark:text-zinc-100">3. Local Ollama Options (Zero-Cloud Fallback)</span>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="space-y-1">
             <label for="ollama_base_url" class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Ollama Base URL</label>
@@ -175,7 +240,7 @@
                    placeholder="http://host.docker.internal:11434"
                    value="{{ ai_config.ollama_base_url|default:'http://host.docker.internal:11434' }}"
                    class="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 text-xs py-2 px-3 focus:border-zinc-400 focus:outline-none transition-smooth font-mono">
-            <p class="text-[10px] text-zinc-500 dark:text-zinc-400">Use <code class="text-zinc-700 dark:text-zinc-300 font-mono">http://host.docker.internal:11434</code> in Docker, or <code class="text-zinc-700 dark:text-zinc-300 font-mono">http://127.0.0.1:11434</code> if running on host.</p>
+            <p class="text-[10px] text-zinc-500 dark:text-zinc-400">Use <code class="text-zinc-700 dark:text-zinc-300 font-mono">http://host.docker.internal:11434</code> in Docker, or <code class="text-zinc-700 dark:text-zinc-300 font-mono">http://127.0.0.1:11434</code> on host.</p>
           </div>
           <div class="space-y-1">
             <label for="ollama_model" class="block text-[11px] font-medium text-zinc-600 dark:text-zinc-400">Local Model</label>
@@ -190,10 +255,29 @@
         </div>
       </div>
 
-      <button type="submit"
-              class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 text-xs font-semibold shadow-sm transition-smooth">
-        Save AI Configuration
-      </button>
+      {# Live Ping Feedback Console #}
+      <div id="settings-ping-console" class="hidden p-3.5 rounded-xl bg-zinc-900 text-zinc-100 text-xs border border-zinc-800 font-mono shadow-inner space-y-1"></div>
+
+      {# Action Buttons #}
+      <div class="flex items-center gap-3 pt-1">
+        <button type="submit"
+                class="px-5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100 text-xs font-semibold shadow-sm transition-smooth flex items-center gap-2">
+          <svg class="w-4 h-4 text-emerald-400 dark:text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Save All Credentials</span>
+        </button>
+
+        <button type="button"
+                id="btn-settings-ping"
+                onclick="pingAllIntegrations()"
+                class="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-smooth flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>Ping Network Check</span>
+        </button>
+      </div>
     </form>
   </div>
 
@@ -236,22 +320,6 @@
     </div>
   </div>
 
-
-  {# Seed / Reset Actions #}
-  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm space-y-3">
-    <div>
-      <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Curriculum Reset & Seeding</h3>
-      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Synchronize standard curriculum domains and benchmark assessments.</p>
-    </div>
-    <form action="{% url 'web-reseed' %}" method="post">
-      {% csrf_token %}
-      <button type="submit"
-              class="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-medium transition-smooth">
-        Re-seed Standard Roadmap
-      </button>
-    </form>
-  </div>
-
 </div>
 {% endblock %}
 
@@ -279,5 +347,138 @@ function onGeminiInputManual(val) {
     select.value = 'custom';
   }
 }
+
+function toggleInputVisibility(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+async function pingAllIntegrations() {
+  const btn = document.getElementById('btn-settings-ping');
+  const consoleBox = document.getElementById('settings-ping-console');
+  const geminiKey = document.getElementById('gemini_api_key')?.value?.trim();
+  const geminiModel = document.getElementById('gemini_model')?.value?.trim() || 'gemini-3.6-flash';
+  const lsKey = document.getElementById('langsmith_api_key')?.value?.trim();
+  const lsProj = document.getElementById('langsmith_project')?.value?.trim() || 'brofessor-rag';
+
+  if (btn) btn.disabled = true;
+  if (consoleBox) {
+    consoleBox.classList.remove('hidden');
+    consoleBox.innerHTML = `
+      <div class="flex items-center gap-2 text-indigo-400">
+        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+        <span>Checking connectivity to LangSmith and Gemini endpoints...</span>
+      </div>
+    `;
+  }
+
+  try {
+    const res = await fetch('/api/v1/rag/integrations/verify/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': window.getCsrfToken ? window.getCsrfToken() : '',
+      },
+      body: JSON.stringify({
+        save: false,
+        gemini_api_key: geminiKey,
+        gemini_model: geminiModel,
+        langsmith_api_key: lsKey,
+        langsmith_project: lsProj,
+      }),
+    });
+
+    const data = await res.json();
+    const ls = data.langsmith || {};
+    const gem = data.gemini || {};
+
+    // Update Gemini badge & pill
+    const gemPill = document.getElementById('gemini-live-status-pill');
+    const gemBadge = document.getElementById('settings-gemini-badge');
+    if (gemPill) {
+      if (gem.connected) {
+        gemPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Connected (${gem.latency_ms || 0}ms)</span>`;
+      } else if (gem.configured) {
+        gemPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> <span class="text-rose-600 dark:text-rose-400">Auth Failed</span>`;
+      } else {
+        gemPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> <span>Optional</span>`;
+      }
+    }
+    if (gemBadge && gem.connected) {
+      gemBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60';
+      gemBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Gemini (${gem.model || 'Connected'})`;
+    }
+
+    // Update LangSmith badge & pill
+    const lsPill = document.getElementById('langsmith-live-status-pill');
+    const lsBadge = document.getElementById('settings-langsmith-badge');
+    if (lsPill) {
+      if (ls.connected) {
+        lsPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Connected (${ls.latency_ms || 0}ms)</span>`;
+      } else if (ls.configured) {
+        lsPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> <span class="text-rose-600 dark:text-rose-400">Failed</span>`;
+      } else {
+        lsPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> <span>Optional</span>`;
+      }
+    }
+    if (lsBadge) {
+      if (ls.connected) {
+        lsBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60';
+        lsBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> LangSmith Tracing Active (${ls.project || 'brofessor-rag'})`;
+      } else {
+        lsBadge.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono uppercase font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-500 border border-zinc-200 dark:border-zinc-700';
+        lsBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> LangSmith Inactive`;
+      }
+    }
+
+    // Output console details
+    let out = '';
+    if (ls.connected) {
+      out += `<div class="text-emerald-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> [LangSmith] Connected (HTTP 200, ${ls.latency_ms || 0}ms) &bull; Project: ${ls.project}</div>`;
+    } else if (ls.configured) {
+      out += `<div class="text-rose-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> [LangSmith] ${ls.message}</div>`;
+    } else {
+      out += `<div class="text-zinc-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-zinc-400"></span> [LangSmith] Key not provided (Tracing inactive)</div>`;
+    }
+
+    if (gem.connected) {
+      out += `<div class="text-emerald-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> [Gemini] Connected (HTTP 200, ${gem.latency_ms || 0}ms) &bull; Model: ${gem.model}</div>`;
+    } else if (gem.configured) {
+      out += `<div class="text-rose-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-rose-500"></span> [Gemini] ${gem.message}</div>`;
+    } else {
+      out += `<div class="text-indigo-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span> [Gemini] Key not set &bull; Local Ollama active</div>`;
+    }
+
+    if (consoleBox) consoleBox.innerHTML = out;
+  } catch (err) {
+    if (consoleBox) {
+      consoleBox.innerHTML = `<span class="text-rose-500">[Error] Failed to ping endpoints: ${err.message}</span>`;
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// Auto-check live status on load if on Settings page
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    const res = await fetch('/api/v1/rag/integrations/status/');
+    if (!res.ok) return;
+    const data = await res.json();
+    const ls = data.langsmith || {};
+    const gem = data.gemini || {};
+
+    const gemPill = document.getElementById('gemini-live-status-pill');
+    if (gemPill && gem.connected) {
+      gemPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Connected (${gem.latency_ms || 0}ms)</span>`;
+    }
+
+    const lsPill = document.getElementById('langsmith-live-status-pill');
+    if (lsPill && ls.connected) {
+      lsPill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Connected (${ls.latency_ms || 0}ms)</span>`;
+    }
+  } catch (e) {}
+});
 </script>
 {% endblock %}

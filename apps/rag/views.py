@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
+from django.http import StreamingHttpResponse
 from drf_spectacular.utils import extend_schema
 
 logger = logging.getLogger("brofessor")
@@ -126,6 +127,45 @@ class RAGChatView(APIView):
             )
 
 
+class RAGChatStreamView(APIView):
+    """
+    Server-Sent Events (SSE) streaming endpoint for RAG question answering.
+    Streams real-time pipeline stage telemetry and token-by-token LLM output.
+    """
+
+    @extend_schema(
+        summary="RAG Chat Question & Answer (SSE Stream)",
+        description="Stream real-time pipeline stage telemetry and progressive token output via Server-Sent Events.",
+        request=RAGChatRequestSerializer,
+    )
+    def post(self, request):
+        serializer = RAGChatRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        filters = {
+            "source_types": data.get("source_types") or None,
+            "source_ids": [str(s) for s in data.get("source_ids", [])] if data.get("source_ids") else None,
+            "document_ids": [str(d) for d in data.get("document_ids", [])] if data.get("document_ids") else None,
+            "min_similarity": data.get("min_similarity"),
+        }
+
+        stream_gen = RAGService.ask_stream(
+            query=data["query"],
+            conversation_id=data.get("conversation_id"),
+            domain_id=data.get("domain_id"),
+            allow_web_search=data.get("allow_web_search", False),
+            retrieval_top_k=data.get("retrieval_top_k"),
+            rerank_top_k=data.get("rerank_top_k"),
+            filters=filters,
+        )
+
+        response = StreamingHttpResponse(stream_gen, content_type="text/event-stream")
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
+
+
 
 class ConversationListView(APIView):
     """List recent conversations or create a new conversation."""
@@ -213,3 +253,119 @@ class ConversationDetailView(APIView):
             {"message": f"Conversation {pk} deleted successfully"},
             status=status.HTTP_200_OK,
         )
+
+
+class IntegrationsStatusView(APIView):
+    """
+    Get live connection and health status for external observability (LangSmith)
+    and LLM providers (Gemini / Ollama).
+    """
+
+    @extend_schema(summary="Integrations & API Keys Health Status")
+    def get(self, request):
+        from apps.rag.services.integrations import get_current_integrations_status
+        status_data = get_current_integrations_status(include_secrets=False)
+        return Response(status_data, status=status.HTTP_200_OK)
+
+
+class IntegrationsVerifyView(APIView):
+    """
+    Verify / Ping connection for LangSmith and LLM API keys.
+    Optionally saves the credentials to persistent ai_config.json.
+    """
+
+    @extend_schema(summary="Verify and Test Integrations Connection (Ping)")
+    def post(self, request):
+        from apps.rag.services.integrations import (
+            verify_langsmith_key,
+            verify_gemini_key,
+            verify_ollama_status,
+            get_current_integrations_status,
+            mask_key,
+        )
+        from apps.rag.llm.registry import get_system_ai_config, save_system_ai_config
+
+        payload = request.data or {}
+        save_changes = bool(payload.get("save", False))
+
+        ai_cfg = get_system_ai_config()
+
+        # Keys can be explicitly supplied or fallback to existing configured keys
+        langsmith_key = payload.get("langsmith_api_key")
+        if langsmith_key is None:
+            langsmith_key = ai_cfg.get("langsmith_api_key", "")
+        langsmith_key = langsmith_key.strip()
+
+        langsmith_project = payload.get("langsmith_project")
+        if langsmith_project is None:
+            langsmith_project = ai_cfg.get("langsmith_project", "brofessor-rag")
+        langsmith_project = (langsmith_project or "brofessor-rag").strip()
+
+        gemini_key = payload.get("gemini_api_key")
+        if gemini_key is None:
+            gemini_key = ai_cfg.get("gemini_api_key", "")
+        gemini_key = gemini_key.strip()
+
+        gemini_model = payload.get("gemini_model")
+        if gemini_model is None:
+            gemini_model = ai_cfg.get("gemini_model", "gemini-3.6-flash")
+        gemini_model = (gemini_model or "gemini-3.6-flash").strip()
+
+        # Run verification checks
+        langsmith_result = verify_langsmith_key(langsmith_key, project_name=langsmith_project)
+        gemini_result = verify_gemini_key(gemini_key, model_name=gemini_model)
+        ollama_result = verify_ollama_status(
+            ai_cfg.get("ollama_base_url", "http://127.0.0.1:11434"),
+            ai_cfg.get("ollama_model", "llama3.2"),
+        )
+
+        if save_changes:
+            updates = {
+                "langsmith_api_key": langsmith_key,
+                "langsmith_project": langsmith_project,
+                "langsmith_tracing": bool(langsmith_key),
+                "gemini_api_key": gemini_key,
+                "gemini_model": gemini_model,
+            }
+            save_system_ai_config(updates)
+            logger.info("Saved updated integrations config via API verify.")
+
+        # Resolve active LLM display
+        if gemini_key:
+            active_llm = {
+                "provider": "gemini",
+                "name": f"Gemini ({gemini_model})",
+                "connected": gemini_result["connected"],
+                "status": gemini_result["status"],
+                "message": gemini_result["message"],
+            }
+        else:
+            active_llm = {
+                "provider": "ollama",
+                "name": f"Ollama ({ai_cfg.get('ollama_model', 'llama3.2')})",
+                "connected": ollama_result["connected"],
+                "status": ollama_result["status"],
+                "message": ollama_result["message"],
+            }
+
+        return Response(
+            {
+                "success": True,
+                "saved": save_changes,
+                "langsmith": {
+                    **langsmith_result,
+                    "api_key_masked": mask_key(langsmith_key),
+                    "project": langsmith_project,
+                    "tracing_enabled": bool(langsmith_key),
+                },
+                "gemini": {
+                    **gemini_result,
+                    "api_key_masked": mask_key(gemini_key),
+                    "model": gemini_model,
+                },
+                "ollama": ollama_result,
+                "active_llm": active_llm,
+            },
+            status=status.HTTP_200_OK,
+        )
+

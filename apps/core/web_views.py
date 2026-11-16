@@ -1291,6 +1291,8 @@ class SettingsView(LoginRequiredMixin, View):
             gemini_model = request.POST.get("gemini_model", "gemini-1.5-flash").strip()
             ollama_url = request.POST.get("ollama_base_url", "").strip()
             ollama_model = request.POST.get("ollama_model", "llama3.2").strip()
+            langsmith_key = request.POST.get("langsmith_api_key")
+            langsmith_project = request.POST.get("langsmith_project")
 
             is_docker = os.getenv("DOCKER_CONTAINER") == "1" or os.path.exists("/.dockerenv")
             default_ollama = "http://host.docker.internal:11434" if is_docker else "http://127.0.0.1:11434"
@@ -1301,12 +1303,34 @@ class SettingsView(LoginRequiredMixin, View):
                 "ollama_base_url": ollama_url or default_ollama,
                 "ollama_model": ollama_model or "llama3.2",
             }
+            if langsmith_key is not None:
+                updates["langsmith_api_key"] = langsmith_key.strip()
+                updates["langsmith_tracing"] = bool(langsmith_key.strip())
+            if langsmith_project is not None:
+                updates["langsmith_project"] = langsmith_project.strip() or "brofessor-rag"
+
             save_system_ai_config(updates)
             if gemini_key:
                 status_msg = f"Cloud (Gemini: {gemini_model or 'gemini-1.5-flash'}) active by default for all tasks, with Local (Ollama) fallback."
             else:
                 status_msg = f"Local model (Ollama: {ollama_model or 'llama3.2'}) active for all tasks."
             messages.success(request, f"AI configuration saved. {status_msg}")
+            return redirect("web-settings")
+
+        if action == "save_langsmith":
+            from apps.rag.llm import save_system_ai_config
+            langsmith_key = request.POST.get("langsmith_api_key", "").strip()
+            langsmith_project = request.POST.get("langsmith_project", "brofessor-rag").strip() or "brofessor-rag"
+            updates = {
+                "langsmith_api_key": langsmith_key,
+                "langsmith_project": langsmith_project,
+                "langsmith_tracing": bool(langsmith_key),
+            }
+            save_system_ai_config(updates)
+            if langsmith_key:
+                messages.success(request, f"LangSmith tracing active for project '{langsmith_project}'.")
+            else:
+                messages.info(request, "LangSmith tracing disabled.")
             return redirect("web-settings")
 
         new_username = request.POST.get("username", "").strip()

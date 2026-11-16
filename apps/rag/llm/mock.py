@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterator, Optional
 from .base import BaseLLMProvider, LLMResponse
 
 
@@ -47,3 +47,15 @@ class MockLLMProvider(BaseLLMProvider):
             finish_reason="stop",
             metadata={"mock": True},
         )
+
+    def generate_stream(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        resp = self.generate(prompt, system_prompt=system_prompt, temperature=temperature, **kwargs)
+        words = resp.text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")

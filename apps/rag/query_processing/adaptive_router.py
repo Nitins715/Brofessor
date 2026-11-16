@@ -138,7 +138,7 @@ class QueryTransformer:
     """
     Transforms and expands user queries into optimized search queries
     for both dense vector retrieval and BM25 lexical matching.
-    Only applied to harder/complex queries to avoid unnecessary LLM latency.
+    Supports multi-turn conversational query condensation and hard query optimization.
     """
 
     TRANSFORM_PROMPT = """You are a retrieval optimization assistant.
@@ -146,6 +146,82 @@ Rewrite the user's conversational question into a clean, keyword-rich search que
 Remove filler words (e.g., "can you tell me about", "I was wondering"). Focus on key domain terminology, concepts, and identifiers.
 
 Return ONLY the rewritten search query text without quotation marks or explanations."""
+
+    CONDENSE_SYSTEM_PROMPT = """You are a conversational query contextualizer for a technical knowledge base.
+Given the preceding conversation turns and the user's latest follow-up question, rewrite the follow-up question into a complete, standalone technical search query that preserves the conversational context.
+Resolve pronouns (such as "it", "this", "that", "they", "its") and implicit references to point directly to the specific subject discussed.
+If the query is already self-contained and clear, return it as-is.
+Return ONLY the standalone rewritten search query text without quotation marks, conversational preamble, or explanations."""
+
+    FOLLOW_UP_PATTERNS = [
+        r"\b(?:it|its|this|that|these|those|they|them|he|she)\b",
+        r"\b(?:above|previous|earlier|former|latter|the second|the third|first one|other one)\b",
+        r"^(?:why|how so|and\b|also\b|what about|how about|explain more|more details|elaborate|give an example|show an example|show me|can you provide)\b",
+        r"\b(?:example of (?:it|that|this)|syntax for (?:it|that|this)|how to use (?:it|that|this)|install (?:it|this))\b",
+    ]
+
+    @classmethod
+    def is_follow_up(cls, query: str) -> bool:
+        if not query:
+            return False
+        clean = query.strip().lower()
+        for pattern in cls.FOLLOW_UP_PATTERNS:
+            if re.search(pattern, clean):
+                return True
+        short_follow_ups = {
+            "why", "why?", "how", "how?", "how so", "how so?",
+            "what else", "what else?", "elaborate", "more details",
+            "tell me more", "give example", "show example", "and then?"
+        }
+        if clean in short_follow_ups:
+            return True
+        return False
+
+    @classmethod
+    def condense_query(
+        cls,
+        query: str,
+        chat_history: Optional[list] = None,
+        llm_provider: Optional[BaseLLMProvider] = None,
+    ) -> str:
+        """
+        Rewrites a conversational follow-up question into a standalone retrieval query
+        by incorporating context from preceding conversation turns.
+        """
+        if not chat_history or not cls.is_follow_up(query):
+            return (query or "").strip()
+
+        dialogue_lines = []
+        for turn in chat_history[-4:]:
+            role = "User" if turn.get("role") == "user" else "Assistant"
+            content = (turn.get("content") or "").strip()
+            if len(content) > 300:
+                content = content[:300] + "..."
+            dialogue_lines.append(f"{role}: {content}")
+
+        if not dialogue_lines:
+            return query.strip()
+
+        dialogue_text = "\n".join(dialogue_lines)
+        active_llm = llm_provider or get_llm_provider()
+        prompt = (
+            f"Conversation History:\n{dialogue_text}\n\n"
+            f"Latest Follow-up Question: {query}\n\n"
+            f"Standalone Search Query:"
+        )
+        try:
+            res = active_llm.generate(
+                prompt=prompt,
+                system_prompt=cls.CONDENSE_SYSTEM_PROMPT,
+                temperature=0.0,
+            )
+            rewritten = res.text.strip().strip('"\'')
+            if rewritten and len(rewritten) >= 3:
+                return rewritten
+        except Exception as e:
+            logger.warning(f"QueryTransformer.condense_query error ({e}), keeping original query.")
+
+        return query.strip()
 
     @classmethod
     def transform(

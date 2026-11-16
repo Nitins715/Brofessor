@@ -43,9 +43,10 @@ Return ONLY a JSON object:
             return False
 
         active_llm = llm_provider or get_llm_provider()
+        grading_text = (getattr(chunk, "parent_content", None) or chunk.content)[:800]
         prompt = (
             f"User Question: {query}\n\n"
-            f"Retrieved Document Content:\n{chunk.content[:600]}\n"
+            f"Retrieved Document Content:\n{grading_text}\n"
         )
         try:
             resp = active_llm.generate(

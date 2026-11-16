@@ -126,7 +126,7 @@ class HybridRetrievalService:
 
         # 2. Sparse / Keyword Candidates via BM25
         # Retrieve candidate chunk records for BM25 ranking across all documents
-        queryset = DocumentChunk.objects.select_related("document", "document__source")
+        queryset = DocumentChunk.objects.select_related("document", "document__source", "parent_chunk")
         if source_ids:
             queryset = queryset.filter(document__source_id__in=source_ids)
         if document_ids:
@@ -182,6 +182,7 @@ class HybridRetrievalService:
             if cid not in chunk_map:
                 doc = chunk.document
                 src = doc.source if doc else None
+                parent_chunk = chunk.parent_chunk
                 chunk_map[cid] = SearchResult(
                     chunk_id=cid,
                     chunk_index=chunk.chunk_index,
@@ -194,9 +195,13 @@ class HybridRetrievalService:
                     source_name=src.name if src else "",
                     source_type=src.source_type if src else "",
                     source_uri=src.uri if src else "",
+                    chunk_level=chunk.chunk_level,
+                    parent_chunk_id=str(parent_chunk.id) if parent_chunk else None,
+                    parent_content=parent_chunk.content if parent_chunk else None,
                     metadata={
                         **(chunk.metadata or {}),
                         "token_count": chunk.token_count,
+                        "chunk_level": chunk.chunk_level,
                         "bm25_score": round(score, 4),
                     },
                 )

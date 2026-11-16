@@ -5,27 +5,26 @@ from apps.assessments.models import Assessment, Question
 
 
 class Command(BaseCommand):
-    help = "Seeds canonical AI/ML and Data Science domains, roadmaps, and baseline diagnostic assessments."
+    help = "Seeds canonical Artificial Intelligence & Machine Learning domain roadmap and diagnostic assessments."
 
     def handle(self, *args, **options):
-        self.stdout.write("Seeding canonical AI/ML and Data Science domain roadmaps...")
+        self.stdout.write("Seeding canonical AI/ML domain roadmap...")
 
-        # 1. Purge any legacy domains that are not our canonical 2 domains
-        canonical_slugs = ["artificial-intelligence-machine-learning", "data-science"]
-        legacy_domains = Domain.objects.exclude(slug__in=canonical_slugs)
-        if legacy_domains.exists():
-            legacy_names = list(legacy_domains.values_list("name", flat=True))
-            legacy_domains.delete()
-            self.stdout.write(f"Removed legacy non-canonical domains: {legacy_names}")
+        # 1. Purge or deactivate non-AI/ML domains so ONLY Artificial Intelligence & Machine Learning is active
+        canonical_slugs = ["artificial-intelligence-machine-learning"]
+        non_aiml = Domain.objects.exclude(slug__in=canonical_slugs)
+        if non_aiml.exists():
+            non_aiml.update(is_active=False, is_selected=False)
+            self.stdout.write("Deactivated non-AI/ML domains. Only Artificial Intelligence & Machine Learning is active.")
 
         # 2. Invoke idempotent canonical curriculum seeder
         call_command("seed_domain_roadmaps")
 
-        # 3. Ensure a canonical domain is selected if none currently selected
-        if not Domain.objects.filter(is_selected=True).exists():
-            first_domain = Domain.objects.filter(slug="artificial-intelligence-machine-learning").first() or Domain.objects.first()
-            if first_domain:
-                first_domain.is_selected = True
-                first_domain.save(update_fields=["is_selected"])
+        # 3. Ensure AI/ML domain is active and selected
+        aiml = Domain.objects.filter(slug="artificial-intelligence-machine-learning").first()
+        if aiml:
+            aiml.is_active = True
+            aiml.is_selected = True
+            aiml.save(update_fields=["is_active", "is_selected"])
 
-        self.stdout.write(self.style.SUCCESS("Canonical roadmap seeding complete! Only AI/ML and Data Science domains are active."))
+        self.stdout.write(self.style.SUCCESS("Roadmap seeding complete! Only Artificial Intelligence & Machine Learning roadmap is active."))

@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 from django.conf import settings
@@ -14,6 +15,30 @@ def get_ai_config_file() -> Path:
     return Path(data_dir) / "ai_config.json"
 
 
+def sync_langsmith_env(config: Optional[Dict[str, Any]] = None) -> None:
+    """Synchronize system environment variables for LangSmith / LangChain tracing."""
+    if config is None:
+        config = get_system_ai_config()
+    key = (config.get("langsmith_api_key") or "").strip()
+    project = (config.get("langsmith_project") or "brofessor-rag").strip()
+    tracing = bool(config.get("langsmith_tracing", True if key else False))
+
+    if key and tracing:
+        os.environ["LANGSMITH_API_KEY"] = key
+        os.environ["LANGCHAIN_API_KEY"] = key
+        os.environ["LANGSMITH_PROJECT"] = project
+        os.environ["LANGCHAIN_PROJECT"] = project
+        os.environ["LANGSMITH_TRACING"] = "true"
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+    else:
+        if "LANGSMITH_API_KEY" in os.environ:
+            del os.environ["LANGSMITH_API_KEY"]
+        if "LANGCHAIN_API_KEY" in os.environ:
+            del os.environ["LANGCHAIN_API_KEY"]
+        os.environ["LANGSMITH_TRACING"] = "false"
+        os.environ["LANGCHAIN_TRACING_V2"] = "false"
+
+
 def get_system_ai_config() -> Dict[str, Any]:
     config_file = get_ai_config_file()
     saved = {}
@@ -24,6 +49,10 @@ def get_system_ai_config() -> Dict[str, Any]:
         except Exception:
             saved = {}
 
+    langsmith_key = saved.get("langsmith_api_key") or getattr(settings, "LANGSMITH_API_KEY", "") or os.environ.get("LANGSMITH_API_KEY", "") or os.environ.get("LANGCHAIN_API_KEY", "")
+    langsmith_project = saved.get("langsmith_project") or getattr(settings, "LANGSMITH_PROJECT", "brofessor-rag") or os.environ.get("LANGSMITH_PROJECT", "brofessor-rag")
+    langsmith_tracing = saved.get("langsmith_tracing", True if langsmith_key else False)
+
     return {
         "llm_provider": saved.get("llm_provider") or getattr(settings, "LLM_PROVIDER", "ollama"),
         "gemini_api_key": saved.get("gemini_api_key") or getattr(settings, "GEMINI_API_KEY", ""),
@@ -33,6 +62,9 @@ def get_system_ai_config() -> Dict[str, Any]:
         "openai_base_url": saved.get("openai_base_url") or getattr(settings, "OPENAI_BASE_URL", "https://api.openai.com/v1"),
         "ollama_base_url": saved.get("ollama_base_url") or getattr(settings, "OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
         "ollama_model": saved.get("ollama_model") or getattr(settings, "OLLAMA_MODEL", "gemma3:4b"),
+        "langsmith_api_key": langsmith_key,
+        "langsmith_project": langsmith_project,
+        "langsmith_tracing": langsmith_tracing,
     }
 
 
@@ -43,6 +75,7 @@ def save_system_ai_config(updates: Dict[str, Any]) -> Dict[str, Any]:
     config_file.parent.mkdir(parents=True, exist_ok=True)
     with open(config_file, "w", encoding="utf-8") as f:
         json.dump(config, f, indent=2)
+    sync_langsmith_env(config)
     return config
 
 

@@ -1,6 +1,6 @@
 import logging
 import json
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterator, Optional
 import requests
 from django.conf import settings
 from .base import BaseLLMProvider, LLMResponse
@@ -104,3 +104,61 @@ class OpenAILLMProvider(BaseLLMProvider):
         except requests.exceptions.RequestException as e:
             logger.error(f"Cloud LLM request failed: {e}")
             raise RuntimeError(f"Cloud LLM connection error: {str(e)}") from e
+
+    def generate_stream(
+        self,
+        prompt: str,
+        system_prompt: Optional[str] = None,
+        temperature: float = 0.2,
+        **kwargs: Any,
+    ) -> Iterator[str]:
+        if not self._api_key:
+            raise ValueError(
+                "OpenAI API key is not configured. Please add OPENAI_API_KEY in Settings."
+            )
+
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": self._model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "stream": True,
+        }
+
+        try:
+            response = requests.post(
+                f"{self._base_url}/chat/completions",
+                headers=self._headers,
+                json=payload,
+                stream=True,
+                timeout=self.timeout,
+            )
+            if response.status_code == 200:
+                for line in response.iter_lines(decode_unicode=True):
+                    if line and line.startswith("data: "):
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            chunk = json.loads(data_str)
+                            choices = chunk.get("choices", [])
+                            if choices:
+                                delta = choices[0].get("delta", {})
+                                token = delta.get("content", "")
+                                if token:
+                                    yield token
+                        except Exception:
+                            continue
+                return
+        except Exception as e:
+            logger.warning(f"OpenAI streaming request error: {e}")
+
+        # Fallback to standard generate
+        resp = self.generate(prompt=prompt, system_prompt=system_prompt, temperature=temperature, **kwargs)
+        words = resp.text.split(" ")
+        for i, word in enumerate(words):
+            yield word + (" " if i < len(words) - 1 else "")

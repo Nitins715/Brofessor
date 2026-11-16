@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Any, Dict, List, Optional, TypedDict
+from typing import Any, Callable, Dict, List, Optional, TypedDict
 from langgraph.graph import StateGraph, START, END
 
 from apps.rag.query_processing import BaseQueryProcessor, DefaultQueryProcessor
@@ -14,7 +14,7 @@ from apps.rag.services.retrieval import SearchResult
 from apps.rag.services.web_search import WebSearchService, WebSearchResult
 from apps.rag.reranking import BaseReranker, RerankResult, get_reranker
 from apps.rag.context import ContextBuilder, Citation
-from apps.rag.llm import BaseLLMProvider, get_llm_provider
+from apps.rag.llm import BaseLLMProvider, LLMResponse, get_llm_provider
 from apps.rag.workflow.grader import DocumentGrader, HallucinationChecker
 
 logger = logging.getLogger("brofessor")
@@ -44,6 +44,7 @@ class RAGState(TypedDict, total=False):
     processed_query: str
     transformed_query: str
     conversation_id: Optional[str]
+    chat_history: Optional[List[Dict[str, str]]]
     route_decision: str  # "PARAMETRIC", "RETRIEVAL", "WEB_SEARCH"
     allow_web_search: bool  # True when user has confirmed web search
     filters: Dict[str, Any]
@@ -53,6 +54,8 @@ class RAGState(TypedDict, total=False):
     reranked_chunks: List[RerankResult]
     graded_chunks: List[SearchResult]
     grading_status: str  # "RELEVANT", "INSUFFICIENT"
+    graph_context: str
+    graph_entities: List[str]
     web_results: List[WebSearchResult]
     can_search_web: bool
     context_text: str
@@ -64,11 +67,55 @@ class RAGState(TypedDict, total=False):
     metadata: Dict[str, Any]
 
 
+def format_history_prompt(chat_history: Optional[List[Dict[str, str]]]) -> str:
+    """Format recent turns of dialogue into conversational context."""
+    if not chat_history:
+        return ""
+    lines = []
+    for turn in chat_history[-4:]:
+        role = "User" if turn.get("role") == "user" else "Brofessor"
+        content = (turn.get("content") or "").strip()
+        if len(content) > 350:
+            content = content[:350] + "..."
+        lines.append(f"{role}: {content}")
+    if lines:
+        return "Recent Conversation History:\n" + "\n".join(lines) + "\n\n"
+    return ""
+
+
+def execute_generation(
+    prompt: str,
+    system_prompt: str,
+    active_llm: BaseLLMProvider,
+    on_token: Optional[Callable[[str], None]] = None,
+) -> LLMResponse:
+    """Execute LLM generation with progressive token streaming callback if available."""
+    if on_token and hasattr(active_llm, "generate_stream"):
+        tokens: List[str] = []
+        try:
+            for tok in active_llm.generate_stream(prompt=prompt, system_prompt=system_prompt):
+                if tok:
+                    tokens.append(tok)
+                    on_token(tok)
+            accumulated = "".join(tokens).strip()
+            if accumulated:
+                return LLMResponse(
+                    text=accumulated,
+                    model=active_llm.model_name,
+                    tokens_used=len(tokens),
+                )
+        except Exception as stream_err:
+            logger.warning(f"execute_generation generate_stream error ({stream_err}), falling back to generate()")
+
+    return active_llm.generate(prompt=prompt, system_prompt=system_prompt)
+
+
 def create_rag_graph(
     query_processor: Optional[BaseQueryProcessor] = None,
     reranker: Optional[BaseReranker] = None,
     llm_provider: Optional[BaseLLMProvider] = None,
     context_builder: Optional[ContextBuilder] = None,
+    on_token: Optional[Callable[[str], None]] = None,
 ):
     """
     Builds the Advanced LangGraph Adaptive Self-RAG & Corrective RAG (CRAG) workflow.
@@ -107,11 +154,17 @@ def create_rag_graph(
     # =========================================================================
     def parametric_node(state: RAGState) -> Dict[str, Any]:
         query = state.get("query", "")
+        chat_history = state.get("chat_history", [])
+        history_block = format_history_prompt(chat_history)
+        prompt = f"{history_block}User Question: {query}" if history_block else query
+
         start_time = time.time()
         try:
-            res = active_llm.generate(
-                prompt=query,
+            res = execute_generation(
+                prompt=prompt,
                 system_prompt=PARAMETRIC_SYSTEM_PROMPT,
+                active_llm=active_llm,
+                on_token=on_token,
             )
             elapsed = round((time.time() - start_time) * 1000, 2)
             return {
@@ -138,11 +191,26 @@ def create_rag_graph(
             }
 
     # =========================================================================
-    # Node 3: Query Transformation Node
+    # Node 3: Query Transformation Node (Multi-Turn Condensation + Query Expansion)
     # =========================================================================
     def query_transform_node(state: RAGState) -> Dict[str, Any]:
         raw_query = state.get("query", "")
-        transformed = QueryTransformer.transform(query=raw_query, llm_provider=active_llm)
+        chat_history = state.get("chat_history", [])
+
+        # 1. Multi-Turn Condensation: If follow-up inquiry, rewrite using dialogue context
+        working_query = raw_query
+        if chat_history and QueryTransformer.is_follow_up(raw_query):
+            condensed = QueryTransformer.condense_query(
+                query=raw_query,
+                chat_history=chat_history,
+                llm_provider=active_llm,
+            )
+            if condensed and condensed.lower() != raw_query.lower():
+                logger.info(f"QueryTransformer condensed follow-up: '{raw_query[:35]}' -> '{condensed[:40]}'")
+                working_query = condensed
+
+        # 2. Query Transformation: Optimize domain keywords for hard queries
+        transformed = QueryTransformer.transform(query=working_query, llm_provider=active_llm)
         logger.info(f"QueryTransformer: '{raw_query[:35]}...' -> '{transformed[:35]}...'")
         return {
             "transformed_query": transformed,
@@ -164,9 +232,60 @@ def create_rag_graph(
             source_types=filters.get("source_types"),
             min_similarity=filters.get("min_similarity"),
         )
+
+        # Multi-Hop Knowledge Graph Traversal
+        graph_context = ""
+        graph_entities: List[str] = []
+        try:
+            from apps.rag.services.graph_service import KnowledgeGraphService
+            matched_entities = KnowledgeGraphService.find_query_entities(search_query)
+            if matched_entities:
+                subgraph = KnowledgeGraphService.traverse_subgraph(matched_entities, max_depth=2, max_edges=8)
+                graph_context = subgraph.to_text()
+                graph_entities = [e.name for e in subgraph.entities]
+
+                # Incorporate chunks connected via Knowledge Graph into retrieval candidate pool
+                if subgraph.mapped_chunks:
+                    existing_ids = {r.chunk_id for r in results}
+                    for chk in subgraph.mapped_chunks:
+                        cid = str(chk.id)
+                        if cid not in existing_ids:
+                            doc = chk.document
+                            src = doc.source if doc else None
+                            p_chunk = chk.parent_chunk
+                            results.append(
+                                SearchResult(
+                                    chunk_id=cid,
+                                    chunk_index=chk.chunk_index,
+                                    content=chk.content,
+                                    similarity_score=0.70,  # High prior for knowledge-graph linked evidence
+                                    distance=0.30,
+                                    document_id=str(doc.id) if doc else "",
+                                    document_title=doc.title if doc else "",
+                                    source_id=str(src.id) if src else "",
+                                    source_name=src.name if src else "",
+                                    source_type=src.source_type if src else "",
+                                    source_uri=src.uri if src else "",
+                                    chunk_level=chk.chunk_level,
+                                    parent_chunk_id=str(p_chunk.id) if p_chunk else None,
+                                    parent_content=p_chunk.content if p_chunk else None,
+                                    metadata={
+                                        **(chk.metadata or {}),
+                                        "retrieval_source": "knowledge_graph",
+                                    },
+                                )
+                            )
+                            existing_ids.add(cid)
+                if graph_context:
+                    logger.info(f"Knowledge Graph traversed {len(subgraph.relationships)} relations for query '{search_query[:30]}...'")
+        except Exception as kg_err:
+            logger.warning(f"Knowledge Graph traversal error ({kg_err}), continuing with hybrid vector retrieval.")
+
         logger.info(f"Hybrid retrieval returned {len(results)} chunks for query: '{search_query[:40]}...'")
         return {
             "retrieved_chunks": results,
+            "graph_context": graph_context,
+            "graph_entities": graph_entities,
         }
 
     # =========================================================================
@@ -301,16 +420,21 @@ def create_rag_graph(
             })
 
         web_context_text = "\n\n".join(web_context_parts)
+        chat_history = state.get("chat_history", [])
+        history_block = format_history_prompt(chat_history)
         prompt = (
             f"External Web Context:\n{web_context_text}\n\n"
+            f"{history_block}"
             f"User Question: {query}\n\n"
             f"Answer based on the web context:"
         )
 
         try:
-            res = active_llm.generate(
+            res = execute_generation(
                 prompt=prompt,
                 system_prompt=WEB_GROUNDED_SYSTEM_PROMPT,
+                active_llm=active_llm,
+                on_token=on_token,
             )
             return {
                 "response_text": res.text,
@@ -349,8 +473,7 @@ def create_rag_graph(
                     )
                 )
 
-
-        built_ctx = ctx_builder.build(rerank_items)
+        built_ctx = ctx_builder.build(rerank_items, graph_context=state.get("graph_context"))
         serialized_citations = [c.to_dict() for c in built_ctx.citations]
         return {
             "context_text": built_ctx.formatted_text,
@@ -369,19 +492,24 @@ def create_rag_graph(
         query = state.get("query", "")
         context_text = state.get("context_text", "").strip()
         citations = state.get("citations", [])
+        chat_history = state.get("chat_history", [])
 
+        history_block = format_history_prompt(chat_history)
         prompt = (
             f"Context from knowledge base:\n"
             f"{context_text}\n\n"
+            f"{history_block}"
             f"User Question: {query}\n\n"
             f"Answer:"
         )
 
         start_time = time.time()
         try:
-            res = active_llm.generate(
+            res = execute_generation(
                 prompt=prompt,
                 system_prompt=GROUNDED_SYSTEM_PROMPT,
+                active_llm=active_llm,
+                on_token=on_token,
             )
             elapsed_ms = round((time.time() - start_time) * 1000, 2)
 
