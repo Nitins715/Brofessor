@@ -11,8 +11,9 @@ from django.views import View
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse, Http404, HttpResponse
 from django.conf import settings
+from django.utils import timezone
 from django.utils.text import slugify
 from django.core.management import call_command
 from django.db.models import Avg, Count, Q
@@ -488,8 +489,29 @@ class RoadmapView(LoginRequiredMixin, View):
             dom_prog = RoadmapProgressService.get_domain_progress(active_domain.id)
             domain_progress_pct = dom_prog.get("progress_percentage", 0.0)
 
+            track_counts = {
+                "all": 0,
+                "swe_foundations": 0,
+                "ai_engineer": 0,
+                "agentic_ai": 0,
+                "mlops": 0,
+                "fde": 0,
+            }
+            track_labels = {
+                "swe_foundations": "SWE Foundations",
+                "ai_engineer": "AI Engineer",
+                "agentic_ai": "Agentic AI",
+                "mlops": "MLOps / LLMOps",
+                "fde": "Forward Deployed AI",
+            }
+
             topics_qs = active_domain.get_all_topics() if hasattr(active_domain, "get_all_topics") else active_domain.topics.all().order_by("order", "name")
             for topic in topics_qs:
+                topic_track = getattr(topic, "track", "ai_engineer") or "ai_engineer"
+                track_counts["all"] += 1
+                if topic_track in track_counts:
+                    track_counts[topic_track] += 1
+
                 topic_skills_data = []
                 for skill in topic.skills.all().order_by("order", "name"):
                     progress_info = RoadmapProgressService.get_skill_progress(skill.id)
@@ -522,10 +544,25 @@ class RoadmapView(LoginRequiredMixin, View):
                     "description": topic.description,
                     "order": topic.order,
                     "priority": topic.priority,
+                    "track": topic_track,
+                    "track_label": track_labels.get(topic_track, "AI Engineer"),
                     "learning_objectives": topic.learning_objectives,
                     "skills_count": len(topic_skills_data),
                     "skills": topic_skills_data,
                 })
+
+        selected_track = request.GET.get("track", "all").lower()
+        if selected_track != "all":
+            topics_data = [t for t in topics_data if t["track"] == selected_track]
+
+        track_items = [
+            {"key": "all", "label": "All Tracks", "count": track_counts.get("all", 0), "desc": "Comprehensive curriculum covering all specializations"},
+            {"key": "swe_foundations", "label": "SWE Foundations", "count": track_counts.get("swe_foundations", 0), "desc": "Software Engineering Bedrock (Python, DSA, OS, Networks, DBMS)"},
+            {"key": "ai_engineer", "label": "AI Engineer", "count": track_counts.get("ai_engineer", 0), "desc": "Core ML/DL, PyTorch, Modern NLP & Advanced RAG"},
+            {"key": "agentic_ai", "label": "Agentic AI", "count": track_counts.get("agentic_ai", 0), "desc": "ReAct loops, LangGraph state machines, multi-agent swarms & memory"},
+            {"key": "mlops", "label": "MLOps & LLMOps", "count": track_counts.get("mlops", 0), "desc": "vLLM serving, KV-cache optimization, LangSmith tracing & Ragas evals"},
+            {"key": "fde", "label": "Forward Deployed AI", "count": track_counts.get("fde", 0), "desc": "Enterprise ontologies, dirty data ETL, air-gapped VPCs & failover pools"},
+        ]
 
         context = {
             "current_nav": "roadmap",
@@ -533,6 +570,8 @@ class RoadmapView(LoginRequiredMixin, View):
             "active_domain": active_domain,
             "domain_progress_pct": domain_progress_pct,
             "topics_data": topics_data,
+            "selected_track": selected_track,
+            "track_items": track_items,
         }
         return render(request, "pages/roadmap.html", context)
 
@@ -785,7 +824,8 @@ class SourceDetailView(LoginRequiredMixin, View):
         source = get_object_or_404(Source, pk=pk)
 
         document = source.documents.first()
-        chunks = document.chunks.all().order_by("chunk_index") if document else []
+        total_chunks_count = document.chunks.count() if document else 0
+        chunks = document.chunks.all().order_by("chunk_index")[:150] if document else []
 
         # Related concepts
         concepts = Concept.objects.filter(evidence_items__source=source).distinct()
@@ -802,6 +842,7 @@ class SourceDetailView(LoginRequiredMixin, View):
             "source": source,
             "document": document,
             "chunks": chunks,
+            "total_chunks_count": total_chunks_count,
             "concepts": concepts,
             "skills": skills,
             "topics": topics,
@@ -1177,11 +1218,239 @@ class ChatView(LoginRequiredMixin, View):
 
 class KnowledgeGraphView(LoginRequiredMixin, View):
     """
-    Personal Performance Knowledge Graph & Question Memory View:
-    1. Need-to-Learn Queue: Diagnostic questions answered incorrectly, queued for re-testing.
-    2. Mastered Graph: Questions answered correctly and retained.
-    3. Retains roadmap gaps and recommendations for curriculum alignment.
+    Visual Concept Graph & Question Memory View (Vis.js Interactive DAG).
+    - Mode 'curriculum': Interactive Skill & Topic Prerequisite DAG color-coded by Track.
+    - Mode 'library': Extracted knowledge graph entities and semantic relationships.
+    - Tabs for Visual Graph, Need-to-Learn Question Queue, and Mastered Concepts.
     """
+    login_url = "/login/"
+
+    def get(self, request):
+        import json
+        from apps.knowledge.services.knowledge_graph import KnowledgeGraphService
+
+        active_domain = Domain.objects.filter(is_selected=True).first() or Domain.objects.first()
+        active_track = request.GET.get("track", "all").lower()
+        active_mode = request.GET.get("mode", "curriculum").lower()
+        active_tab = request.GET.get("tab", "graph")
+
+        # 1. Visual Graph Data for Vis.js
+        graph_data = KnowledgeGraphService.get_visual_graph_data(
+            domain=active_domain,
+            track=active_track,
+            mode=active_mode,
+        )
+
+        # 2. Performance Memory Data (Need-to-Learn & Mastered Questions)
+        knowledge_stats = KnowledgeGraphService.get_user_knowledge_stats(domain=active_domain)
+        need_to_learn_items = KnowledgeGraphService.get_need_to_learn_queue(domain=active_domain)
+        mastered_items = KnowledgeGraphService.get_mastered_nodes(domain=active_domain)
+
+        # 3. Gaps & Recommendations
+        gaps_qs = KnowledgeGap.objects.filter(status=KnowledgeGap.Status.ACTIVE).select_related(
+            "skill", "topic"
+        ).prefetch_related("recommendations").order_by("-identified_at")
+
+        if active_domain:
+            domain_topics = active_domain.get_all_topics()
+            gaps_qs = gaps_qs.filter(Q(skill__topic__in=domain_topics) | Q(topic__in=domain_topics))
+
+        recommendations = Recommendation.objects.filter(
+            status=Recommendation.Status.PENDING
+        ).select_related("skill", "topic", "assessment", "source").order_by("-created_at")[:6]
+
+        context = {
+            "current_nav": "knowledge_graph",
+            "active_tab": active_tab,
+            "active_mode": active_mode,
+            "active_track": active_track,
+            "active_domain": active_domain,
+            "graph_data": graph_data,
+            "graph_data_json": json.dumps(graph_data),
+            "graph_summary": graph_data.get("summary", {}),
+            "graph_tracks": graph_data.get("tracks", []),
+            "knowledge_stats": knowledge_stats,
+            "need_to_learn_items": need_to_learn_items,
+            "mastered_items": mastered_items,
+            "active_gaps_count": gaps_qs.count(),
+            "recommendations": recommendations,
+        }
+        return render(request, "pages/knowledge_graph.html", context)
+
+
+class SourceClipView(LoginRequiredMixin, View):
+    """
+    Bookmarklet Web Clipper View:
+    GET: Displays pre-filled clip dialog with target URL, title, and selected excerpt.
+    POST: Ingests the webpage into Brofessor's knowledge library, runs the pipeline,
+          and displays a confirmation screen.
+    """
+    login_url = "/login/"
+
+    def get(self, request):
+        url = request.GET.get("url", "").strip()
+        title = request.GET.get("title", "").strip()
+        selected_text = request.GET.get("selected", "").strip()
+
+        context = {
+            "url": url,
+            "title": title or "Clipped Web Article",
+            "selected_text": selected_text,
+            "success": False,
+        }
+        return render(request, "pages/clip_popup.html", context)
+
+    def post(self, request):
+        from apps.sources.models import Source
+        from apps.processing.pipeline import IngestionPipeline
+
+        url = request.POST.get("url", "").strip()
+        title = request.POST.get("title", "").strip() or "Clipped Web Article"
+        selected_text = request.POST.get("selected_text", "").strip()
+
+        if not url:
+            context = {
+                "url": url,
+                "title": title,
+                "selected_text": selected_text,
+                "error_message": "A valid target URL is required to clip an article.",
+                "success": False,
+            }
+            return render(request, "pages/clip_popup.html", context)
+
+        try:
+            source = Source.objects.filter(uri=url).first()
+            if not source:
+                source = Source.objects.create(
+                    name=title,
+                    source_type=Source.SourceType.ARTICLE,
+                    uri=url,
+                    metadata={
+                        "clipped_via": "browser_bookmarklet",
+                        "clipped_at": timezone.now().isoformat(),
+                        "selected_text": selected_text,
+                    },
+                )
+
+            doc = IngestionPipeline.process_source(source.id)
+            chunks_count = doc.chunks.count() if doc else 0
+
+            context = {
+                "source": source,
+                "url": url,
+                "title": title,
+                "chunks_count": chunks_count,
+                "success": True,
+            }
+            return render(request, "pages/clip_popup.html", context)
+        except Exception as exc:
+            context = {
+                "url": url,
+                "title": title,
+                "selected_text": selected_text,
+                "error_message": f"Failed to ingest webpage: {str(exc)}",
+                "success": False,
+            }
+            return render(request, "pages/clip_popup.html", context)
+
+
+class SourceClipApiView(LoginRequiredMixin, View):
+    """API endpoint for background / headless bookmarklet clipping."""
+    login_url = "/login/"
+
+    def post(self, request):
+        import json
+        from apps.sources.models import Source
+        from apps.processing.pipeline import IngestionPipeline
+
+        try:
+            payload = json.loads(request.body.decode("utf-8")) if request.body else {}
+        except Exception:
+            payload = request.POST
+
+        url = payload.get("url", "").strip()
+        title = payload.get("title", "").strip() or "Clipped Web Article"
+        selected_text = payload.get("selected_text", "").strip()
+
+        if not url:
+            return JsonResponse({"error": "Missing required 'url' parameter."}, status=400)
+
+        try:
+            source = Source.objects.filter(uri=url).first()
+            if not source:
+                source = Source.objects.create(
+                    name=title,
+                    source_type=Source.SourceType.ARTICLE,
+                    uri=url,
+                    metadata={
+                        "clipped_via": "bookmarklet_api",
+                        "clipped_at": timezone.now().isoformat(),
+                        "selected_text": selected_text,
+                    },
+                )
+
+            doc = IngestionPipeline.process_source(source.id)
+            chunks_count = doc.chunks.count() if doc else 0
+
+            return JsonResponse({
+                "status": "success",
+                "source_id": str(source.id),
+                "name": source.name,
+                "chunks_count": chunks_count,
+            })
+        except Exception as exc:
+            return JsonResponse({"error": str(exc)}, status=500)
+
+
+class TopicCheatSheetExportView(LoginRequiredMixin, View):
+    """
+    Exports a comprehensive technical interview cheat sheet for a topic.
+    Supports ?format=pdf (downloadable printable PDF styled with ReportLab)
+    and ?format=md (downloadable GitHub-flavored Markdown).
+    """
+    login_url = "/login/"
+
+    def get(self, request, pk):
+        from apps.roadmap.cheat_sheet_service import CheatSheetService
+        topic = get_object_or_404(Topic, pk=pk)
+        export_format = request.GET.get("format", "pdf").strip().lower()
+
+        if export_format in ["md", "markdown"]:
+            md_content = CheatSheetService.generate_markdown(topic)
+            response = HttpResponse(md_content, content_type="text/markdown; charset=utf-8")
+            filename = f"{topic.slug}_interview_cheat_sheet.md"
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
+
+        # Default: PDF
+        pdf_bytes = CheatSheetService.generate_pdf(topic)
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        filename = f"{topic.slug}_interview_cheat_sheet.pdf"
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+
+class VisualConceptGraphApiView(LoginRequiredMixin, View):
+    """API endpoint providing real-time nodes and edges for Vis.js concept graph."""
+    login_url = "/login/"
+
+    def get(self, request):
+        from apps.knowledge.services.knowledge_graph import KnowledgeGraphService
+
+        active_domain = Domain.objects.filter(is_selected=True).first() or Domain.objects.first()
+        track = request.GET.get("track", "all").strip().lower()
+        mode = request.GET.get("mode", "curriculum").strip().lower()
+
+        data = KnowledgeGraphService.get_visual_graph_data(
+            domain=active_domain,
+            track=track,
+            mode=mode,
+        )
+        return JsonResponse(data)
+
+
+class KnowledgeGapsView(LoginRequiredMixin, View):
+    """Dedicated view for active knowledge gaps and curriculum recommendations."""
     login_url = "/login/"
 
     def get(self, request):
@@ -1190,7 +1459,6 @@ class KnowledgeGraphView(LoginRequiredMixin, View):
         active_domain = Domain.objects.filter(is_selected=True).first() or Domain.objects.first()
         active_tab = request.GET.get("tab", "")
 
-        # 1. Performance Memory Data
         knowledge_stats = KnowledgeGraphService.get_user_knowledge_stats(domain=active_domain)
         need_to_learn_items = KnowledgeGraphService.get_need_to_learn_queue(domain=active_domain)
         mastered_items = KnowledgeGraphService.get_mastered_nodes(domain=active_domain)
@@ -1198,8 +1466,9 @@ class KnowledgeGraphView(LoginRequiredMixin, View):
         if not active_tab:
             active_tab = "need_to_learn" if need_to_learn_items else "mastered"
 
-        # 2. Existing Gap & Recommendation data for backward compatibility
-        gaps_qs = KnowledgeGap.objects.filter(status=KnowledgeGap.Status.ACTIVE).select_related("skill", "topic").prefetch_related("recommendations").order_by("-identified_at")
+        gaps_qs = KnowledgeGap.objects.filter(status=KnowledgeGap.Status.ACTIVE).select_related(
+            "skill", "topic"
+        ).prefetch_related("recommendations").order_by("-identified_at")
 
         if active_domain:
             domain_topics = active_domain.get_all_topics()
@@ -1241,10 +1510,12 @@ class KnowledgeGraphView(LoginRequiredMixin, View):
             else:
                 low_gaps.append(gap_data)
 
-        recommendations = Recommendation.objects.filter(status=Recommendation.Status.PENDING).select_related("skill", "topic", "assessment", "source").order_by("-created_at")[:6]
+        recommendations = Recommendation.objects.filter(
+            status=Recommendation.Status.PENDING
+        ).select_related("skill", "topic", "assessment", "source").order_by("-created_at")[:6]
 
         context = {
-            "current_nav": "knowledge_graph",
+            "current_nav": "gaps",
             "active_tab": active_tab,
             "active_domain": active_domain,
             "knowledge_stats": knowledge_stats,
@@ -1258,9 +1529,6 @@ class KnowledgeGraphView(LoginRequiredMixin, View):
             "recommendations": recommendations,
         }
         return render(request, "pages/gaps.html", context)
-
-
-KnowledgeGapsView = KnowledgeGraphView
 
 
 class SettingsView(LoginRequiredMixin, View):
@@ -1352,6 +1620,16 @@ class ReseedRoadmapView(LoginRequiredMixin, View):
         call_command("seed_roadmap")
         messages.success(request, "Curriculum roadmap and benchmark assessments re-seeded successfully!")
         return redirect("web-settings")
+
+
+class LoadStarterKnowledgeView(LoginRequiredMixin, View):
+    """POST trigger to load or refresh default CS Starter Pack (CN, DBMS, OS, OOPS)."""
+    login_url = "/login/"
+
+    def post(self, request):
+        call_command("seed_starter_knowledge")
+        messages.success(request, "CS Starter Knowledge Pack (CN, DBMS, OS, OOPS) loaded into your library!")
+        return redirect("web-sources")
 
 
 class SelectActiveDomainView(LoginRequiredMixin, View):

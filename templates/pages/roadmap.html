@@ -72,7 +72,27 @@
         <span class="px-1.5 py-0.2 rounded text-[10px] font-bold bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-300">P2 Elective</span>
       </div>
     </div>
-    <span class="text-[11px] font-mono text-zinc-400">Click any skill to view knowledge detail</span>
+    <span class="text-[11px] font-mono text-zinc-400">Click any skill to view knowledge detail & study links</span>
+  </div>
+
+  {# Selectable Career Specialization Tracks #}
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-2 shadow-sm">
+    <div class="flex items-center gap-1.5 overflow-x-auto text-xs font-medium">
+      {% for item in track_items %}
+        <a href="?track={{ item.key }}"
+           title="{{ item.desc }}"
+           class="px-3 py-2 rounded-xl transition-smooth whitespace-nowrap flex items-center gap-2
+             {% if selected_track == item.key %}bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 font-bold shadow-sm
+             {% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800/60{% endif %}">
+          <span>{{ item.label }}</span>
+          <span class="text-[10px] font-mono px-1.5 py-0.5 rounded-full
+            {% if selected_track == item.key %}bg-zinc-700 text-zinc-200 dark:bg-zinc-200 dark:text-zinc-800
+            {% else %}bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400{% endif %}">
+            {{ item.count }}
+          </span>
+        </a>
+      {% endfor %}
+    </div>
   </div>
 
   {# Expandable Topics Hierarchy Tree #}
@@ -100,6 +120,15 @@
                   {% else %}bg-zinc-200 text-zinc-800 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
                   {{ topic.priority|default:"P0" }}
                 </span>
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded
+                  {% if topic.track == 'swe_foundations' %}bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40
+                  {% elif topic.track == 'ai_engineer' %}bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40
+                  {% elif topic.track == 'agentic_ai' %}bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40
+                  {% elif topic.track == 'mlops' %}bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40
+                  {% elif topic.track == 'fde' %}bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-800/40
+                  {% else %}bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400{% endif %}">
+                  {{ topic.track_label }}
+                </span>
                 <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100 truncate">{{ topic.name }}</h3>
               </div>
               {% if topic.description %}
@@ -108,9 +137,17 @@
             </div>
           </div>
 
-          {# Topic Action Buttons (Add Skill, Edit Topic, Delete Topic) #}
+          {# Topic Action Buttons (Add Skill, Cheat Sheet, Edit Topic, Delete Topic) #}
           <div class="flex items-center gap-2 shrink-0 ml-4" onclick="event.stopPropagation()">
             <span class="text-xs font-mono text-zinc-400 mr-1 hidden sm:inline">{{ topic.skills_count }} skills</span>
+            <a href="{% url 'web-topic-cheat-sheet' topic.id %}?format=pdf"
+               title="Download Printable Interview Cheat Sheet (PDF)"
+               class="px-2 py-1 text-[11px] font-medium rounded-lg border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-smooth flex items-center gap-1">
+              <svg class="w-3 h-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Cheat Sheet</span>
+            </a>
             <button type="button"
                     title="Add Skill to Topic"
                     onclick="openSkillModal(null, '{{ topic.id }}')"

@@ -9,6 +9,11 @@ set -e
 DATA_DIR="${DATA_DIR:-/data}"
 mkdir -p "$DATA_DIR/media" "$DATA_DIR/logs" "$DATA_DIR/cache/huggingface" "$DATA_DIR/cache/fastembed"
 
+# Seed pre-downloaded fastembed model cache into data directory if volume is empty
+if [ -d "/app/cache/fastembed" ] && [ -z "$(ls -A "$DATA_DIR/cache/fastembed" 2>/dev/null)" ]; then
+    cp -r /app/cache/fastembed/* "$DATA_DIR/cache/fastembed/" 2>/dev/null || true
+fi
+
 export DATA_DIR="$DATA_DIR"
 export DOCKER_CONTAINER=1
 export PYTHONUNBUFFERED=1
@@ -49,6 +54,13 @@ if LearningResource.objects.count() == 0:
         call_command('import_learning_resources')
     except Exception as e:
         print(f'Learning resources seed warning: {e}')
+from apps.sources.models import Source
+if Source.objects.count() == 0:
+    print('Fresh install detected: Ingesting default CS Starter Pack (CN, DBMS, OS, OOPS)...')
+    try:
+        call_command('seed_starter_knowledge')
+    except Exception as e:
+        print(f'Starter knowledge seed warning: {e}')
 "
 
 

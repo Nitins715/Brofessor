@@ -88,6 +88,13 @@ class DocumentChunk(BaseModel):
         help_text="Hierarchy level: parent section or child sub-chunk.",
     )
     chunk_index = models.PositiveIntegerField()
+    heading = models.CharField(
+        max_length=512,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text="Hierarchical section heading breadcrumb (e.g. 'DBMS > Transactions > ACID Properties').",
+    )
     content = models.TextField()
     token_count = models.PositiveIntegerField(null=True, blank=True)
     embedding = VectorField(

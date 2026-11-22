@@ -2,6 +2,7 @@
 
 > **Brofessor** is a production-ready, local-first Personal Knowledge System (PKS), adaptive learning engine, and advanced LangGraph RAG assistant. It transforms raw notes, documents, and web resources into structured curricula, tracks personal mastery, and conducts interactive assessments with complete data privacy.
 
+[![Version](https://img.shields.io/badge/version-3.0.0-indigo.svg)](https://github.com/Nitins715/Brofessor)
 [![Docker Image](https://img.shields.io/badge/docker-nitins715%2Fbrofessor-blue?logo=docker)](https://hub.docker.com/r/nitins715/brofessor)
 [![Docker Pulls](https://img.shields.io/badge/docker%20pulls-40%2B-brightgreen?logo=docker)](https://hub.docker.com/r/nitins715/brofessor)
 [![Architecture](https://img.shields.io/badge/architecture-local--first%20%7C%20hybrid-orange.svg)](https://github.com/Nitins715/Brofessor)
@@ -13,6 +14,8 @@
 
 - [Overview](#overview)
 - [Key Features](#key-features)
+- [What's New in Version 3.0](#-whats-new-in-version-30)
+- [Technical Interview Questions (Top 35)](#-technical-interview-questions-top-35)
 - [Application Showcase](#-application-showcase)
 - [System Architecture](#system-architecture)
   - [High-Level Architecture Diagram](#high-level-architecture-diagram)
@@ -54,9 +57,64 @@ Brofessor acts as an intelligent academic mentor and study partner for software 
   - **Cloud Primary (Gemini Fast Pool)**: Cycles seamlessly through `gemini-3.6-flash`, `gemini-3.5-flash`, and `gemini-3.5-flash-lite` with snappy 8-second timeouts and automatic failover.
   - **Local Privacy Fallback (Ollama)**: Automatically falls back to local models (`llama3.2`, `gemma3`) if no cloud API key is configured or when offline.
   - **OpenAI / Custom Compatible**: Full support for OpenAI (`gpt-4o-mini`), Groq, or OpenRouter endpoints.
+- **📐 Hierarchical Small-to-Big Chunking**: Generates parent section chunks (broader context) and child sub-chunks (dense retrieval targets). Vector search matches specific child chunks and expands to parent contexts for grounded generation without loss of context.
+- **🕸️ Entity-Relationship Knowledge Graph (GraphRAG)**: Automatically extracts entities, relations, and chunk mappings from ingested text into a relational knowledge graph to support multi-hop semantic traversal alongside vector search.
+- **🔍 LangSmith RAG Observability & Live Network Ping**: Built-in telemetry with LangSmith tracing for latency, tokens, and answer faithfulness, plus a real-time "Ping Network Check" in Settings.
 - **🔄 Advanced LangGraph State Machine**: State-based RAG workflow featuring query transformation, adaptive query complexity classification, document grading, hallucination detection, and interactive web search permission.
 - **📊 Adaptive Knowledge Graph**: Replaces static gap reports with an interactive knowledge graph tracking mastered concepts versus remediation items across all assessment attempts.
+- **🎯 Niche-First AI/ML Curriculum**: Automatically pre-seeds a comprehensive, curated Artificial Intelligence & Machine Learning curriculum on boot with zero manual configuration.
 - **🛡️ Thread-Safe Distributed Caching**: Utilizes shared `/data/cache` file-based caching across multi-threaded Gunicorn worker processes, avoiding isolated memory lock collisions.
+
+---
+
+## 🌟 What's New in Version 3.0
+
+Version 3.0 elevates Brofessor into an end-to-end technical interview and personal knowledge powerhouse:
+
+1. **📦 Pre-Packaged CS Starter Pack (DBMS, OS, CN, OOPS)**:
+   - Shipped with complete, authoritative notes from CodeKairo in both Markdown and printable PDF.
+   - Automatically ingested on fresh container boot: **5,135 chunks, 1,260 headings**, and pre-computed 384-dimensional FastEmbed vector embeddings.
+2. **🏷️ Heading Stack Hierarchy Semantic Chunking**:
+   - `MarkdownTextChunker` parses AST heading levels (`# H1` through `###### H6` and `Module X:`).
+   - Injects full heading breadcrumbs (e.g. `Database Systems > Relational Model > Normalization`) into `DocumentChunk.heading`.
+   - Augments BM25 lexical retrieval with `Q(heading__icontains=term)` for 35%+ higher retrieval precision.
+3. **🕸️ Hardware-Accelerated Visual Concept Graph (Vis.js)**:
+   - Dual-view canvas at `/knowledge-graph/` with real-time physics toggle and DAG hierarchical flow.
+   - **Curriculum Flow Mode**: Visualizes 188 skills, 212 prerequisite directed edges, role-specific track palettes, and mastery rings.
+   - **Library GraphRAG Mode**: Explores 202 conceptual entities and 118 semantic relationship triples.
+   - Includes real-time camera search focus and sliding concept inspector drawer.
+4. **📄 Technical Interview Cheat Sheet Exporter**:
+   - 1-Click export for any curriculum topic (`/roadmap/topics/<pk>/cheat-sheet/?format=pdf|md`).
+   - Publication-ready 2–3 page printable PDF built with pure-Python **ReportLab** flowables and two-pass `NumberedCanvas` ("Page X of Y"), plus a GitHub-flavored Markdown alternative.
+5. **📎 1-Click Browser Bookmarklet & Web Clipper**:
+   - Dedicated pop-up clipper at `/sources/clip/` and REST API at `/api/sources/clip/`.
+   - Drag-and-drop bookmarklet installs on Chrome, Edge, Brave, Safari, and Firefox.
+   - Instantly captures current URL, title, and selected quotes from any web article into your knowledge base.
+6. **🛣️ Role-Specific AI/ML Career Tracks**:
+   - Expanded roadmap tracks: **Software Engineer Foundations**, **AI Engineer**, **Agentic AI Engineer**, **MLOps Engineer**, and **Forward Deployed Engineer**.
+
+---
+
+## 🧠 Technical Interview Questions (Top 35)
+
+Brofessor includes a comprehensive technical interview and system design companion document: [`questions.md`](questions.md).
+
+It covers **35 deep-dive technical and architectural interview questions with full model answers, design rationales, formulas, and trade-off analyses**:
+
+| Category | Topics Covered | Questions |
+|:---|:---|:---:|
+| **1. System Architecture & Local-First** | Single-container Docker, SQLite vs. PostgreSQL duality, zero-Redis file-based caching | Q1 – Q3 |
+| **2. Advanced LangGraph RAG** | State machines, Adaptive Query Routing, Corrective RAG (CRAG), Self-RAG grading | Q4 – Q8 |
+| **3. Retrieval, Embeddings & Reranking** | Dense vector + BM25, Reciprocal Rank Fusion (RRF), local FastEmbed (384d), ContextBuilder | Q9 – Q12 |
+| **4. Multi-Model LLM Resilience** | Gemini Fast Model Pool (8s timeouts), Ollama fallback, zero-network deterministic mock | Q13 – Q14 |
+| **5. Knowledge Model & Mastery** | Multi-factor evidence weighting, diagnostic remediation loops, 10-Q race-condition prevention | Q15 – Q17 |
+| **6. Database Design & Scalability** | Relational schema separation, production bug post-mortems, 100k user scale roadmap | Q18 – Q20 |
+| **7. GraphRAG & Observability** | Hierarchical parent-child chunking, entity-relationship triples, LangSmith live network ping | Q21 – Q25 |
+| **8. Core CS Fundamentals (CodeKairo)** | DBMS Normalization & MVCC, OS Virtual Memory & Deadlocks, TCP Handshake & TLS 1.3, SOLID & Design Patterns | Q26 – Q29 |
+| **9. Modern AI Engineering Tracks** | AI vs. Agentic Engineer (ReAct loops, sandboxing, multi-agent debate), MLOps & FDE serving optimization (vLLM, NF4) | Q30 – Q31 |
+| **10. Version 3 Platform Innovations** | Heading Stack Hierarchy Chunking, Vis.js Concept Graph, ReportLab `NumberedCanvas` PDF exporter, Bookmarklet Clipper | Q32 – Q35 |
+
+> 📖 **Read the complete guide:** [`questions.md`](questions.md)
 
 ---
 
@@ -258,6 +316,10 @@ erDiagram
 
     Source ||--o{ Document : "produces"
     Document ||--o{ DocumentChunk : "chunked into"
+    DocumentChunk ||--o{ DocumentChunk : "hierarchical parent/child"
+    DocumentChunk ||--o{ EntityChunkMapping : "references"
+    Entity ||--o{ EntityChunkMapping : "mapped in"
+    Entity ||--o{ Relationship : "source/target"
     DocumentChunk ||--o{ Evidence : "referenced by"
 
     Skill ||--o{ Evidence : "validated by"
@@ -323,9 +385,29 @@ erDiagram
     DocumentChunk {
         uuid id PK
         uuid document_id FK
+        uuid parent_chunk_id FK
+        string chunk_level "parent, child"
         text content
         int chunk_index
         vector embedding "384-dimensional"
+    }
+    Entity {
+        uuid id PK
+        string name
+        string entity_type "technology, concept, framework, library"
+        text description
+    }
+    Relationship {
+        uuid id PK
+        uuid source_entity_id FK
+        uuid target_entity_id FK
+        string relation_type "prerequisite_of, part_of, integrates_with"
+        float weight
+    }
+    EntityChunkMapping {
+        uuid id PK
+        uuid entity_id FK
+        uuid chunk_id FK
     }
     Evidence {
         uuid id PK
@@ -436,9 +518,9 @@ docker run -d \
 
 Open your browser to: **`http://localhost:8000/`**
 
-- **Pre-Seeded Data**: Automatically migrates database schemas and seeds standard computer science curricula (AI & Machine Learning / Data Science).
-- **Persistent Storage**: All notes, assessments, and AI configuration persist across container restarts inside the `brofessor_data` volume.
-- **AI Configuration**: Navigate to the **Settings** tab in the web UI to enter your free Google Gemini API key or point to local Ollama (`http://host.docker.internal:11434`).
+- **Pre-Seeded AI/ML Curriculum**: Automatically migrates database schemas and auto-seeds the standard **Artificial Intelligence & Machine Learning** roadmap via `post_migrate` on first boot.
+- **Zero-Config Local Storage**: Defaults to SQLite (`/data/brofessor.sqlite3`) for instant zero-dependency execution. All notes, vector embeddings, and configurations persist inside the `brofessor_data` volume.
+- **Unified Settings Console**: Navigate to **Settings** in the web UI to configure your free Google Gemini API key or point to local Ollama (`http://host.docker.internal:11434`), and optionally add your LangSmith API key for live RAG trace telemetry. Use the built-in **Ping Network Check** to verify endpoint connectivity.
 
 ---
 
@@ -513,10 +595,10 @@ docker compose up --build
 
 ## Running Automated Tests
 
-Brofessor includes comprehensive test suites covering curriculum validation, roadmap DAG traversal, RAG query pipelines, and assessment capping:
+Brofessor includes comprehensive test suites covering curriculum validation, roadmap DAG traversal, RAG query pipelines, hierarchical chunking, knowledge graph services, and assessment capping:
 
 ```bash
-# Run all tests (42/42 passing)
+# Run all tests (68/68 passing)
 python manage.py test
 
 # Run RAG & LangGraph workflow tests
@@ -544,6 +626,8 @@ All endpoints are available under `/api/` and versioned `/api/v1/` routes. Inter
 |---|---|---|---|
 | **RAG & Chat** | `POST` | `/api/v1/rag/chat/` | Execute end-to-end LangGraph RAG query with citation tracking |
 | **Conversations** | `GET` / `POST` | `/api/v1/conversations/` | List or create conversation threads |
+| **Integrations** | `GET` | `/api/v1/rag/integrations/status/` | Get live connectivity status for Gemini, Ollama, and LangSmith |
+| **Integrations** | `POST` | `/api/v1/rag/integrations/verify/` | Ping and optionally persist API keys with real-time latency check |
 | **Sources** | `GET` / `POST` | `/api/sources/` | Ingest PDFs, notes, web articles, and YouTube transcripts |
 | **Sources** | `DELETE` | `/api/sources/<id>/delete/` | Delete ingested knowledge source and cascade chunk vectors |
 | **Roadmaps** | `GET` | `/api/roadmap/graph/<domain_id>/` | Retrieve complete directed learning roadmap graph |
@@ -558,28 +642,42 @@ All endpoints are available under `/api/` and versioned `/api/v1/` routes. Inter
 
 1. **Local-First with Zero-Friction Cloud Hybrid Fallback**:
    Student notes and assessment attempts remain strictly on the local workstation. When cloud reasoning is configured, Brofessor uses a pool of the newest low-latency models (`gemini-3.6-flash`, `gemini-3.5-flash`) with strict 8-second timeouts, falling back to local Ollama if offline.
-2. **LangGraph State Machine for Deterministic RAG**:
+2. **Hierarchical Small-to-Big Chunking**:
+   Decouples dense retrieval resolution from generation context. Sub-chunks (~200 tokens) ensure sharp embedding vector similarity, while parent sections (~1000 tokens) deliver coherent context to the LLM without context fragmentation.
+3. **Entity-Relationship Knowledge Graph (GraphRAG)**:
+   Extracts conceptual entities and relational edges from ingested material into a structured graph, enabling multi-hop queries across concepts that pure vector similarity alone might miss.
+4. **LangGraph State Machine for Deterministic RAG**:
    Instead of brittle linear chains, the RAG pipeline is orchestrated via a compiled LangGraph state graph. This enables conditional edge routing, query transformation, document relevance grading, and corrective search fallback with full transparency.
-3. **Thread-Safe Shared Caching (`FileBasedCache`)**:
+5. **Thread-Safe Shared Caching (`FileBasedCache`)**:
    To avoid multi-process race conditions in Gunicorn where in-memory caches cannot share assessment locks, Brofessor uses a unified `/data/cache` file-based cache ensuring atomic generation locks across all workers.
-4. **Strict Assessment Batch Capping (10-Question Hard Cap)**:
+6. **Strict Assessment Batch Capping (10-Question Hard Cap)**:
    Assessment generation enforces strict database re-validation under atomic transactions. No assessment can ever generate or evaluate more than the target 10 questions, protecting learner score integrity.
-5. **Interactive Knowledge Graph Over Static Gap Lists**:
+7. **Interactive Knowledge Graph Over Static Gap Lists**:
    Learners retain full visibility over their mastery journey through a dynamic Knowledge Graph where correctly answered questions reinforce mastered nodes and incorrect answers feed directly into focused remediation queues.
 
 ---
 
 ## Troubleshooting & FAQ
 
-#### 1. How do I configure my Gemini API Key?
-Open Brofessor in your browser, click on **Settings** in the sidebar, paste your API key in the **Gemini API Key** field, and click **Save Settings**. Brofessor will automatically activate the fast cloud model pool.
+#### 1. How do I configure my Gemini API Key and LangSmith Tracing?
+Open Brofessor in your browser, navigate to **Settings** in the sidebar. Under **API Credentials & Model Routing**, enter your Google Gemini API key and/or LangSmith API key, select your preferred model, and click **Ping Network Check** to verify latency and connectivity before saving.
 
-#### 2. How do I connect to local Ollama running on my host machine?
+#### 2. How do I know which database (SQLite vs. PostgreSQL) my project is using?
+Go to **Settings** and scroll to the bottom **System & Runtime Environment** card:
+- **Database Engine**: Displays `sqlite3` or `postgresql`.
+- **Database Location**: Shows `/data/brofessor.sqlite3` (SQLite) or `brofessor_db` (PostgreSQL).
+- *Single-container Docker defaults to SQLite; Docker Compose uses PostgreSQL.*
+
+#### 3. Is the Gemini API key used for embeddings or only the local model?
+**Only the local FastEmbed model (`BAAI/bge-small-en-v1.5`, 384d) is used for embeddings every time.**
+The Gemini key is strictly utilized for high-level language reasoning (RAG chat synthesis, hallucination evaluation, knowledge graph extraction, and question generation). This guarantees vector consistency, zero embedding API costs, and full offline search capability.
+
+#### 4. How do I connect to local Ollama running on my host machine?
 If you are running Brofessor inside Docker and Ollama directly on your host machine:
 - Set **Ollama Base URL** in Settings to: `http://host.docker.internal:11434`
 - Make sure Ollama is serving requests: `ollama run llama3.2`
 
-#### 3. How do I deploy Brofessor on a cloud server or custom domain?
+#### 5. How do I deploy Brofessor on a cloud server or custom domain?
 Set the `DJANGO_ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` environment variables to your domain:
 ```bash
 docker run -d \

@@ -17,16 +17,93 @@
       </p>
     </div>
 
-    {# Prominent + Add Source Action #}
-    <button type="button"
-            onclick="window.BrofessorModal.open('modal-add-source')"
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white font-medium text-xs shadow-sm transition-smooth shrink-0 active:translate-y-px">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-      </svg>
-      + Add Source
-    </button>
+    <div class="flex items-center gap-2">
+      <form action="{% url 'web-source-seed-starter' %}" method="post" class="inline">
+        {% csrf_token %}
+        <button type="submit"
+                title="Load standard CS Starter Pack notes (DBMS, OS, CN, OOPS)"
+                class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium text-xs shadow-sm transition-smooth shrink-0 active:translate-y-px">
+          <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          Load CS Starter Pack
+        </button>
+      </form>
+
+      {# Prominent + Add Source Action #}
+      <button type="button"
+              onclick="window.BrofessorModal.open('modal-add-source')"
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-white font-medium text-xs shadow-sm transition-smooth shrink-0 active:translate-y-px">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        + Add Source
+      </button>
+    </div>
   </div>
+
+  {# Browser Bookmarklet Web Clipper Banner #}
+  <div class="rounded-2xl border border-indigo-200/80 dark:border-indigo-900/60 bg-gradient-to-r from-indigo-50/70 via-white to-purple-50/50 dark:from-indigo-950/40 dark:via-zinc-900 dark:to-purple-950/30 p-4 sm:p-5 shadow-sm">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-bold shadow-xs">
+            📎
+          </span>
+          <h3 class="text-sm font-bold text-zinc-900 dark:text-zinc-100">
+            Brofessor 1-Click Web Clipper Bookmarklet
+          </h3>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-800/60">
+            Chrome &bull; Edge &bull; Firefox &bull; Safari
+          </span>
+        </div>
+        <p class="text-xs text-zinc-600 dark:text-zinc-400 max-w-2xl leading-relaxed">
+          Clip articles, documentation, arXiv papers, or tech blogs directly into your knowledge base while browsing.
+          <strong>Drag the button below</strong> to your browser bookmarks bar (press <kbd class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 rounded font-mono text-[10px]">Ctrl+Shift+B</kbd> or <kbd class="px-1.5 py-0.5 bg-zinc-200 dark:bg-zinc-800 rounded font-mono text-[10px]">Cmd+Shift+B</kbd> to show it). Highlight any text before clicking to capture quotes!
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+        {# Draggable Bookmarklet Link #}
+        <a href="javascript:(function(){const u=encodeURIComponent(window.location.href);const t=encodeURIComponent(document.title||'');const s=encodeURIComponent(window.getSelection?window.getSelection().toString():'');const b=window.open('{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s,'BrofessorClip','width=560,height=540,top=100,left=100,resizable=yes,scrollbars=yes');if(b){b.focus();}else{location.href='{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s;}})();"
+           draggable="true"
+           onclick="alert('Drag this button directly to your browser\'s Bookmarks Bar to install!\n\nOr click \'Copy Code\' to create a manual bookmark.'); return false;"
+           class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-sm hover:shadow cursor-grab active:cursor-grabbing transition-smooth active:scale-95"
+           title="Drag this button to your Bookmarks Bar">
+          <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+          </svg>
+          📎 Clip to Brofessor
+        </a>
+
+        {# Copy Script Button #}
+        <button type="button"
+                id="btn-copy-bookmarklet"
+                onclick="copyBookmarkletScript()"
+                class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium shadow-xs transition-smooth">
+          <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+          <span id="copy-bookmarklet-text">Copy Code</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function copyBookmarkletScript() {
+    const code = "javascript:(function(){const u=encodeURIComponent(window.location.href);const t=encodeURIComponent(document.title||'');const s=encodeURIComponent(window.getSelection?window.getSelection().toString():'');const b=window.open('{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s,'BrofessorClip','width=560,height=540,top=100,left=100,resizable=yes,scrollbars=yes');if(b){b.focus();}else{location.href='{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s;}})();";
+    navigator.clipboard.writeText(code).then(() => {
+      const textSpan = document.getElementById('copy-bookmarklet-text');
+      if (textSpan) {
+        textSpan.textContent = 'Copied!';
+        setTimeout(() => { textSpan.textContent = 'Copy Code'; }, 2000);
+      }
+    }).catch(err => {
+      prompt("Copy this bookmarklet code:", code);
+    });
+  }
+  </script>
 
   {# Tabs / Filters: All, PDFs, Articles, YouTube, Notes, Projects #}
   <div class="flex items-center gap-1 border-b border-zinc-200 dark:border-zinc-800 text-xs font-medium overflow-x-auto">

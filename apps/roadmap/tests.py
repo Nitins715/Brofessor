@@ -404,3 +404,77 @@ class SkillDetailUIIntegrationTestCase(TestCase):
         self.assertIn("Curated External Learning Resources", content)
         self.assertIn("0 verified", content)
         self.assertIn("No verified resources available yet", content)
+
+
+class InterviewCheatSheetExportTests(TestCase):
+    """Tests for Topic technical interview cheat sheet generator and export views."""
+
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        self.user = User.objects.create_user(username="cheatsheetuser", password="password123")
+        self.client = Client()
+        self.client.force_login(self.user)
+
+        self.domain = Domain.objects.create(name="AI Engineering", slug="ai-eng", is_selected=True)
+        self.topic = Topic.objects.create(
+            domain=self.domain,
+            name="LLM Fine-Tuning & Quantization",
+            slug="llm-fine-tuning-quantization",
+            track="ai_engineer",
+            description="LoRA, QLoRA, full parameter fine-tuning, and memory optimizations.",
+        )
+        self.skill = Skill.objects.create(
+            topic=self.topic,
+            name="LoRA and QLoRA",
+            slug="lora-qlora",
+            difficulty_level="advanced",
+            key_concepts=["Low-Rank Adaptation", "NF4 Quantization", "Rank Decomposition", "Memory Footprint"],
+            interview_relevance="Critical for LLM infrastructure, efficient training, and serving cost optimization.",
+        )
+
+    def test_cheat_sheet_data_aggregation(self):
+        from apps.roadmap.cheat_sheet_service import CheatSheetService
+        data = CheatSheetService.get_cheat_sheet_data(self.topic)
+
+        self.assertEqual(data["topic_name"], "LLM Fine-Tuning & Quantization")
+        self.assertEqual(data["track_code"], "ai_engineer")
+        self.assertEqual(data["skills_count"], 1)
+        self.assertGreater(len(data["interview_questions"]), 0)
+        self.assertGreater(len(data["pitfalls"]), 0)
+
+    def test_markdown_generation(self):
+        from apps.roadmap.cheat_sheet_service import CheatSheetService
+        md = CheatSheetService.generate_markdown(self.topic)
+
+        self.assertIn("# LLM Fine-Tuning & Quantization — Technical Interview Cheat Sheet", md)
+        self.assertIn("LoRA and QLoRA", md)
+        self.assertIn("Model Answer", md)
+        self.assertIn("Critical Interview Traps", md)
+
+    def test_pdf_generation(self):
+        from apps.roadmap.cheat_sheet_service import CheatSheetService
+        pdf_bytes = CheatSheetService.generate_pdf(self.topic)
+
+        self.assertIsInstance(pdf_bytes, bytes)
+        self.assertGreater(len(pdf_bytes), 1000)
+        self.assertTrue(pdf_bytes.startswith(b"%PDF"))
+
+    def test_web_export_view_pdf(self):
+        url = reverse("web-topic-cheat-sheet", kwargs={"pk": self.topic.id})
+        response = self.client.get(url, {"format": "pdf"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertIn("attachment; filename=", response["Content-Disposition"])
+        self.assertTrue(response.content.startswith(b"%PDF"))
+
+    def test_web_export_view_markdown(self):
+        url = reverse("web-topic-cheat-sheet", kwargs={"pk": self.topic.id})
+        response = self.client.get(url, {"format": "md"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "text/markdown; charset=utf-8")
+        self.assertIn("attachment; filename=", response["Content-Disposition"])
+        self.assertIn(b"Technical Interview Cheat Sheet", response.content)
+

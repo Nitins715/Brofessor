@@ -43,6 +43,16 @@
             Target: {% if source.uri %}<a href="{{ source.uri }}" target="_blank" rel="noopener" class="text-indigo-600 hover:underline">{{ source.uri }}</a>{% else %}{{ source.file_path }}{% endif %}
           </p>
         {% endif %}
+        {% if source.metadata.pdf_url %}
+          <div class="pt-1">
+            <a href="{{ source.metadata.pdf_url }}" target="_blank" download class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-900/50 text-xs font-medium hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-smooth">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Download PDF Version
+            </a>
+          </div>
+        {% endif %}
       </div>
 
       {# Retry / Delete Actions #}
@@ -75,7 +85,7 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800/60 font-mono text-xs">
       <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
         <span class="block text-zinc-400 text-[10px]">Indexed Chunks</span>
-        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ chunks.count }}</span>
+        <span class="text-base font-bold text-zinc-900 dark:text-zinc-100">{{ total_chunks_count|default:chunks.count }}</span>
       </div>
       <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50">
         <span class="block text-zinc-400 text-[10px]">Evidence Generated</span>
@@ -105,7 +115,7 @@
             <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Document Chunks & Vector Representations</h3>
             <p class="text-xs text-zinc-500 dark:text-zinc-400">Semantic segments with vector embedding and source locations.</p>
           </div>
-          <span class="text-xs font-mono text-zinc-400">{{ chunks.count }} chunks</span>
+          <span class="text-xs font-mono text-zinc-400">{{ total_chunks_count|default:chunks.count }} chunks{% if total_chunks_count > 150 %} (first 150 shown){% endif %}</span>
         </div>
 
         <div class="space-y-3">
@@ -134,6 +144,15 @@
                   </span>
                 </div>
               </div>
+
+              {% if chunk.heading %}
+                <div class="flex items-center gap-1.5 text-[11px] font-medium text-indigo-700 dark:text-indigo-300 bg-indigo-50/80 dark:bg-indigo-950/40 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-900/50">
+                  <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <span class="truncate">{{ chunk.heading }}</span>
+                </div>
+              {% endif %}
 
               {# Content Snippet #}
               <p class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-sans line-clamp-4">

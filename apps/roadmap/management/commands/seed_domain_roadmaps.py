@@ -134,6 +134,7 @@ class Command(BaseCommand):
                             "name": t_data["name"],
                             "description": t_data["description"],
                             "priority": t_data.get("priority", "P0"),
+                            "track": t_data.get("track", Topic.Track.SWE_FOUNDATIONS),
                             "learning_objectives": t_data.get("learning_objectives", []),
                             "estimated_effort_hours": t_data.get("estimated_effort_hours", 0),
                             "order": t_data.get("order", 0),
@@ -151,6 +152,9 @@ class Command(BaseCommand):
                             updated = True
                         if topic.priority != t_data.get("priority", "P0"):
                             topic.priority = t_data.get("priority", "P0")
+                            updated = True
+                        if topic.track != t_data.get("track", Topic.Track.SWE_FOUNDATIONS):
+                            topic.track = t_data.get("track", Topic.Track.SWE_FOUNDATIONS)
                             updated = True
                         if topic.learning_objectives != t_data.get("learning_objectives", []):
                             topic.learning_objectives = t_data.get("learning_objectives", [])
@@ -184,6 +188,7 @@ class Command(BaseCommand):
                             "name": t_data["name"],
                             "description": t_data["description"],
                             "priority": t_data.get("priority", "P0"),
+                            "track": t_data.get("track", Topic.Track.AI_ENGINEER),
                             "learning_objectives": t_data.get("learning_objectives", []),
                             "estimated_effort_hours": t_data.get("estimated_effort_hours", 0),
                             "order": t_data.get("order", 0),
@@ -201,6 +206,9 @@ class Command(BaseCommand):
                             updated = True
                         if topic.priority != t_data.get("priority", "P0"):
                             topic.priority = t_data.get("priority", "P0")
+                            updated = True
+                        if topic.track != t_data.get("track", Topic.Track.AI_ENGINEER):
+                            topic.track = t_data.get("track", Topic.Track.AI_ENGINEER)
                             updated = True
                         if topic.learning_objectives != t_data.get("learning_objectives", []):
                             topic.learning_objectives = t_data.get("learning_objectives", [])

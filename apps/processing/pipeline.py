@@ -135,6 +135,7 @@ class IngestionPipeline:
                             chunk_level=DocumentChunk.ChunkLevel.PARENT,
                             content=p.content,
                             token_count=p.token_count,
+                            heading=getattr(p, "heading", "") or "",
                             metadata=p.metadata,
                         )
                         for p in parents_data
@@ -153,6 +154,7 @@ class IngestionPipeline:
                                 chunk_level=DocumentChunk.ChunkLevel.CHILD,
                                 content=c.content,
                                 token_count=c.token_count,
+                                heading=getattr(c, "heading", "") or "",
                                 metadata=c.metadata,
                             )
                         )
@@ -166,6 +168,7 @@ class IngestionPipeline:
                             chunk_level=DocumentChunk.ChunkLevel.CHILD,
                             content=chunk.content,
                             token_count=chunk.token_count,
+                            heading=getattr(chunk, "heading", "") or "",
                             metadata=chunk.metadata,
                         )
                         for chunk in children_data

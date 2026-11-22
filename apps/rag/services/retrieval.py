@@ -22,6 +22,7 @@ class SearchResult:
     source_name: str
     source_type: str
     source_uri: str
+    heading: str = ""
     chunk_level: str = "child"
     parent_chunk_id: Optional[str] = None
     parent_content: Optional[str] = None
@@ -32,6 +33,7 @@ class SearchResult:
             "chunk_id": self.chunk_id,
             "chunk_index": self.chunk_index,
             "content": self.content,
+            "heading": self.heading,
             "chunk_level": self.chunk_level,
             "parent_chunk_id": self.parent_chunk_id,
             "parent_content": self.parent_content,
@@ -121,6 +123,7 @@ class RetrievalService:
                     "chunk_level": chunk.chunk_level,
                 }
 
+                chunk_heading = getattr(chunk, "heading", "") or (chunk.metadata or {}).get("heading", "")
                 results.append(
                     SearchResult(
                         chunk_id=str(chunk.id),
@@ -134,6 +137,7 @@ class RetrievalService:
                         source_name=src.name if src else "",
                         source_type=src.source_type if src else "",
                         source_uri=src.uri if src else "",
+                        heading=chunk_heading,
                         chunk_level=chunk.chunk_level,
                         parent_chunk_id=str(parent_chunk.id) if parent_chunk else None,
                         parent_content=parent_chunk.content if parent_chunk else None,
@@ -184,6 +188,7 @@ class RetrievalService:
                     "chunk_level": chunk.chunk_level,
                 }
 
+                chunk_heading = getattr(chunk, "heading", "") or (chunk.metadata or {}).get("heading", "")
                 results.append(
                     SearchResult(
                         chunk_id=str(chunk.id),
@@ -197,6 +202,7 @@ class RetrievalService:
                         source_name=src.name if src else "",
                         source_type=src.source_type if src else "",
                         source_uri=src.uri if src else "",
+                        heading=chunk_heading,
                         chunk_level=chunk.chunk_level,
                         parent_chunk_id=str(parent_chunk.id) if parent_chunk else None,
                         parent_content=parent_chunk.content if parent_chunk else None,

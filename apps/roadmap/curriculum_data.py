@@ -5,6 +5,12 @@ Canonical Curriculum Data for Brofessor:
 3. Data Science Specialization (D1-D10)
 """
 
+from .tracks_data import (
+    AGENTIC_AI_TOPICS,
+    MODERN_MLOPS_TOPICS,
+    FORWARD_DEPLOYED_AI_TOPICS,
+)
+
 DOMAINS_DATA = [
     {
         "name": "Artificial Intelligence & Machine Learning",
@@ -23,6 +29,7 @@ SHARED_FOUNDATION_TOPICS = [
         "description": "Core Python language mechanics, data structures, object-oriented design, functional features, and testing for software engineering and data applications.",
         "priority": "P0",
         "order": 1,
+        "track": "swe_foundations",
         "estimated_effort_hours": 40,
         "learning_objectives": [
             "Master Python syntax, type system, and control flow.",
@@ -1602,6 +1609,7 @@ AIML_SPECIALIZATION_TOPICS = [
         "description": "Taking models to production: serialization, inference REST APIs with FastAPI, input validation, Docker packaging, experiment tracking (MLflow), model monitoring, and drift detection.",
         "priority": "P1",
         "order": 17,
+        "track": "mlops",
         "estimated_effort_hours": 40,
         "learning_objectives": [
             "Serve low-latency ML predictions through asynchronous FastAPI microservices.",
@@ -1730,7 +1738,7 @@ AIML_SPECIALIZATION_TOPICS = [
             },
         ],
     },
-]
+] + AGENTIC_AI_TOPICS + MODERN_MLOPS_TOPICS + FORWARD_DEPLOYED_AI_TOPICS
 
 # Data Science Specialization Topics (D1-D10)
 DATA_SCIENCE_SPECIALIZATION_TOPICS = [

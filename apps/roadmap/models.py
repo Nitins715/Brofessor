@@ -30,6 +30,13 @@ class Topic(BaseModel):
         P1 = "P1", "P1 - Important"
         P2 = "P2", "P2 - Elective"
 
+    class Track(models.TextChoices):
+        SWE_FOUNDATIONS = "swe_foundations", "Software Engineering Foundations"
+        AI_ENGINEER = "ai_engineer", "AI Engineer"
+        AGENTIC_AI = "agentic_ai", "Agentic AI Engineer"
+        MLOPS = "mlops", "MLOps & LLMOps"
+        FDE = "fde", "Forward Deployed AI"
+
     domain = models.ForeignKey(Domain, on_delete=models.CASCADE, related_name="topics")
     additional_domains = models.ManyToManyField(Domain, blank=True, related_name="shared_topics")
     name = models.CharField(max_length=255)
@@ -39,6 +46,13 @@ class Topic(BaseModel):
         max_length=4,
         choices=Priority.choices,
         default=Priority.P0,
+    )
+    track = models.CharField(
+        max_length=64,
+        choices=Track.choices,
+        default=Track.AI_ENGINEER,
+        blank=True,
+        db_index=True,
     )
     learning_objectives = models.JSONField(default=list, blank=True)
     estimated_effort_hours = models.PositiveIntegerField(default=0, help_text="Estimated learning effort in hours")

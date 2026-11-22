@@ -24,10 +24,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . /app/
 
 # Create unified data storage directory and collect static assets
-RUN mkdir -p /data/media /data/logs /data/cache && \
+RUN mkdir -p /data/media /data/logs /data/cache /app/cache/fastembed && \
     sed -i 's/\r$//' /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
-    python manage.py collectstatic --noinput
+    python manage.py collectstatic --noinput && \
+    python -c "from fastembed import TextEmbedding; TextEmbedding(model_name='BAAI/bge-small-en-v1.5', cache_dir='/app/cache/fastembed')"
 
 VOLUME ["/data"]
 

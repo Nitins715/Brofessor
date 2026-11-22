@@ -1,0 +1,700 @@
+{% extends "layouts/app.html" %}
+
+{% block title %}Visual Concept Graph | Brofessor{% endblock %}
+{% block page_title %}Visual Concept Graph{% endblock %}
+
+{% block head_extra %}
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<style>
+  #vis-network-canvas {
+    width: 100%;
+    height: 640px;
+    outline: none;
+  }
+  @media (min-width: 1024px) {
+    #vis-network-canvas {
+      height: 720px;
+    }
+  }
+  .vis-tooltip {
+    position: absolute;
+    visibility: hidden;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    color: #0f172a;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    pointer-events: none;
+    z-index: 1000;
+  }
+  .dark .vis-tooltip {
+    color: #f8fafc;
+    background-color: rgba(15, 23, 42, 0.95);
+    border-color: #334155;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  {# Header & Mode Navigation #}
+  <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+          Visual Concept Graph
+        </h2>
+        <span class="text-xs font-mono px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 font-semibold">
+          Vis.js Engine
+        </span>
+      </div>
+      <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+        Interactive concept topology, prerequisite DAG flows, and extracted knowledge graph relationships.
+      </p>
+    </div>
+
+    {# Mode & View Tabs #}
+    <div class="flex items-center gap-1.5 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 text-xs font-medium self-start lg:self-auto">
+      <a href="?mode=curriculum&track={{ active_track }}&tab=graph"
+         class="px-3 py-1.5 rounded-lg transition-smooth flex items-center gap-1.5 {% if active_mode == 'curriculum' and active_tab == 'graph' %}bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm font-semibold{% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Prerequisite DAG
+      </a>
+      <a href="?mode=library&tab=graph"
+         class="px-3 py-1.5 rounded-lg transition-smooth flex items-center gap-1.5 {% if active_mode == 'library' and active_tab == 'graph' %}bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-sm font-semibold{% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Library Knowledge Graph
+      </a>
+      <a href="?tab=need_to_learn"
+         class="px-3 py-1.5 rounded-lg transition-smooth flex items-center gap-1.5 {% if active_tab == 'need_to_learn' %}bg-white dark:bg-zinc-900 text-rose-600 dark:text-rose-400 shadow-sm font-semibold{% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+        Need-to-Learn Queue ({{ need_to_learn_items|length }})
+      </a>
+      <a href="?tab=mastered"
+         class="px-3 py-1.5 rounded-lg transition-smooth flex items-center gap-1.5 {% if active_tab == 'mastered' %}bg-white dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 shadow-sm font-semibold{% else %}text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100{% endif %}">
+        Mastered Concepts ({{ mastered_items|length }})
+      </a>
+    </div>
+  </div>
+
+  {# Stats Bar #}
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
+    <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm">
+      <span class="block text-zinc-400 text-[10px] uppercase font-semibold">Total Nodes</span>
+      <span class="text-lg font-bold text-zinc-900 dark:text-zinc-100" id="stat-total-nodes">{{ graph_summary.total_nodes }}</span>
+    </div>
+    <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm">
+      <span class="block text-zinc-400 text-[10px] uppercase font-semibold">Connections & Edges</span>
+      <span class="text-lg font-bold text-zinc-900 dark:text-zinc-100" id="stat-total-edges">{{ graph_summary.total_edges }}</span>
+    </div>
+    <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm">
+      <span class="block text-zinc-400 text-[10px] uppercase font-semibold">Mastered Skills</span>
+      <span class="text-lg font-bold text-emerald-600 dark:text-emerald-400" id="stat-mastered">{{ graph_summary.mastered_count }}</span>
+    </div>
+    <div class="p-3.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 shadow-sm">
+      <span class="block text-zinc-400 text-[10px] uppercase font-semibold">Current View</span>
+      <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase truncate block mt-1">
+        {% if active_mode == 'curriculum' %}Track DAG{% else %}Library Graph{% endif %}
+      </span>
+    </div>
+  </div>
+
+  {% if active_tab == 'graph' %}
+    {# MAIN VISUAL GRAPH CONTAINER #}
+    <div class="space-y-3">
+
+      {# Toolbar Controls: Track Filter, Layout Switcher, Search, Zoom #}
+      <div class="p-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        
+        {# Left: Track Pills (when in curriculum mode) #}
+        {% if active_mode == 'curriculum' %}
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+            <button type="button" onclick="filterByTrack('all')"
+                    class="track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth {% if active_track == 'all' %}bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100{% else %}border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400{% endif %}"
+                    data-track="all">
+              All Tracks
+            </button>
+            <button type="button" onclick="filterByTrack('swe_foundations')"
+                    class="track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth {% if active_track == 'swe_foundations' %}bg-blue-600 text-white border-blue-600{% else %}border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-blue-400{% endif %}"
+                    data-track="swe_foundations">
+              SWE Foundations
+            </button>
+            <button type="button" onclick="filterByTrack('ai_engineer')"
+                    class="track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth {% if active_track == 'ai_engineer' %}bg-emerald-600 text-white border-emerald-600{% else %}border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-emerald-400{% endif %}"
+                    data-track="ai_engineer">
+              AI Engineer
+            </button>
+            <button type="button" onclick="filterByTrack('agentic_ai')"
+                    class="track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth {% if active_track == 'agentic_ai' %}bg-purple-600 text-white border-purple-600{% else %}border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-purple-400{% endif %}"
+                    data-track="agentic_ai">
+              Agentic AI
+            </button>
+            <button type="button" onclick="filterByTrack('mlops')"
+                    class="track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth {% if active_track == 'mlops' %}bg-amber-600 text-white border-amber-600{% else %}border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-amber-400{% endif %}"
+                    data-track="mlops">
+              MLOps
+            </button>
+            <button type="button" onclick="filterByTrack('fde')"
+                    class="track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth {% if active_track == 'fde' %}bg-rose-600 text-white border-rose-600{% else %}border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-rose-400{% endif %}"
+                    data-track="fde">
+              FDE
+            </button>
+          </div>
+        {% else %}
+          <div class="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+            Entities extracted from ingested knowledge sources & starter pack.
+          </div>
+        {% endif %}
+
+        {# Right: Search & Layout Controls #}
+        <div class="flex items-center gap-2 shrink-0">
+          {# Concept Search Input #}
+          <div class="relative">
+            <input type="text" id="node-search-input"
+                   placeholder="Find concept or skill..."
+                   onkeyup="searchNode(event)"
+                   class="w-44 sm:w-56 text-xs bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg px-2.5 py-1 text-zinc-800 dark:text-zinc-200 placeholder-zinc-400 focus:outline-none focus:border-indigo-500">
+          </div>
+
+          {# Layout Hierarchy Toggle #}
+          <button type="button" id="btn-toggle-layout" onclick="toggleLayoutDirection()"
+                  title="Toggle between Directed DAG Flow and Physics Simulation"
+                  class="px-2.5 py-1 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth flex items-center gap-1">
+            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+            <span id="layout-mode-label">DAG Flow</span>
+          </button>
+
+          {# Fit / Zoom In / Zoom Out #}
+          <div class="flex items-center border border-zinc-200 dark:border-zinc-800 rounded-lg overflow-hidden">
+            <button type="button" onclick="zoomIn()" title="Zoom In"
+                    class="px-2 py-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-smooth font-mono font-bold">
+              +
+            </button>
+            <button type="button" onclick="zoomOut()" title="Zoom Out"
+                    class="px-2 py-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-800 transition-smooth font-mono font-bold">
+              -
+            </button>
+            <button type="button" onclick="fitGraph()" title="Fit All Nodes"
+                    class="px-2.5 py-1 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 border-l border-zinc-200 dark:border-zinc-800 transition-smooth">
+              Fit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {# Interactive Vis.js Canvas Card #}
+      <div class="relative rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-950/80 overflow-hidden shadow-sm">
+        
+        {# Loading Spinner Overlay #}
+        <div id="graph-loading" class="absolute inset-0 z-20 flex flex-col items-center justify-center bg-white/80 dark:bg-zinc-950/80 backdrop-blur-sm transition-opacity duration-300">
+          <div class="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-xs font-mono text-zinc-500 dark:text-zinc-400 mt-2">Computing topology & physics...</span>
+        </div>
+
+        {# Network Canvas Container #}
+        <div id="vis-network-canvas"></div>
+
+        {# Bottom Overlay Legend #}
+        <div class="absolute bottom-3 left-3 z-10 p-2.5 rounded-xl bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 text-[10px] space-y-1.5 shadow-sm">
+          <span class="block font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider font-mono">Legend</span>
+          <div class="flex items-center gap-3 flex-wrap">
+            {% if active_mode == 'curriculum' %}
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-blue-500"></span><span class="text-zinc-700 dark:text-zinc-300">SWE</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500"></span><span class="text-zinc-700 dark:text-zinc-300">AI Eng</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500"></span><span class="text-zinc-700 dark:text-zinc-300">Agentic</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span><span class="text-zinc-700 dark:text-zinc-300">MLOps</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-rose-500"></span><span class="text-zinc-700 dark:text-zinc-300">FDE</span></div>
+              <div class="flex items-center gap-1 pl-2 border-l border-zinc-200 dark:border-zinc-800">
+                <span class="w-2.5 h-2.5 rounded-full border-2 border-emerald-500 bg-white"></span>
+                <span class="text-zinc-700 dark:text-zinc-300 font-semibold">Mastered</span>
+              </div>
+            {% else %}
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-emerald-500"></span><span class="text-zinc-700 dark:text-zinc-300">Concept</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-cyan-500"></span><span class="text-zinc-700 dark:text-zinc-300">Algorithm</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-blue-500"></span><span class="text-zinc-700 dark:text-zinc-300">Technology</span></div>
+              <div class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded bg-purple-500"></span><span class="text-zinc-700 dark:text-zinc-300">Framework</span></div>
+            {% endif %}
+          </div>
+        </div>
+
+        {# Slide-Over Concept Inspector Drawer #}
+        <div id="concept-drawer"
+             class="absolute top-0 right-0 bottom-0 w-80 sm:w-96 z-30 bg-white dark:bg-zinc-900 border-l border-zinc-200 dark:border-zinc-800 shadow-xl p-5 overflow-y-auto transform translate-x-full transition-transform duration-300 ease-in-out space-y-4">
+          <div class="flex items-start justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <div>
+              <span id="drawer-track-badge" class="text-[10px] uppercase font-mono px-2 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400">
+                Track
+              </span>
+              <h3 id="drawer-title" class="text-base font-bold text-zinc-900 dark:text-zinc-100 mt-1">
+                Concept Title
+              </h3>
+              <p id="drawer-topic" class="text-xs text-zinc-400 font-mono mt-0.5">Topic</p>
+            </div>
+            <button type="button" onclick="closeDrawer()" class="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 p-1">
+              &times;
+            </button>
+          </div>
+
+          {# Mastery Bar #}
+          <div class="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950/50 space-y-1.5" id="drawer-mastery-box">
+            <div class="flex items-center justify-between text-xs font-mono">
+              <span class="text-zinc-500">Demonstrated Mastery</span>
+              <span id="drawer-mastery-score" class="font-bold text-zinc-900 dark:text-zinc-100">0%</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
+              <div id="drawer-mastery-bar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          {# Description #}
+          <div class="space-y-1">
+            <span class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase font-mono">Description</span>
+            <p id="drawer-description" class="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed font-sans"></p>
+          </div>
+
+          {# Prerequisites List #}
+          <div class="space-y-2" id="drawer-prereqs-section">
+            <span class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase font-mono">Prerequisites</span>
+            <div id="drawer-prereqs-list" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          {# Unlocks Downstream List #}
+          <div class="space-y-2" id="drawer-downstream-section">
+            <span class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase font-mono">Unlocks Next</span>
+            <div id="drawer-downstream-list" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          {# Curated Learning Resources #}
+          <div class="space-y-2" id="drawer-resources-section">
+            <span class="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 uppercase font-mono">Curated Study Resources</span>
+            <div id="drawer-resources-list" class="space-y-1.5"></div>
+          </div>
+
+          {# Action Buttons #}
+          <div class="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-2">
+            <a id="drawer-detail-link" href="#"
+               class="flex-1 py-2 rounded-xl bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 text-xs font-semibold text-center hover:opacity-90 transition-smooth">
+              Skill Details & Evidence
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  {% elif active_tab == 'need_to_learn' %}
+    {# NEED-TO-LEARN QUESTION MEMORY QUEUE #}
+    <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Need-to-Learn Question Queue</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Questions previously answered incorrectly and queued for re-testing.</p>
+        </div>
+        <span class="text-xs font-mono text-rose-600 dark:text-rose-400 font-bold">{{ need_to_learn_items|length }} items</span>
+      </div>
+
+      <div class="space-y-3">
+        {% for item in need_to_learn_items %}
+          <div class="p-4 rounded-xl border border-rose-100 dark:border-rose-950/60 bg-rose-50/30 dark:bg-rose-950/20 space-y-2">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-zinc-800 dark:text-zinc-200">{{ item.concept }}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                Failed {{ item.attempt_count }}x
+              </span>
+            </div>
+            <p class="text-xs text-zinc-700 dark:text-zinc-300 font-sans">{{ item.prompt }}</p>
+            {% if item.feedback %}
+              <div class="p-2.5 rounded-lg bg-white dark:bg-zinc-900 text-[11px] text-zinc-600 dark:text-zinc-400 border border-zinc-100 dark:border-zinc-800">
+                <span class="font-semibold text-indigo-600 dark:text-indigo-400">Remediation:</span> {{ item.feedback }}
+              </div>
+            {% endif %}
+          </div>
+        {% empty %}
+          <p class="text-xs text-zinc-400 italic text-center py-8">Zero questions in your need-to-learn queue! All tested concepts are mastered.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  {% elif active_tab == 'mastered' %}
+    {# MASTERED CONCEPTS #}
+    <div class="p-5 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <div>
+          <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">Mastered Concept Nodes</h3>
+          <p class="text-xs text-zinc-500 dark:text-zinc-400">Concepts and questions verified as correct and retained in performance memory.</p>
+        </div>
+        <span class="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-bold">{{ mastered_items|length }} items</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% for item in mastered_items %}
+          <div class="p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-950/60 bg-emerald-50/30 dark:bg-emerald-950/20 space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-zinc-800 dark:text-zinc-200">{{ item.concept }}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300">
+                Mastered
+              </span>
+            </div>
+            <p class="text-xs text-zinc-600 dark:text-zinc-400 line-clamp-2">{{ item.prompt }}</p>
+          </div>
+        {% empty %}
+          <p class="text-xs text-zinc-400 italic text-center py-8 col-span-2">No mastered questions recorded yet. Complete diagnostic assessments to retain concepts.</p>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+</div>
+
+{# VIS.JS INITIALIZATION & INTERACTIVITY SCRIPT #}
+<script>
+  let rawGraphData = {{ graph_data_json|safe }};
+  let network = null;
+  let isHierarchical = true;
+  let currentTrack = "{{ active_track }}";
+  let currentMode = "{{ active_mode }}";
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (document.getElementById("vis-network-canvas")) {
+      initNetwork(rawGraphData);
+    }
+  });
+
+  function initNetwork(data) {
+    const container = document.getElementById("vis-network-canvas");
+    if (!container) return;
+
+    const isDark = document.documentElement.classList.contains("dark");
+
+    const visData = {
+      nodes: new vis.DataSet(data.nodes || []),
+      edges: new vis.DataSet(data.edges || [])
+    };
+
+    const options = {
+      nodes: {
+        borderWidth: 1.5,
+        shadow: {
+          enabled: true,
+          color: isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.06)",
+          size: 6,
+          x: 2,
+          y: 2
+        },
+        font: {
+          face: "Inter, system-ui, sans-serif",
+          size: 11,
+          color: isDark ? "#f1f5f9" : "#0f172a"
+        }
+      },
+      edges: {
+        width: 1.5,
+        arrows: {
+          to: { enabled: true, scaleFactor: 0.6 }
+        },
+        color: {
+          color: isDark ? "#475569" : "#94a3b8",
+          highlight: "#6366f1",
+          hover: "#4f46e5"
+        },
+        smooth: {
+          enabled: true,
+          type: "cubicBezier",
+          forceDirection: isHierarchical ? "horizontal" : "none",
+          roundness: 0.35
+        }
+      },
+      layout: isHierarchical ? {
+        hierarchical: {
+          enabled: true,
+          direction: "LR", // Left-to-Right Prerequisite Flow
+          sortMethod: "directed",
+          levelSeparation: 220,
+          nodeSpacing: 110,
+          treeSpacing: 140,
+          blockShifting: true,
+          edgeMinimization: true
+        }
+      } : {
+        hierarchical: { enabled: false }
+      },
+      physics: isHierarchical ? {
+        enabled: false
+      } : {
+        enabled: true,
+        solver: "forceAtlas2Based",
+        forceAtlas2Based: {
+          gravitationalConstant: -38,
+          centralGravity: 0.008,
+          springLength: 95,
+          springConstant: 0.16,
+          damping: 0.88
+        },
+        stabilization: {
+          iterations: 120,
+          updateInterval: 25
+        }
+      },
+      interaction: {
+        hover: true,
+        tooltipDelay: 120,
+        navigationButtons: false,
+        zoomView: true,
+        dragView: true
+      }
+    };
+
+    network = new vis.Network(container, visData, options);
+
+    network.on("stabilizationIterationsDone", function () {
+      const loader = document.getElementById("graph-loading");
+      if (loader) {
+        loader.style.opacity = "0";
+        setTimeout(() => loader.style.display = "none", 300);
+      }
+    });
+
+    // Node click handler -> open concept drawer
+    network.on("click", function (params) {
+      if (params.nodes && params.nodes.length > 0) {
+        const nodeId = params.nodes[0];
+        const nodeObj = (data.nodes || []).find(n => n.id === nodeId);
+        if (nodeObj) {
+          openDrawer(nodeObj);
+        }
+      }
+    });
+
+    // Hide loader if stabilization takes less than 300ms
+    setTimeout(() => {
+      const loader = document.getElementById("graph-loading");
+      if (loader && loader.style.opacity !== "0") {
+        loader.style.opacity = "0";
+        setTimeout(() => loader.style.display = "none", 300);
+      }
+    }, 1500);
+  }
+
+  function toggleLayoutDirection() {
+    isHierarchical = !isHierarchical;
+    const label = document.getElementById("layout-mode-label");
+    if (label) {
+      label.innerText = isHierarchical ? "DAG Flow" : "Organic Physics";
+    }
+
+    const loader = document.getElementById("graph-loading");
+    if (loader) {
+      loader.style.display = "flex";
+      loader.style.opacity = "1";
+    }
+
+    network.setOptions({
+      layout: isHierarchical ? {
+        hierarchical: {
+          enabled: true,
+          direction: "LR",
+          sortMethod: "directed",
+          levelSeparation: 220,
+          nodeSpacing: 110
+        }
+      } : {
+        hierarchical: { enabled: false }
+      },
+      physics: isHierarchical ? { enabled: false } : {
+        enabled: true,
+        solver: "forceAtlas2Based"
+      }
+    });
+
+    setTimeout(() => {
+      fitGraph();
+      if (loader) {
+        loader.style.opacity = "0";
+        setTimeout(() => loader.style.display = "none", 300);
+      }
+    }, 400);
+  }
+
+  function filterByTrack(track) {
+    currentTrack = track;
+    // Update active button state
+    document.querySelectorAll(".track-btn").forEach(btn => {
+      if (btn.getAttribute("data-track") === track) {
+        btn.className = "track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 border-zinc-900 dark:border-zinc-100";
+      } else {
+        btn.className = "track-btn px-2.5 py-1 rounded-lg border font-medium transition-smooth border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-zinc-400";
+      }
+    });
+
+    const loader = document.getElementById("graph-loading");
+    if (loader) {
+      loader.style.display = "flex";
+      loader.style.opacity = "1";
+    }
+
+    fetch(`/api/knowledge-graph/data/?track=${track}&mode=${currentMode}`)
+      .then(res => res.json())
+      .then(data => {
+        rawGraphData = data;
+        document.getElementById("stat-total-nodes").innerText = data.summary.total_nodes;
+        document.getElementById("stat-total-edges").innerText = data.summary.total_edges;
+        document.getElementById("stat-mastered").innerText = data.summary.mastered_count;
+        initNetwork(data);
+      })
+      .catch(err => {
+        console.error("Failed to load track graph data", err);
+        if (loader) loader.style.display = "none";
+      });
+  }
+
+  function searchNode(event) {
+    const query = (event.target.value || "").trim().toLowerCase();
+    if (!query || !network) return;
+
+    const matched = (rawGraphData.nodes || []).find(n =>
+      n.label.toLowerCase().includes(query) || (n.topic && n.topic.toLowerCase().includes(query))
+    );
+
+    if (matched) {
+      network.focus(matched.id, {
+        scale: 1.25,
+        animation: {
+          duration: 600,
+          easingFunction: "easeInOutQuad"
+        }
+      });
+      network.selectNodes([matched.id]);
+      if (event.key === "Enter") {
+        openDrawer(matched);
+      }
+    }
+  }
+
+  function zoomIn() {
+    if (!network) return;
+    const scale = network.getScale() * 1.25;
+    network.moveTo({ scale: scale, animation: { duration: 250 } });
+  }
+
+  function zoomOut() {
+    if (!network) return;
+    const scale = network.getScale() * 0.8;
+    network.moveTo({ scale: scale, animation: { duration: 250 } });
+  }
+
+  function fitGraph() {
+    if (!network) return;
+    network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } });
+  }
+
+  function openDrawer(node) {
+    const drawer = document.getElementById("concept-drawer");
+    if (!drawer) return;
+
+    const d = node.details || {};
+    document.getElementById("drawer-title").innerText = d.name || node.label;
+    document.getElementById("drawer-topic").innerText = d.topic || d.entity_type_label || "Topic";
+    document.getElementById("drawer-description").innerText = d.description || "Core conceptual node in knowledge graph.";
+    document.getElementById("drawer-track-badge").innerText = d.track_label || d.entity_type_label || "Concept";
+
+    // Mastery bar
+    const masteryScore = Math.round(d.mastery_score || 0);
+    document.getElementById("drawer-mastery-score").innerText = masteryScore + "% (" + (d.mastery_level || "unrated") + ")";
+    document.getElementById("drawer-mastery-bar").style.width = masteryScore + "%";
+
+    // Prerequisites
+    const prereqsList = document.getElementById("drawer-prereqs-list");
+    prereqsList.innerHTML = "";
+    if (d.prerequisites && d.prerequisites.length > 0) {
+      d.prerequisites.forEach(p => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-smooth border border-zinc-200 dark:border-zinc-700";
+        chip.innerText = p.name;
+        chip.onclick = () => focusNodeById(p.id);
+        prereqsList.appendChild(chip);
+      });
+      document.getElementById("drawer-prereqs-section").style.display = "block";
+    } else {
+      document.getElementById("drawer-prereqs-section").style.display = "none";
+    }
+
+    // Downstream
+    const downstreamList = document.getElementById("drawer-downstream-list");
+    downstreamList.innerHTML = "";
+    if (d.downstream && d.downstream.length > 0) {
+      d.downstream.forEach(ds => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-[11px] text-zinc-700 dark:text-zinc-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 transition-smooth border border-zinc-200 dark:border-zinc-700";
+        chip.innerText = ds.name;
+        chip.onclick = () => focusNodeById(ds.id);
+        downstreamList.appendChild(chip);
+      });
+      document.getElementById("drawer-downstream-section").style.display = "block";
+    } else {
+      document.getElementById("drawer-downstream-section").style.display = "none";
+    }
+
+    // Resources
+    const resList = document.getElementById("drawer-resources-list");
+    resList.innerHTML = "";
+    if (d.resources && d.resources.length > 0) {
+      d.resources.forEach(r => {
+        const link = document.createElement("a");
+        link.href = r.url;
+        link.target = "_blank";
+        link.rel = "noopener";
+        link.className = "flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-950 text-xs text-indigo-600 dark:text-indigo-400 hover:underline border border-zinc-200 dark:border-zinc-800";
+        link.innerHTML = `<span class="truncate">${r.title}</span><span class="text-[10px] uppercase font-mono text-zinc-400 shrink-0 ml-2">${r.resource_type}</span>`;
+        resList.appendChild(link);
+      });
+      document.getElementById("drawer-resources-section").style.display = "block";
+    } else {
+      document.getElementById("drawer-resources-section").style.display = "none";
+    }
+
+    // Detail link
+    const detailLink = document.getElementById("drawer-detail-link");
+    if (d.id && !d.id.startsWith("e_")) {
+      detailLink.href = `/knowledge/skills/${d.id}/`;
+      detailLink.style.display = "block";
+    } else {
+      detailLink.style.display = "none";
+    }
+
+    drawer.classList.remove("translate-x-full");
+  }
+
+  function closeDrawer() {
+    const drawer = document.getElementById("concept-drawer");
+    if (drawer) {
+      drawer.classList.add("translate-x-full");
+    }
+  }
+
+  function focusNodeById(nodeId) {
+    if (!network) return;
+    network.focus(nodeId, {
+      scale: 1.25,
+      animation: { duration: 500, easingFunction: "easeInOutQuad" }
+    });
+    network.selectNodes([nodeId]);
+    const nodeObj = (rawGraphData.nodes || []).find(n => n.id === nodeId);
+    if (nodeObj) {
+      openDrawer(nodeObj);
+    }
+  }
+</script>
+{% endblock %}

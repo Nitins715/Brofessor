@@ -1,0 +1,2447 @@
+[
+  {
+    "skill_slug": "python-syntax-variables-types",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Fundamental GFG tutorial on Python variables, identifiers and typing",
+    "resource": {
+      "title": "Python Variables and Data Types",
+      "url": "https://www.geeksforgeeks.org/python-variables/",
+      "description": "Comprehensive explanation of dynamic typing, variable references, and primitive types in Python.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-syntax-variables-types",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Python standard library documentation for built-in types",
+    "resource": {
+      "title": "Built-in Types - Python Official Documentation",
+      "url": "https://docs.python.org/3/library/stdtypes.html",
+      "description": "Authoritative language specification for numeric types, sequence types, set types, and mapping types.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-control-flow",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG guide on control structures in Python",
+    "resource": {
+      "title": "Loops and Control Statements in Python",
+      "url": "https://www.geeksforgeeks.org/loops-and-control-statements-in-python/",
+      "description": "In-depth guide covering if-else branching, while loops, for loops, and jump statements in Python.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-control-flow",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official control flow tutorial",
+    "resource": {
+      "title": "More Control Flow Tools - Python Tutorial",
+      "url": "https://docs.python.org/3/tutorial/controlflow.html",
+      "description": "Official documentation covering if statements, for loops, range function, break and continue statements, and match statements.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-functions-scope-errors",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG comprehensive guide to Python functions and scope",
+    "resource": {
+      "title": "Python Functions and Scope Resolution",
+      "url": "https://www.geeksforgeeks.org/python-functions/",
+      "description": "Function definition syntax, positional and keyword arguments, default parameters, recursion, and variable scope (LEGB rule).",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-functions-scope-errors",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official documentation on exception handling",
+    "resource": {
+      "title": "Errors and Exceptions - Python Tutorial",
+      "url": "https://docs.python.org/3/tutorial/errors.html",
+      "description": "Syntax errors, handling exceptions, raising exceptions, and defining clean cleanup actions with try-except-finally.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-collections",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG tutorial on Python core collections",
+    "resource": {
+      "title": "Python Data Structures: Lists, Tuples, Sets and Dictionaries",
+      "url": "https://www.geeksforgeeks.org/python-data-structures/",
+      "description": "Comprehensive comparison of mutability, memory indexing, hashing characteristics, and performance trade-offs of core collections.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-collections",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official documentation on data structures",
+    "resource": {
+      "title": "Data Structures - Python Tutorial",
+      "url": "https://docs.python.org/3/tutorial/datastructures.html",
+      "description": "Official guides for list comprehensions, tuples, sequences, sets, and dictionary lookups.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-oop-principles",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG tutorial on Object-Oriented Programming in Python",
+    "resource": {
+      "title": "Python OOPs Concepts",
+      "url": "https://www.geeksforgeeks.org/python-oops-concepts/",
+      "description": "Classes, objects, constructors (__init__), inheritance, encapsulation, polymorphism, and class vs static methods.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-oop-principles",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Python documentation on Classes",
+    "resource": {
+      "title": "Classes and Inheritance - Python Tutorial",
+      "url": "https://docs.python.org/3/tutorial/classes.html",
+      "description": "Deep dive into namespaces, class definition syntax, instance objects, inheritance, multiple inheritance, and private variables.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-generators-comprehensions",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG tutorial on Generators and Iterators",
+    "resource": {
+      "title": "Generators in Python",
+      "url": "https://www.geeksforgeeks.org/generators-in-python/",
+      "description": "Generator functions, yield expressions, generator expressions, memory efficiency, and state retention.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-generators-comprehensions",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official functional programming HOWTO",
+    "resource": {
+      "title": "Functional Programming HOWTO: Iterators and Generators",
+      "url": "https://docs.python.org/3/howto/functional.html",
+      "description": "Standard documentation on iterators, generator expressions, list comprehensions, and built-in itertools module.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-modules-virtualenvs",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG guide on modules and packages",
+    "resource": {
+      "title": "Python Modules and Packages",
+      "url": "https://www.geeksforgeeks.org/python-modules-and-packages/",
+      "description": "Creating reusable modules, importing mechanism, __name__ == '__main__', and organizing packages with __init__.py.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-modules-virtualenvs",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official venv documentation",
+    "resource": {
+      "title": "venv \u2014 Creation of Virtual Environments",
+      "url": "https://docs.python.org/3/library/venv.html",
+      "description": "Official reference for creating lightweight isolated Python environments with their own site packages.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-file-io-csv-json",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG file handling tutorial",
+    "resource": {
+      "title": "File Handling in Python",
+      "url": "https://www.geeksforgeeks.org/file-handling-python/",
+      "description": "Working with text and binary files, context managers ('with' statement), buffer management, and reading/writing modes.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-file-io-csv-json",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official json documentation",
+    "resource": {
+      "title": "json \u2014 JSON Encoder and Decoder",
+      "url": "https://docs.python.org/3/library/json.html",
+      "description": "Serialization and deserialization of Python data structures to and from JSON format.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-testing-debugging",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG unit testing tutorial",
+    "resource": {
+      "title": "Unit Testing in Python using unittest",
+      "url": "https://www.geeksforgeeks.org/unit-testing-python-unittest/",
+      "description": "Writing test cases, assertions, test fixtures (setUp/tearDown), test suites, and mock objects in Python.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-testing-debugging",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official unittest documentation",
+    "resource": {
+      "title": "unittest \u2014 Unit Testing Framework",
+      "url": "https://docs.python.org/3/library/unittest.html",
+      "description": "Standard library unit testing framework documentation including test runners and automated test discovery.",
+      "resource_type": "official_docs",
+      "source": "Python Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "python-dependency-management",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official Python Packaging User Guide",
+    "resource": {
+      "title": "Managing Application Dependencies - Python Packaging User Guide",
+      "url": "https://packaging.python.org/en/latest/tutorials/managing-dependencies/",
+      "description": "Guide to pip, requirements.txt, pyproject.toml, lockfiles, and environment reproducibility in Python.",
+      "resource_type": "official_docs",
+      "source": "Python Packaging Authority",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-asymptotic-complexity",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG tutorial on Asymptotic Analysis",
+    "resource": {
+      "title": "Analysis of Algorithms: Asymptotic Analysis",
+      "url": "https://www.geeksforgeeks.org/analysis-of-algorithms-set-1-asymptotic-analysis/",
+      "description": "Mathematical foundations of Big-O, Big-Omega, Big-Theta notations, best/worst/average case complexity, and growth rates.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-arrays-hashing-prefix-sums",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG guide on array data structure",
+    "resource": {
+      "title": "Array Data Structure Guide and Operations",
+      "url": "https://www.geeksforgeeks.org/array-data-structure-guide/",
+      "description": "Array indexing, memory layout, prefix sums, sliding windows, and hash table lookups for constant-time lookups.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-arrays-hashing-prefix-sums",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Curated interview practice problems",
+    "resource": {
+      "title": "Top 50 Array Coding Problems for Technical Interviews",
+      "url": "https://www.geeksforgeeks.org/top-50-array-coding-problems-for-interviews/",
+      "description": "High-frequency coding problems testing subarrays, hashing, frequency counting, and prefix sum optimizations.",
+      "resource_type": "practice",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-linked-lists-stacks-queues",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Linked List Master Guide",
+    "resource": {
+      "title": "Linked List Data Structure Guide",
+      "url": "https://www.geeksforgeeks.org/learn-linked-list-data-structure/",
+      "description": "Singly, doubly, and circular linked lists, node pointers, insertion, deletion, and reversal algorithms.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-searching-sorting",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG sorting algorithms complete overview",
+    "resource": {
+      "title": "Sorting Algorithms Explained with Implementations",
+      "url": "https://www.geeksforgeeks.org/sorting-algorithms/",
+      "description": "Detailed walkthrough of Merge Sort, Quick Sort, Heap Sort, Counting Sort, and Radix Sort with time complexity analysis.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-binary-search-two-pointers",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG binary search comprehensive guide",
+    "resource": {
+      "title": "Binary Search Algorithm and Problem Solving",
+      "url": "https://www.geeksforgeeks.org/binary-search/",
+      "description": "Divide-and-conquer binary search on sorted arrays, search space reduction, lower/upper bounds, and rotated arrays.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-binary-search-two-pointers",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Two Pointers Technique tutorial",
+    "resource": {
+      "title": "Two Pointers Technique in Problem Solving",
+      "url": "https://www.geeksforgeeks.org/two-pointers-technique/",
+      "description": "Opposite-directional and same-directional pointers for finding pairs, trapped water, and palindrome verification in O(N) time.",
+      "resource_type": "practice",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-recursion-backtracking",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG recursion fundamentals",
+    "resource": {
+      "title": "Recursion in Data Structures and Algorithms",
+      "url": "https://www.geeksforgeeks.org/recursion/",
+      "description": "Call stack frames, base conditions, tree recursions, memoization, and time/space recurrence relations.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-recursion-backtracking",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Backtracking algorithm guide",
+    "resource": {
+      "title": "Backtracking Algorithms with Classic Problems",
+      "url": "https://www.geeksforgeeks.org/backtracking-algorithms/",
+      "description": "Systematic exploration of state spaces: N-Queens, Sudoku solver, subset generation, and permutations.",
+      "resource_type": "practice",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-trees-heaps",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Binary Tree and BST guide",
+    "resource": {
+      "title": "Binary Tree and Binary Search Tree (BST) Guide",
+      "url": "https://www.geeksforgeeks.org/binary-tree-data-structure/",
+      "description": "Tree traversals (inorder, preorder, postorder, level order), tree properties, BST search and insertion, and balancing concepts.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-trees-heaps",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Heap data structure guide",
+    "resource": {
+      "title": "Heap Data Structure and Priority Queues",
+      "url": "https://www.geeksforgeeks.org/heap-data-structure/",
+      "description": "Min-heap and max-heap array representations, heapify operations, priority queues, and top-K elements problem patterns.",
+      "resource_type": "practice",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-graphs-bfs-dfs",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Graph data structure and algorithms guide",
+    "resource": {
+      "title": "Graph Data Structure and Algorithms Guide",
+      "url": "https://www.geeksforgeeks.org/graph-data-structure-and-algorithms/",
+      "description": "Adjacency matrix, adjacency lists, BFS, DFS, cycle detection, topological sort, and Dijkstra's shortest path.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-dp-greedy",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Dynamic Programming Master Tutorial",
+    "resource": {
+      "title": "Dynamic Programming Tutorial and Patterns",
+      "url": "https://www.geeksforgeeks.org/dynamic-programming/",
+      "description": "Optimal substructure, overlapping subproblems, memoization vs tabulation, knapsack, LCS, and LIS problems.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-tries-dsu-bit-manipulation",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Trie data structure guide",
+    "resource": {
+      "title": "Trie Data Structure: Insert, Search and Prefix Matching",
+      "url": "https://www.geeksforgeeks.org/trie-insert-and-search/",
+      "description": "Prefix tree implementation, character indexing, autocomplete mechanisms, and bitwise tries for maximum XOR pairs.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "dsa-patterns-optimization",
+    "is_primary": true,
+    "order": 1,
+    "notes": "DSA interview patterns",
+    "resource": {
+      "title": "Must Do Coding Questions for Product Based Companies",
+      "url": "https://www.geeksforgeeks.org/must-do-coding-questions-for-companies-like-amazon-microsoft-adobe/",
+      "description": "Curated repository of top algorithmic patterns, edge cases, space optimizations, and interview strategies.",
+      "resource_type": "practice",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-linear-algebra-fundamentals",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Linear Algebra for Machine Learning",
+    "resource": {
+      "title": "Linear Algebra for Machine Learning",
+      "url": "https://www.geeksforgeeks.org/linear-algebra-for-machine-learning/",
+      "description": "Vectors, linear combinations, vector spaces, matrix multiplication, dot products, and geometric projections in ML.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-linear-algebra-fundamentals",
+    "is_primary": false,
+    "order": 2,
+    "notes": "3Blue1Brown visual series on Linear Algebra",
+    "resource": {
+      "title": "Essence of Linear Algebra - 3Blue1Brown",
+      "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab",
+      "description": "Acclaimed visual explanation of linear transformations, matrices, determinants, dot and cross products, and change of basis.",
+      "resource_type": "video",
+      "source": "YouTube",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-matrix-decompositions",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG SVD and Eigenvalues tutorial",
+    "resource": {
+      "title": "Singular Value Decomposition (SVD) and Eigenvalue Decomposition",
+      "url": "https://www.geeksforgeeks.org/singular-value-decomposition-svd/",
+      "description": "Matrix rank, characteristic equations, eigenvectors, spectral theorem, and low-rank approximation via SVD.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-multivariable-calculus",
+    "is_primary": true,
+    "order": 1,
+    "notes": "3Blue1Brown Calculus visual series",
+    "resource": {
+      "title": "Essence of Calculus - 3Blue1Brown",
+      "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr",
+      "description": "Visual and conceptual intuition for derivatives, chain rule, partial derivatives, and gradients.",
+      "resource_type": "video",
+      "source": "YouTube",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-optimization-gradient-descent",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Gradient Descent in Machine Learning",
+    "resource": {
+      "title": "Gradient Descent in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/gradient-descent-in-machine-learning/",
+      "description": "Objective functions, learning rate schedules, batch gradient descent, stochastic gradient descent (SGD), and mini-batch optimization.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-probability-random-variables",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Probability for Machine Learning",
+    "resource": {
+      "title": "Probability Theory and Mathematics for Machine Learning",
+      "url": "https://www.geeksforgeeks.org/mathematics-probability/",
+      "description": "Conditional probability, Bayes' theorem, independence, discrete and continuous random variables, and expectation.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-statistics-distributions",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Random Variables and Distributions",
+    "resource": {
+      "title": "Random Variables and Probability Distributions in Statistics",
+      "url": "https://www.geeksforgeeks.org/random-variable/",
+      "description": "Gaussian normal distribution, Poisson, Bernoulli, binomial distributions, central limit theorem, and variance analysis.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-discrete-combinatorics",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Discrete Mathematics",
+    "resource": {
+      "title": "Discrete Mathematics and Combinatorics Tutorial",
+      "url": "https://www.geeksforgeeks.org/discrete-mathematics-tutorial/",
+      "description": "Set theory, relations, combinatorics, counting principles, permutations and combinations, and graph theory basics.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "math-numerical-computing",
+    "is_primary": true,
+    "order": 1,
+    "notes": "NumPy official data types and precision guide",
+    "resource": {
+      "title": "Data Types and Numerical Precision in NumPy",
+      "url": "https://numpy.org/doc/stable/user/basics.types.html",
+      "description": "IEEE 754 floating-point standards, float32 vs float64 precision, underflow, overflow, and numerical stability in computing.",
+      "resource_type": "official_docs",
+      "source": "NumPy Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-mle-map-estimation",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Maximum Likelihood Estimation",
+    "resource": {
+      "title": "Maximum Likelihood Estimation (MLE) in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/maximum-likelihood-estimation/",
+      "description": "Log-likelihood formulation, parameter estimation, comparison between Maximum Likelihood Estimation and Maximum A Posteriori (MAP).",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-bias-variance-tradeoff",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Bias-Variance Tradeoff",
+    "resource": {
+      "title": "Bias and Variance in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/bias-and-variance-in-machine-learning/",
+      "description": "Decomposition of generalization error, underfitting vs overfitting, model capacity, and regularization dynamics.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-information-theory-entropy",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Entropy and Cross-Entropy tutorial",
+    "resource": {
+      "title": "Cross-Entropy and Information Theory in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/cross-entropy-cost-function/",
+      "description": "Shannon entropy, KL divergence, mutual information, and cross-entropy loss formulation for neural networks.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-hypothesis-testing-assumptions",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Hypothesis Testing tutorial",
+    "resource": {
+      "title": "Hypothesis Testing in Statistics and Machine Learning",
+      "url": "https://www.geeksforgeeks.org/hypothesis-testing/",
+      "description": "Null hypothesis, p-values, significance levels (alpha), Type I and Type II errors, t-tests, and chi-squared tests.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-hypothesis-testing-assumptions",
+    "is_primary": false,
+    "order": 2,
+    "notes": "SciPy official statistical tests documentation",
+    "resource": {
+      "title": "Statistical Functions (scipy.stats) - SciPy Documentation",
+      "url": "https://docs.scipy.org/doc/scipy/reference/stats.html",
+      "description": "Authoritative scientific computing reference for statistical distributions, tests, and estimation routines.",
+      "resource_type": "official_docs",
+      "source": "SciPy Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-numpy-vectorization",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official NumPy Quickstart",
+    "resource": {
+      "title": "NumPy: The Absolute Basics for Beginners",
+      "url": "https://numpy.org/doc/stable/user/quickstart.html",
+      "description": "Ndarray creation, broadcasting rules, indexing, slicing, vectorization, and matrix linear algebra.",
+      "resource_type": "official_docs",
+      "source": "NumPy Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-numpy-vectorization",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG NumPy Tutorial",
+    "resource": {
+      "title": "NumPy Tutorial - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/numpy-tutorial/",
+      "description": "Array manipulation, mathematical functions, universal functions (ufuncs), and vectorization over Python loops.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pandas-data-wrangling",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official Pandas 10 minutes guide",
+    "resource": {
+      "title": "10 Minutes to pandas - Official Guide",
+      "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+      "description": "DataFrame and Series basics, viewing data, selection by label/position, boolean indexing, missing values, and grouping.",
+      "resource_type": "official_docs",
+      "source": "Pandas Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pandas-data-wrangling",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Pandas Tutorial",
+    "resource": {
+      "title": "Pandas Tutorial - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/pandas-tutorial/",
+      "description": "Data wrangling, cleaning missing records, merging, joining, concatenation, pivot tables, and time series handling.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-data-visualization",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Seaborn official tutorial",
+    "resource": {
+      "title": "Seaborn: Statistical Data Visualization Tutorial",
+      "url": "https://seaborn.pydata.org/tutorial.html",
+      "description": "Statistical plotting, distributions, categorical relationships, heatmaps, regression plots, and multi-plot grids.",
+      "resource_type": "official_docs",
+      "source": "Seaborn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-data-visualization",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Data Visualization Tutorial",
+    "resource": {
+      "title": "Data Visualization in Python using Matplotlib and Seaborn",
+      "url": "https://www.geeksforgeeks.org/data-visualization-in-python/",
+      "description": "Creating line plots, bar charts, scatter plots, histograms, subplots, and styling visual outputs for exploratory data analysis.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-sklearn-pipelines-leakage",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official Scikit-learn Pipeline documentation",
+    "resource": {
+      "title": "Pipelines and Composite Estimators - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/compose.html",
+      "description": "Chaining transformers and estimators, ColumnTransformer, preventing data leakage during preprocessing, and hyperparameter tuning.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-sklearn-pipelines-leakage",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Scikit-learn Pipeline tutorial",
+    "resource": {
+      "title": "Managing Machine Learning Workflows with Scikit-learn Pipeline",
+      "url": "https://www.geeksforgeeks.org/managing-machine-learning-workflows-with-scikit-learn-pipeline/",
+      "description": "Step-by-step tutorial constructing leak-free machine learning pipelines from imputation to model fitting.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-linear-polynomial-regression",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Linear Regression guide",
+    "resource": {
+      "title": "Linear Regression in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/ml-linear-regression/",
+      "description": "Simple and multiple linear regression, ordinary least squares (OLS), cost functions, and polynomial feature expansion.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-linear-polynomial-regression",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn Linear Models",
+    "resource": {
+      "title": "Generalized Linear Models - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+      "description": "Mathematical formulation and API documentation for Ridge, Lasso, and LinearRegression estimators.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-regularization-l1-l2",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Regularization tutorial",
+    "resource": {
+      "title": "Regularization in Machine Learning (L1, L2 and ElasticNet)",
+      "url": "https://www.geeksforgeeks.org/regularization-in-machine-learning/",
+      "description": "L1 Lasso regularization (sparsity & feature selection), L2 Ridge regularization (shrinkage), and ElasticNet combinations.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-logistic-regression",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Logistic Regression tutorial",
+    "resource": {
+      "title": "Understanding Logistic Regression in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/understanding-logistic-regression/",
+      "description": "Sigmoid activation function, log-odds, binary and multinomial cross-entropy loss, decision boundaries, and odds ratios.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-logistic-regression",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn Logistic Regression API",
+    "resource": {
+      "title": "LogisticRegression Classifier - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html",
+      "description": "Official parameter reference for solvers (lbfgs, liblinear, saga), penalty choices, and multi-class schemes.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-knn-naive-bayes",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG KNN algorithm",
+    "resource": {
+      "title": "K-Nearest Neighbours Algorithm with Intuition",
+      "url": "https://www.geeksforgeeks.org/k-nearest-neighbours/",
+      "description": "Distance metrics (Euclidean, Manhattan, Minkowski), curse of dimensionality, KD-trees, and hyperparameter K selection.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-knn-naive-bayes",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Naive Bayes Classifiers",
+    "resource": {
+      "title": "Naive Bayes Classifiers Explained",
+      "url": "https://www.geeksforgeeks.org/naive-bayes-classifiers/",
+      "description": "Conditional independence assumption, Gaussian, Multinomial, and Bernoulli Naive Bayes for text and categorical classification.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-decision-trees-random-forests",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Random Forest tutorial",
+    "resource": {
+      "title": "Random Forest Algorithm in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/random-forest-algorithm-in-machine-learning/",
+      "description": "Ensemble learning, bagging (bootstrap aggregating), out-of-bag (OOB) error, decision trees splitting criteria (Gini, Entropy), and feature importance.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-decision-trees-random-forests",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn Tree Documentation",
+    "resource": {
+      "title": "Decision Trees - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/tree.html",
+      "description": "Mathematical formulation of CART algorithm, tree pruning, complexity analysis, and visualization.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-gradient-boosting",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG XGBoost Tutorial",
+    "resource": {
+      "title": "XGBoost: Extreme Gradient Boosting Algorithm",
+      "url": "https://www.geeksforgeeks.org/xgboost/",
+      "description": "Gradient boosting principles, pseudo-residuals, learning rate shrinkage, tree regularization, LightGBM, and CatBoost comparisons.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-gradient-boosting",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn Ensemble Methods",
+    "resource": {
+      "title": "Ensemble Methods (Gradient Boosting) - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/ensemble.html",
+      "description": "HistGradientBoostingClassifier, loss functions, early stopping, and partial dependence plots.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-support-vector-machines",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG SVM Tutorial",
+    "resource": {
+      "title": "Support Vector Machine (SVM) Algorithm",
+      "url": "https://www.geeksforgeeks.org/support-vector-machine-algorithm/",
+      "description": "Maximum margin hyperplane, support vectors, hard vs soft margin, slack variables, and kernel trick (RBF, Polynomial, Sigmoid).",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-support-vector-machines",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn SVM Documentation",
+    "resource": {
+      "title": "Support Vector Machines - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/svm.html",
+      "description": "Mathematical formulation of primal and dual optimization problems, SVC, SVR, and kernel ridge regression.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-clustering-kmeans-dbscan",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG K-Means Clustering",
+    "resource": {
+      "title": "K-Means Clustering Algorithm in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/k-means-clustering-introduction/",
+      "description": "Centroid initialization, Lloyd's algorithm, K-Means++, elbow method, inertia, and silhouette analysis.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-clustering-kmeans-dbscan",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG DBSCAN Clustering",
+    "resource": {
+      "title": "DBSCAN Clustering: Density-Based Spatial Clustering",
+      "url": "https://www.geeksforgeeks.org/dbscan-clustering-in-ml-density-based-clustering/",
+      "description": "Core points, border points, noise outliers, epsilon neighborhood radius, and min_samples parameters.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pca-dimensionality-reduction",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG PCA Tutorial",
+    "resource": {
+      "title": "Principal Component Analysis (PCA) Step-by-Step",
+      "url": "https://www.geeksforgeeks.org/principal-component-analysis-pca/",
+      "description": "Covariance matrix computation, eigenvectors, eigenvalues, explained variance ratio, scree plots, and t-SNE / UMAP comparisons.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pca-dimensionality-reduction",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn PCA Documentation",
+    "resource": {
+      "title": "Decompositions: Principal Component Analysis - Scikit-Learn",
+      "url": "https://scikit-learn.org/stable/modules/decomposition.html",
+      "description": "Exact PCA, incremental PCA, randomized PCA, and kernel PCA documentation.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-cross-validation-strategies",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Cross-Validation tutorial",
+    "resource": {
+      "title": "Cross-Validation in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/cross-validation-machine-learning/",
+      "description": "K-Fold, Stratified K-Fold, Leave-One-Out, TimeSeriesSplit, and GroupKFold cross-validation techniques.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-cross-validation-strategies",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn Cross-Validation",
+    "resource": {
+      "title": "Cross-Validation: Evaluating Estimator Performance - Scikit-Learn",
+      "url": "https://scikit-learn.org/stable/modules/cross_validation.html",
+      "description": "Computing cross-validated metrics, cross_val_score, cross_validate, and custom data splitters.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-evaluation-metrics",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Confusion Matrix and Metrics",
+    "resource": {
+      "title": "Confusion Matrix and Classification Metrics in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/confusion-matrix-machine-learning/",
+      "description": "Precision, Recall, F1-Score, Specificity, ROC-AUC curve, PR-AUC, and regression metrics (MSE, RMSE, MAE, R-squared).",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-evaluation-metrics",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Scikit-learn Metrics Documentation",
+    "resource": {
+      "title": "Model Evaluation: Quantifying the Quality of Predictions - Scikit-Learn",
+      "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+      "description": "Classification metrics, multilabel ranking metrics, regression metrics, and clustering metrics.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-imbalanced-data-thresholds",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Handling Imbalanced Datasets",
+    "resource": {
+      "title": "How to Handle Imbalanced Classes in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/how-to-handle-imbalanced-classes-in-machine-learning/",
+      "description": "Oversampling with SMOTE, random undersampling, class weights, focal loss, and precision-recall threshold calibration.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-feature-engineering-selection",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Feature Engineering Tutorial",
+    "resource": {
+      "title": "What is Feature Engineering in Machine Learning?",
+      "url": "https://www.geeksforgeeks.org/what-is-feature-engineering/",
+      "description": "One-hot encoding, target encoding, standard scaling, min-max scaling, polynomial features, and variance thresholding.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-hyperparameter-tuning",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Hyperparameter Tuning",
+    "resource": {
+      "title": "Hyperparameter Tuning in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/hyperparameter-tuning/",
+      "description": "GridSearchCV, RandomizedSearchCV, Bayesian optimization with Optuna, and validation curves.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-model-explainability-shap",
+    "is_primary": true,
+    "order": 1,
+    "notes": "SHAP Official GitHub Repository",
+    "resource": {
+      "title": "SHAP (SHapley Additive exPlanations) - Official Repository",
+      "url": "https://github.com/shap/shap",
+      "description": "Game-theoretic approach to explain the output of any machine learning model using Shapley values.",
+      "resource_type": "practice",
+      "source": "GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-model-explainability-shap",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG SHAP Tutorial",
+    "resource": {
+      "title": "Interpreting Machine Learning Models with SHAP Values",
+      "url": "https://www.geeksforgeeks.org/interpreting-machine-learning-models-with-shap-values/",
+      "description": "TreeExplainer, DeepExplainer, summary plots, force plots, waterfall charts, and local vs global model explainability.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-perceptrons-activation-functions",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Activation Functions in Neural Networks",
+    "resource": {
+      "title": "Activation Functions in Neural Networks",
+      "url": "https://www.geeksforgeeks.org/activation-functions-neural-networks/",
+      "description": "Sigmoid, Tanh, ReLU, Leaky ReLU, ELU, Softmax, vanishing gradient problems, and non-linear function approximation.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-perceptrons-activation-functions",
+    "is_primary": false,
+    "order": 2,
+    "notes": "3Blue1Brown Neural Networks Series",
+    "resource": {
+      "title": "Neural Networks - 3Blue1Brown Video Series",
+      "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi",
+      "description": "Celebrated animated series covering perceptrons, multilayer perceptrons, gradient descent, and backpropagation mechanics.",
+      "resource_type": "video",
+      "source": "YouTube",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-backpropagation-computational-graphs",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Backpropagation Tutorial",
+    "resource": {
+      "title": "Backpropagation in Neural Networks Explained",
+      "url": "https://www.geeksforgeeks.org/backpropagation-in-neural-network/",
+      "description": "Forward pass, chain rule of calculus, backward pass, error gradient propagation, weight updates, and computational graph execution.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-optimizers-sgd-adam",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official PyTorch torch.optim Documentation",
+    "resource": {
+      "title": "torch.optim: Optimizers - PyTorch Documentation",
+      "url": "https://pytorch.org/docs/stable/optim.html",
+      "description": "Comprehensive reference for SGD, Momentum, RMSprop, Adam, AdamW, learning rate schedulers, and weight decay.",
+      "resource_type": "official_docs",
+      "source": "PyTorch Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-optimizers-sgd-adam",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Optimizers in Deep Learning",
+    "resource": {
+      "title": "Intuition of Optimizers in Deep Learning",
+      "url": "https://www.geeksforgeeks.org/intuition-of-optimizers-in-deep-learning/",
+      "description": "Visualizing optimization surfaces, momentum, adaptive learning rates, and Adam optimizer hyperparameter selection.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-dl-regularization-normalization",
+    "is_primary": true,
+    "order": 1,
+    "notes": "PyTorch Deep Learning Blitz Tutorial",
+    "resource": {
+      "title": "Deep Learning with PyTorch: A 60 Minute Blitz",
+      "url": "https://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html",
+      "description": "PyTorch foundations, autograd mechanics, neural network module definitions, loss functions, and optimization steps.",
+      "resource_type": "official_docs",
+      "source": "PyTorch Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pytorch-fundamentals",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official PyTorch Tensors Tutorial",
+    "resource": {
+      "title": "Tensors: PyTorch Tutorial",
+      "url": "https://pytorch.org/tutorials/beginner/basics/tensorqs_tutorial.html",
+      "description": "Tensor initialization, attributes, mathematical operations, GPU device allocation (CUDA), and NumPy bridge.",
+      "resource_type": "official_docs",
+      "source": "PyTorch Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pytorch-fundamentals",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG PyTorch Getting Started Tutorial",
+    "resource": {
+      "title": "Getting Started with PyTorch - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/getting-started-with-pytorch/",
+      "description": "Core concepts of PyTorch: autograd, torch.nn.Module, Dataset, DataLoader, and writing clean modular deep learning code.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-pytorch-training-loop",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official PyTorch Optimizing Model Parameters",
+    "resource": {
+      "title": "Optimizing Model Parameters - PyTorch Tutorial",
+      "url": "https://pytorch.org/tutorials/beginner/basics/optimization_tutorial.html",
+      "description": "Writing training loops, validation evaluation, model saving and loading (torch.save / torch.load state_dict), and checkpointing.",
+      "resource_type": "official_docs",
+      "source": "PyTorch Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-cnn-architectures",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG CNN Introduction",
+    "resource": {
+      "title": "Introduction to Convolutional Neural Networks (CNNs)",
+      "url": "https://www.geeksforgeeks.org/introduction-convolution-neural-network/",
+      "description": "Convolutional layers, kernel filters, padding, stride, pooling (Max/Average), feature maps, and classic architectures (LeNet, AlexNet, VGG, ResNet).",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-cnn-architectures",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official PyTorch CIFAR-10 CNN Tutorial",
+    "resource": {
+      "title": "Training an Image Classifier - PyTorch Tutorial",
+      "url": "https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html",
+      "description": "End-to-end PyTorch implementation of a Convolutional Neural Network on CIFAR-10 image data.",
+      "resource_type": "practice",
+      "source": "PyTorch Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-rnn-lstm-gru",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG RNN Tutorial",
+    "resource": {
+      "title": "Introduction to Recurrent Neural Networks (RNNs)",
+      "url": "https://www.geeksforgeeks.org/introduction-to-recurrent-neural-network/",
+      "description": "Sequential data processing, hidden states, backpropagation through time (BPTT), exploding and vanishing gradients.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-rnn-lstm-gru",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG LSTM Tutorial",
+    "resource": {
+      "title": "Deep Learning: Introduction to Long Short-Term Memory (LSTM)",
+      "url": "https://www.geeksforgeeks.org/deep-learning-introduction-to-long-short-term-memory/",
+      "description": "Cell state, forget gate, input gate, output gate, tanh and sigmoid interactions, and Gated Recurrent Unit (GRU) variations.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-tokenization-word-embeddings",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Word Embeddings in NLP",
+    "resource": {
+      "title": "Word Embeddings in NLP: Word2Vec, GloVe and FastText",
+      "url": "https://www.geeksforgeeks.org/word-embeddings-in-nlp/",
+      "description": "Tokenization strategies (WordPiece, BPE), vector semantics, Skip-gram, Continuous Bag of Words (CBOW), and cosine similarity.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-tokenization-word-embeddings",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Hugging Face NLP Course",
+    "resource": {
+      "title": "Hugging Face NLP Course: Tokenizers and Embeddings",
+      "url": "https://huggingface.co/learn/nlp-course",
+      "description": "Comprehensive open course covering modern transformer tokenizers, subword algorithms, and dataset tokenization.",
+      "resource_type": "official_docs",
+      "source": "Hugging Face",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-transformer-architecture",
+    "is_primary": true,
+    "order": 1,
+    "notes": "The Illustrated Transformer by Jay Alammar",
+    "resource": {
+      "title": "The Illustrated Transformer",
+      "url": "http://jalammar.github.io/illustrated-transformer/",
+      "description": "Visually intuitive and comprehensive guide to Self-Attention, Multi-Head Attention, Positional Encoding, and Encoder-Decoder architectures.",
+      "resource_type": "primary",
+      "source": "Jay Alammar",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-transformer-architecture",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Hugging Face Transformers GitHub repository",
+    "resource": {
+      "title": "Hugging Face Transformers Library",
+      "url": "https://github.com/huggingface/transformers",
+      "description": "State-of-the-art machine learning library for PyTorch, TensorFlow, and JAX with pretrained weights for BERT, RoBERTa, LLaMA, and GPT models.",
+      "resource_type": "practice",
+      "source": "GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-llm-pretraining-finetuning",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Fine-Tuning LLMs tutorial",
+    "resource": {
+      "title": "Fine-Tuning Large Language Models (LLMs)",
+      "url": "https://www.geeksforgeeks.org/fine-tuning-large-language-models/",
+      "description": "Causal language modeling, instruction tuning, Parameter-Efficient Fine-Tuning (PEFT, LoRA, QLoRA), and RLHF alignment.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-vector-search-embeddings",
+    "is_primary": true,
+    "order": 1,
+    "notes": "FAISS GitHub repository by Meta Research",
+    "resource": {
+      "title": "FAISS: Efficient Similarity Search and Clustering of Dense Vectors",
+      "url": "https://github.com/facebookresearch/faiss",
+      "description": "Meta Research's library for fast dense vector indexing, HNSW, IVF-PQ quantization, and GPU-accelerated similarity search.",
+      "resource_type": "practice",
+      "source": "GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-vector-search-embeddings",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Vector Databases Guide",
+    "resource": {
+      "title": "Vector Databases for AI and Machine Learning",
+      "url": "https://www.geeksforgeeks.org/vector-databases/",
+      "description": "Vector indexing principles, cosine vs dot product vs euclidean distance, metadata filtering, Chroma, Pinecone, and Qdrant architectures.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-rag-architecture-chunking",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG RAG Architecture",
+    "resource": {
+      "title": "Retrieval-Augmented Generation (RAG) Architecture and Chunking",
+      "url": "https://www.geeksforgeeks.org/retrieval-augmented-generation-rag/",
+      "description": "End-to-end RAG pipelines: document ingestion, recursive chunking strategies, semantic chunking, dense retrieval, and generation grounding.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-rag-evaluation-guardrails",
+    "is_primary": true,
+    "order": 1,
+    "notes": "RAG Triad and Evaluation Guide",
+    "resource": {
+      "title": "Evaluating Retrieval-Augmented Generation (RAG) Systems",
+      "url": "https://www.geeksforgeeks.org/what-is-rag-triad-in-llm/",
+      "description": "Context relevance, groundedness, answer relevance, hallucination mitigation, and input/output guardrails in production LLMs.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-llm-inference-optimization",
+    "is_primary": true,
+    "order": 1,
+    "notes": "vLLM Official GitHub Repository",
+    "resource": {
+      "title": "vLLM: High-Throughput and Memory-Efficient LLM Inference Engine",
+      "url": "https://github.com/vllm-project/vllm",
+      "description": "PagedAttention, KV cache management, continuous batching, quantization (AWQ, GPTQ), and high-throughput LLM serving.",
+      "resource_type": "practice",
+      "source": "GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-image-preprocessing-augmentation",
+    "is_primary": true,
+    "order": 1,
+    "notes": "OpenCV official image processing documentation",
+    "resource": {
+      "title": "Image Processing in OpenCV - Official Tutorial",
+      "url": "https://docs.opencv.org/4.x/d2/d96/tutorial_py_table_of_contents_imgproc.html",
+      "description": "Color spaces, geometric transformations, thresholding, smoothing filters, edge detection (Canny), and image contours.",
+      "resource_type": "official_docs",
+      "source": "OpenCV Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-image-preprocessing-augmentation",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG OpenCV Python Tutorial",
+    "resource": {
+      "title": "OpenCV Python Tutorial - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/opencv-python-tutorial/",
+      "description": "Practical guide on reading, writing, filtering, blurring, resizing, and data augmentation for computer vision models.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-vision-transfer-learning",
+    "is_primary": true,
+    "order": 1,
+    "notes": "GFG Transfer Learning using PyTorch",
+    "resource": {
+      "title": "Transfer Learning using PyTorch for Computer Vision",
+      "url": "https://www.geeksforgeeks.org/transfer-learning-using-pytorch/",
+      "description": "Pretrained models (ResNet, EfficientNet), feature extraction, fine-tuning final classification heads, and learning rate adjustment.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-vision-transfer-learning",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Official Torchvision Models Documentation",
+    "resource": {
+      "title": "Torchvision Models and Pretrained Weights",
+      "url": "https://pytorch.org/vision/stable/models.html",
+      "description": "Official PyTorch repository of computer vision models for image classification, segmentation, and object detection.",
+      "resource_type": "official_docs",
+      "source": "PyTorch Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-object-detection-metrics",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Ultralytics YOLO GitHub Repository",
+    "resource": {
+      "title": "Ultralytics YOLO (You Only Look Once) - Official Repository",
+      "url": "https://github.com/ultralytics/ultralytics",
+      "description": "Industry-standard real-time object detection, instance segmentation, and pose estimation framework with pretrained weights.",
+      "resource_type": "practice",
+      "source": "GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-object-detection-metrics",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Object Detection with YOLO",
+    "resource": {
+      "title": "Object Detection with YOLO Explained",
+      "url": "https://www.geeksforgeeks.org/object-detection-with-yolo/",
+      "description": "Anchor boxes, bounding box prediction, Intersection over Union (IoU), non-maximum suppression (NMS), and mean Average Precision (mAP).",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-segmentation-vit",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Hugging Face ViT Documentation",
+    "resource": {
+      "title": "Vision Transformer (ViT) - Hugging Face Documentation",
+      "url": "https://huggingface.co/docs/transformers/model_doc/vit",
+      "description": "Patch extraction, linear projection of flattened patches, position embeddings, and applying transformer encoders to computer vision.",
+      "resource_type": "official_docs",
+      "source": "Hugging Face",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-model-serialization",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Scikit-learn Model Persistence Documentation",
+    "resource": {
+      "title": "Model Persistence (Pickle, Joblib, ONNX) - Scikit-Learn Documentation",
+      "url": "https://scikit-learn.org/stable/modules/model_persistence.html",
+      "description": "Serializing estimators, security considerations of pickle, joblib performance with large numpy arrays, and ONNX format interoperability.",
+      "resource_type": "official_docs",
+      "source": "Scikit-Learn Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-fastapi-model-serving",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official FastAPI Documentation",
+    "resource": {
+      "title": "FastAPI Tutorial - First Steps and Schema Validation",
+      "url": "https://fastapi.tiangolo.com/tutorial/",
+      "description": "Building performant asynchronous REST APIs with Pydantic type annotations, dependency injection, and automatic OpenAPI schema generation.",
+      "resource_type": "official_docs",
+      "source": "FastAPI Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-fastapi-model-serving",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Deploy ML Model using FastAPI",
+    "resource": {
+      "title": "Deploying Machine Learning Model using FastAPI in Python",
+      "url": "https://www.geeksforgeeks.org/deploy-machine-learning-model-using-fastapi-in-python/",
+      "description": "Step-by-step tutorial exposing a trained machine learning model as an HTTP endpoint with request validation and JSON response schemas.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-experiment-tracking-mlflow",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official MLflow Documentation",
+    "resource": {
+      "title": "MLflow: An Open Platform for the Machine Learning Lifecycle",
+      "url": "https://mlflow.org/docs/latest/index.html",
+      "description": "Tracking parameters and metrics, autologging, model artifacts, model registry, stage transitions, and versioning.",
+      "resource_type": "official_docs",
+      "source": "MLflow Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-experiment-tracking-mlflow",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG MLflow Introduction",
+    "resource": {
+      "title": "Introduction to MLflow for Machine Learning",
+      "url": "https://www.geeksforgeeks.org/introduction-to-mlflow/",
+      "description": "MLflow UI setup, logging runs, tracking hyperparameter tuning iterations, and deploying registered models.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-monitoring-drift-detection",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Evidently AI GitHub Repository",
+    "resource": {
+      "title": "Evidently AI: ML and LLM Model Monitoring in Production",
+      "url": "https://github.com/evidentlyai/evidently",
+      "description": "Evaluating, testing, and monitoring machine learning models in production: data drift detection, concept drift, and target distribution shifts.",
+      "resource_type": "practice",
+      "source": "GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "aiml-monitoring-drift-detection",
+    "is_primary": false,
+    "order": 2,
+    "notes": "GFG Concept Drift Tutorial",
+    "resource": {
+      "title": "Concept Drift and Model Monitoring in Machine Learning",
+      "url": "https://www.geeksforgeeks.org/concept-drift-in-machine-learning/",
+      "description": "Covariate shift, prior probability shift, statistical tests (Kolmogorov-Smirnov, Population Stability Index), and automated retraining triggers.",
+      "resource_type": "primary",
+      "source": "GeeksforGeeks",
+      "verification_status": "verified",
+      "last_verified_date": "2026-10-14"
+    }
+  },
+  {
+    "skill_slug": "agent-react-loop",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Original Princeton/Google research paper on ReAct prompting and execution",
+    "resource": {
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "url": "https://react-lm.github.io/",
+      "description": "Foundational paper introducing the interleaved thought-action-observation paradigm for autonomous LLM problem solving.",
+      "resource_type": "primary",
+      "source": "Princeton NLP & Google Research",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-react-loop",
+    "is_primary": false,
+    "order": 2,
+    "notes": "LangChain official conceptual architecture for ReAct agents",
+    "resource": {
+      "title": "LangChain Agent Architecture & ReAct Loop Guide",
+      "url": "https://python.langchain.com/docs/concepts/agents/",
+      "description": "Complete breakdown of building deterministic ReAct execution loops with stopping conditions and tool handling.",
+      "resource_type": "official_docs",
+      "source": "LangChain Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-planning-decomposition",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Plan-and-Solve prompting methodology",
+    "resource": {
+      "title": "Plan-and-Solve Prompting: Improving Zero-Shot Chain-of-Thought Reasoning",
+      "url": "https://aclanthology.org/2023.acl-long.147/",
+      "description": "Comprehensive study and prompting strategies for decomposing multi-step goals into executable sub-task DAGs.",
+      "resource_type": "primary",
+      "source": "ACL Anthology",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-planning-decomposition",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Plan-and-Execute agent architecture reference in LangGraph",
+    "resource": {
+      "title": "LangGraph Plan-and-Execute Implementation Guide",
+      "url": "https://github.com/langchain-ai/langgraph/tree/main/examples",
+      "description": "Runnable code implementation demonstrating an agent planner generating a task list and re-planning upon sub-task completion.",
+      "resource_type": "practice",
+      "source": "LangGraph GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-reflection-critique",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Reflexion verbal reinforcement learning architecture",
+    "resource": {
+      "title": "Reflexion: Language Agents with Verbal Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2303.11366",
+      "description": "Pioneering paper demonstrating how autonomous agents improve their own code and reasoning through self-critique and unit test feedback.",
+      "resource_type": "primary",
+      "source": "arXiv",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-reflection-critique",
+    "is_primary": false,
+    "order": 2,
+    "notes": "LangGraph tutorial on building self-correcting reflection loops",
+    "resource": {
+      "title": "LangGraph Reflection and Self-Critique Design Patterns",
+      "url": "https://langchain-ai.github.io/langgraph/tutorials/reflection/reflection/",
+      "description": "Step-by-step tutorial on constructing a cyclic graph where a Generator agent is critiqued by a Reviewer agent until quality criteria are met.",
+      "resource_type": "official_docs",
+      "source": "LangGraph Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-tool-use-function-calling",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Authoritative guide on function calling with structured outputs",
+    "resource": {
+      "title": "Function Calling & Structured Tool Definition Guide",
+      "url": "https://platform.openai.com/docs/guides/function-calling",
+      "description": "Complete specification for defining tool schemas, handling function calling parameters, and executing parallel tools safely.",
+      "resource_type": "official_docs",
+      "source": "OpenAI Documentation",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-tool-use-function-calling",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Pydantic JSON schema generation and parameter validation",
+    "resource": {
+      "title": "Pydantic JSON Schema & Type Validation for Tools",
+      "url": "https://docs.pydantic.dev/latest/concepts/json_schema/",
+      "description": "Generating strict JSON schemas from Python classes for robust LLM tool calling validation.",
+      "resource_type": "practice",
+      "source": "Pydantic Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-langgraph-state-machines",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official documentation for LangGraph cyclical workflows",
+    "resource": {
+      "title": "LangGraph Core Conceptual Documentation & StateGraph Reference",
+      "url": "https://langchain-ai.github.io/langgraph/",
+      "description": "Comprehensive reference covering StateGraph, conditional edges, checkpointing, and graph orchestration for reliable production agents.",
+      "resource_type": "official_docs",
+      "source": "LangChain / LangGraph",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-langgraph-state-machines",
+    "is_primary": false,
+    "order": 2,
+    "notes": "DeepLearning.AI short course by Harrison Chase",
+    "resource": {
+      "title": "AI Agents in LangGraph - Interactive Course",
+      "url": "https://www.deeplearning.ai/short-courses/ai-agents-in-langgraph/",
+      "description": "Interactive video course on building stateful multi-agent workflows, cycles, and persistence using LangGraph.",
+      "resource_type": "video",
+      "source": "DeepLearning.AI",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-multi-agent-collaboration",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Comprehensive design patterns for multi-agent systems",
+    "resource": {
+      "title": "Multi-Agent Workflows: Architectures, Supervisors, and Swarms",
+      "url": "https://blog.langchain.dev/langgraph-multi-agent-workflows/",
+      "description": "Deep architectural analysis of Supervisor-Worker, Network, and Hierarchical agent topologies for production applications.",
+      "resource_type": "primary",
+      "source": "LangChain Blog",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-multi-agent-collaboration",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Runnable tutorial on multi-agent supervisor pattern",
+    "resource": {
+      "title": "LangGraph Multi-Agent Supervisor Implementation",
+      "url": "https://langchain-ai.github.io/langgraph/tutorials/multi_agent/multi_agent_router/",
+      "description": "Practical implementation of a centralized supervisor routing tasks between specialized research and coding agents.",
+      "resource_type": "practice",
+      "source": "LangGraph Tutorials",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-context-engineering-mcp",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official Model Context Protocol specification",
+    "resource": {
+      "title": "Model Context Protocol (MCP) Architecture & Specification",
+      "url": "https://modelcontextprotocol.io/introduction",
+      "description": "Open standard introduced by Anthropic for secure, bidirectional tool and context exchange between AI agents and external servers.",
+      "resource_type": "official_docs",
+      "source": "Model Context Protocol",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-context-engineering-mcp",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Python SDK implementation for building MCP servers and clients",
+    "resource": {
+      "title": "MCP Python SDK & Reference Implementations",
+      "url": "https://github.com/modelcontextprotocol/python-sdk",
+      "description": "Official Python library for exposing tools, prompts, and resources over MCP transport protocols.",
+      "resource_type": "practice",
+      "source": "MCP GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-memory-architectures",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Cognitive architectures and memory taxonomies for AI agents",
+    "resource": {
+      "title": "CoALA: Cognitive Architectures for Language Agents",
+      "url": "https://arxiv.org/abs/2309.02427",
+      "description": "Framework organizing language agent memory into working, episodic, semantic, and procedural components with grounding in cognitive science.",
+      "resource_type": "primary",
+      "source": "Princeton NLP / arXiv",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-memory-architectures",
+    "is_primary": false,
+    "order": 2,
+    "notes": "LangGraph cross-thread long-term memory store",
+    "resource": {
+      "title": "LangGraph Long-Term Memory & Store Guide",
+      "url": "https://langchain-ai.github.io/langgraph/concepts/memory/",
+      "description": "Design guide for implementing shared, persistent semantic memory across disparate conversation threads and agent sessions.",
+      "resource_type": "official_docs",
+      "source": "LangGraph Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-sandboxed-execution",
+    "is_primary": true,
+    "order": 1,
+    "notes": "E2B documentation for isolated AI agent code execution",
+    "resource": {
+      "title": "E2B Sandboxing for Autonomous AI Code Execution",
+      "url": "https://e2b.dev/docs",
+      "description": "Production platform providing micro-VM sandboxes to safely run untrusted LLM-generated Python and bash scripts.",
+      "resource_type": "official_docs",
+      "source": "E2B Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-sandboxed-execution",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Docker security and container isolation best practices",
+    "resource": {
+      "title": "Docker Container Security & Sandbox Hardening",
+      "url": "https://docs.docker.com/engine/security/",
+      "description": "Official Docker security guide covering non-root execution, cgroups resource limits, seccomp profiles, and network egress restrictions.",
+      "resource_type": "primary",
+      "source": "Docker Documentation",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-hitl-approval-gates",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Human-in-the-Loop conceptual design in LangGraph",
+    "resource": {
+      "title": "LangGraph Human-in-the-Loop Interrupts & Breakpoints",
+      "url": "https://langchain-ai.github.io/langgraph/concepts/human_in_the_loop/",
+      "description": "Implementing pause/resume workflows, approval gates before high-risk actions, and human state modification in agent graphs.",
+      "resource_type": "official_docs",
+      "source": "LangGraph Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "agent-hitl-approval-gates",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Hands-on tutorial on reviewing tool calls before execution",
+    "resource": {
+      "title": "Reviewing and Editing Agent Tool Calls Before Execution",
+      "url": "https://langchain-ai.github.io/langgraph/tutorials/human_in_the_loop/review-tool-calls/",
+      "description": "Practical code walkthrough showing how to interrupt a graph before a tool is dispatched, allow a human to edit arguments, and resume execution.",
+      "resource_type": "practice",
+      "source": "LangGraph Tutorials",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "mlops-vllm-serving-pagedattention",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Official documentation for vLLM high-throughput engine",
+    "resource": {
+      "title": "vLLM: Fast and Cheap LLM Serving with PagedAttention",
+      "url": "https://docs.vllm.ai/en/latest/",
+      "description": "Official deployment and optimization guide for high-throughput LLM serving using PagedAttention, continuous batching, and tensor parallelism.",
+      "resource_type": "official_docs",
+      "source": "vLLM Documentation",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "mlops-vllm-serving-pagedattention",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Original vLLM paper published at SOSP",
+    "resource": {
+      "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+      "url": "https://arxiv.org/abs/2309.06180",
+      "description": "Landmark paper introducing virtual memory paging for KV cache to virtually eliminate memory fragmentation during LLM inference.",
+      "resource_type": "primary",
+      "source": "arXiv / SOSP",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "mlops-kv-cache-continuous-batching",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Comprehensive Hugging Face guide on LLM inference optimization",
+    "resource": {
+      "title": "LLM Inference Optimization: KV Cache, Batching and Prefill",
+      "url": "https://huggingface.co/blog/optimize-llm",
+      "description": "In-depth guide exploring the mathematical mechanics of KV cache sizing, dynamic batching, and latency optimization techniques.",
+      "resource_type": "primary",
+      "source": "Hugging Face Blog",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "mlops-kv-cache-continuous-batching",
+    "is_primary": false,
+    "order": 2,
+    "notes": "NVIDIA TensorRT-LLM architecture and performance optimization",
+    "resource": {
+      "title": "TensorRT-LLM Performance Guide & Chunked Prefill",
+      "url": "https://nvidia.github.io/TensorRT-LLM/",
+      "description": "NVIDIA documentation on maximizing GPU compute utilization and balancing TTFT with generation throughput.",
+      "resource_type": "official_docs",
+      "source": "NVIDIA Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "mlops-ollama-quantization-gguf",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Ollama Modelfile customization and model management",
+    "resource": {
+      "title": "Ollama Documentation & Custom Modelfile Guide",
+      "url": "https://github.com/ollama/ollama/tree/main/docs",
+      "description": "Official guide on creating custom Modelfiles, setting temperature, system prompts, and managing local quantized models.",
+      "resource_type": "official_docs",
+      "source": "Ollama GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "mlops-ollama-quantization-gguf",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Hugging Face tutorial on GGUF and AWQ quantization",
+    "resource": {
+      "title": "Overview of LLM Quantization Formats: GGUF, AWQ, and GPTQ",
+      "url": "https://huggingface.co/docs/transformers/main/en/quantization",
+      "description": "Comprehensive explanation of post-training quantization methods, bit precision trade-offs, and perplexity evaluation.",
+      "resource_type": "primary",
+      "source": "Hugging Face Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "llmops-langsmith-distributed-tracing",
+    "is_primary": true,
+    "order": 1,
+    "notes": "LangSmith production tracing and observability documentation",
+    "resource": {
+      "title": "LangSmith Tracing & Observability Documentation",
+      "url": "https://docs.smith.langchain.com/",
+      "description": "Complete reference on tracking multi-step chains, visualizing latency waterfalls, monitoring token usage, and debugging production LLM errors.",
+      "resource_type": "official_docs",
+      "source": "LangSmith Documentation",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "llmops-langsmith-distributed-tracing",
+    "is_primary": false,
+    "order": 2,
+    "notes": "OpenInference telemetry semantic conventions for GenAI",
+    "resource": {
+      "title": "OpenInference Semantic Conventions for LLM Observability",
+      "url": "https://github.com/Arize-ai/openinference",
+      "description": "Open-source telemetry standards bridging OpenTelemetry with LLM and agent application tracing.",
+      "resource_type": "practice",
+      "source": "Arize AI / OpenInference",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "llmops-ragas-deepeval-benchmarks",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Ragas automated evaluation framework for RAG",
+    "resource": {
+      "title": "Ragas: Automated Evaluation of Retrieval-Augmented Generation",
+      "url": "https://docs.ragas.io/en/stable/",
+      "description": "Complete documentation on computing Faithfulness, Answer Relevance, Context Precision, and Context Recall scores using golden datasets.",
+      "resource_type": "official_docs",
+      "source": "Ragas Documentation",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "llmops-ragas-deepeval-benchmarks",
+    "is_primary": false,
+    "order": 2,
+    "notes": "DeepEval open-source LLM unit testing framework",
+    "resource": {
+      "title": "DeepEval: Unit Testing and CI/CD Evals for LLMs",
+      "url": "https://github.com/confident-ai/deepeval",
+      "description": "Python framework for writing deterministic and model-based assertions (G-Eval, hallucination tests) inside automated CI/CD pipelines.",
+      "resource_type": "practice",
+      "source": "Confident AI / DeepEval",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "llmops-guardrails-security-pii",
+    "is_primary": true,
+    "order": 1,
+    "notes": "NVIDIA NeMo Guardrails architecture",
+    "resource": {
+      "title": "NVIDIA NeMo Guardrails: Programmable Rails for LLM Safety",
+      "url": "https://github.com/NVIDIA/NeMo-Guardrails",
+      "description": "Open-source toolkit for guiding and safeguarding LLM dialogues, preventing jailbreaks, and enforcing topical and security constraints.",
+      "resource_type": "official_docs",
+      "source": "NVIDIA GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "llmops-guardrails-security-pii",
+    "is_primary": false,
+    "order": 2,
+    "notes": "OWASP Top 10 vulnerabilities for Large Language Models",
+    "resource": {
+      "title": "OWASP Top 10 for Large Language Model Applications",
+      "url": "https://owasp.org/www-project-top-10-for-large-language-model-applications/",
+      "description": "Authoritative security standard detailing prompt injection, insecure output handling, training data poisoning, and sensitive data leakage.",
+      "resource_type": "primary",
+      "source": "OWASP Foundation",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-enterprise-ontologies-mapping",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Palantir Foundry and AIP Ontology architectural whitepaper",
+    "resource": {
+      "title": "The Palantir Ontology: Modern Enterprise Data Architecture",
+      "url": "https://www.palantir.com/platforms/foundry/ontology/",
+      "description": "Foundational architectural concept connecting enterprise tables, APIs, and operational decisions into an actionable semantic ontology.",
+      "resource_type": "primary",
+      "source": "Palantir Technologies",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-enterprise-ontologies-mapping",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Palantir AIP documentation on building AI-integrated enterprise ontologies",
+    "resource": {
+      "title": "Building Semantic Data Layers with Palantir AIP",
+      "url": "https://www.palantir.com/platforms/aip/",
+      "description": "Official overview of deploying autonomous agents with operational guardrails directly grounded in enterprise ontology schemas.",
+      "resource_type": "official_docs",
+      "source": "Palantir AIP",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-dirty-data-etl-pipelines",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Data mesh and enterprise data cleaning principles by Martin Fowler",
+    "resource": {
+      "title": "Enterprise Data Quality: Cleaning and Entity Resolution at Scale",
+      "url": "https://martinfowler.com/articles/data-monolith-to-mesh.html",
+      "description": "Architectural guidelines on transforming messy enterprise databases into decoupled, high-quality domain data products.",
+      "resource_type": "primary",
+      "source": "Martin Fowler Blog",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-dirty-data-etl-pipelines",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Unstructured document processing and layout extraction",
+    "resource": {
+      "title": "Unstructured Data Parsing and Layout Analysis Pipeline",
+      "url": "https://github.com/Unstructured-IO/unstructured",
+      "description": "Open-source library for extracting structured tables, text, and metadata from messy PDFs, Word docs, and enterprise slides.",
+      "resource_type": "practice",
+      "source": "Unstructured.io GitHub",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-graphrag-enterprise-knowledge",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Microsoft GraphRAG official documentation and codebase",
+    "resource": {
+      "title": "Microsoft GraphRAG: Modular Graph-Based RAG System",
+      "url": "https://microsoft.github.io/graphrag/",
+      "description": "Official documentation for Microsoft's GraphRAG framework, detailing entity extraction, community summarization, and global query answering.",
+      "resource_type": "official_docs",
+      "source": "Microsoft GraphRAG",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-graphrag-enterprise-knowledge",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Original Microsoft Research paper on GraphRAG",
+    "resource": {
+      "title": "From Local to Global: A Graph RAG Approach to Query-Focused Summarization",
+      "url": "https://arxiv.org/abs/2404.16130",
+      "description": "Research paper showing how knowledge graph extraction combined with hierarchical clustering solves multi-hop reasoning in RAG.",
+      "resource_type": "primary",
+      "source": "Microsoft Research / arXiv",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-private-vpc-airgapped-deploy",
+    "is_primary": true,
+    "order": 1,
+    "notes": "AWS architectural guidance for deploying GenAI in air-gapped environments",
+    "resource": {
+      "title": "Air-Gapped and Sovereign Cloud Deployments for Enterprise LLMs",
+      "url": "https://aws.amazon.com/solutions/guidance/deploying-generative-ai-in-air-gapped-environments/",
+      "description": "Architectural blueprints for hosting LLMs, vector search, and agent orchestration in disconnected, zero-internet VPC networks.",
+      "resource_type": "primary",
+      "source": "AWS Architecture Center",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-private-vpc-airgapped-deploy",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Kubernetes cluster network policy and security hardening",
+    "resource": {
+      "title": "Zero-Egress Kubernetes Cluster Hardening & Private Peering",
+      "url": "https://kubernetes.io/docs/concepts/security/",
+      "description": "Configuring network policies, air-gapped image mirrors, and mutual TLS for high-security enterprise container clusters.",
+      "resource_type": "official_docs",
+      "source": "Kubernetes Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-rapid-poc-scoping-prototyping",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Forward Deployed Engineer field methodology and playbook",
+    "resource": {
+      "title": "The Forward Deployed Engineer Field Playbook: 2-Week Enterprise PoCs",
+      "url": "https://fde.academy/",
+      "description": "Proven consulting and engineering playbook for scoping ambiguous client problems, managing stakeholders, and shipping working MVPs fast.",
+      "resource_type": "primary",
+      "source": "FDE Academy",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-rapid-poc-scoping-prototyping",
+    "is_primary": false,
+    "order": 2,
+    "notes": "Deep dive into Forward Deployed Engineering by Sundeep Teki",
+    "resource": {
+      "title": "Deconstructing the Forward Deployed Engineer Role at Scale",
+      "url": "https://sundeepteki.org/blog/forward-deployed-engineer",
+      "description": "Comprehensive career and technical guide covering the dual fluency required between senior software engineering and enterprise consulting.",
+      "resource_type": "practice",
+      "source": "Sundeep Teki Tech Blog",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-model-fallback-circuit-breakers",
+    "is_primary": true,
+    "order": 1,
+    "notes": "Classic Martin Fowler circuit breaker architecture",
+    "resource": {
+      "title": "Resilient LLM Gateways: Circuit Breakers, Retry Pools & Rate Limiting",
+      "url": "https://martinfowler.com/bliki/CircuitBreaker.html",
+      "description": "Foundational architectural pattern for wrapping remote service calls with stateful trip counters to guarantee system stability under downtime.",
+      "resource_type": "primary",
+      "source": "Martin Fowler Architecture",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  },
+  {
+    "skill_slug": "fde-model-fallback-circuit-breakers",
+    "is_primary": false,
+    "order": 2,
+    "notes": "LiteLLM proxy and multi-provider failover routing",
+    "resource": {
+      "title": "Multi-Provider Failover Gateway with LiteLLM & Proxy",
+      "url": "https://docs.litellm.ai/docs/proxy/reliability",
+      "description": "Production routing architecture implementing automatic failovers across Azure, Anthropic, Bedrock, and local models with rate limit tracking.",
+      "resource_type": "practice",
+      "source": "LiteLLM Docs",
+      "verification_status": "verified",
+      "last_verified_date": "2026-11-23"
+    }
+  }
+]

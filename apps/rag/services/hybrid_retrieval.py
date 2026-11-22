@@ -140,11 +140,11 @@ class HybridRetrievalService:
         query_tokens = bm25_scorer.tokenize(query)
 
         candidate_chunks_dict = {}
-        # Include chunks containing query terms across the corpus
+        # Include chunks containing query terms across content or hierarchical headings
         if query_tokens:
             token_filter = Q()
             for t in query_tokens[:8]:
-                token_filter |= Q(content__icontains=t)
+                token_filter |= Q(content__icontains=t) | Q(heading__icontains=t)
             matching_chunks = list(queryset.filter(token_filter)[:200])
             for c in matching_chunks:
                 candidate_chunks_dict[str(c.id)] = c
@@ -183,6 +183,7 @@ class HybridRetrievalService:
                 doc = chunk.document
                 src = doc.source if doc else None
                 parent_chunk = chunk.parent_chunk
+                chunk_heading = getattr(chunk, "heading", "") or (chunk.metadata or {}).get("heading", "")
                 chunk_map[cid] = SearchResult(
                     chunk_id=cid,
                     chunk_index=chunk.chunk_index,
@@ -195,11 +196,13 @@ class HybridRetrievalService:
                     source_name=src.name if src else "",
                     source_type=src.source_type if src else "",
                     source_uri=src.uri if src else "",
+                    heading=chunk_heading,
                     chunk_level=chunk.chunk_level,
                     parent_chunk_id=str(parent_chunk.id) if parent_chunk else None,
                     parent_content=parent_chunk.content if parent_chunk else None,
                     metadata={
                         **(chunk.metadata or {}),
+                        "heading": chunk_heading,
                         "token_count": chunk.token_count,
                         "chunk_level": chunk.chunk_level,
                         "bm25_score": round(score, 4),

@@ -17,6 +17,8 @@ from .web_views import (
     SourceDetailView,
     SourceRetryView,
     SourceDeleteView,
+    SourceClipView,
+    SourceClipApiView,
     AssessmentsView,
     StartSkillAssessmentView,
     AssessmentTakeView,
@@ -24,8 +26,11 @@ from .web_views import (
     ChatView,
     KnowledgeGapsView,
     KnowledgeGraphView,
+    VisualConceptGraphApiView,
+    TopicCheatSheetExportView,
     SettingsView,
     ReseedRoadmapView,
+    LoadStarterKnowledgeView,
     SelectActiveDomainView,
 )
 
@@ -53,9 +58,12 @@ urlpatterns = [
     path("knowledge/skills/<uuid:pk>/", SkillDetailView.as_view(), name="web-skill-detail"),
 
     path("sources/", SourcesView.as_view(), name="web-sources"),
+    path("sources/seed-starter-pack/", LoadStarterKnowledgeView.as_view(), name="web-source-seed-starter"),
     path("sources/<uuid:pk>/", SourceDetailView.as_view(), name="web-source-detail"),
     path("sources/<uuid:pk>/retry/", SourceRetryView.as_view(), name="web-source-retry"),
     path("sources/<uuid:pk>/delete/", SourceDeleteView.as_view(), name="web-source-delete"),
+    path("sources/clip/", SourceClipView.as_view(), name="web-source-clip"),
+    path("api/sources/clip/", SourceClipApiView.as_view(), name="api-source-clip"),
 
     # Assessments Flow & Results
     path("assessments/", AssessmentsView.as_view(), name="web-assessments"),
@@ -67,6 +75,8 @@ urlpatterns = [
     # AI Knowledge Assistant & Knowledge Graph
     path("chat/", ChatView.as_view(), name="web-chat"),
     path("knowledge-graph/", KnowledgeGraphView.as_view(), name="web-knowledge-graph"),
+    path("api/knowledge-graph/data/", VisualConceptGraphApiView.as_view(), name="api-knowledge-graph-data"),
+    path("roadmap/topics/<uuid:pk>/cheat-sheet/", TopicCheatSheetExportView.as_view(), name="web-topic-cheat-sheet"),
     path("gaps/", KnowledgeGapsView.as_view(), name="web-gaps"),
     path("settings/", SettingsView.as_view(), name="web-settings"),
     path("settings/reseed/", ReseedRoadmapView.as_view(), name="web-reseed"),

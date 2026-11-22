@@ -282,6 +282,60 @@
   </div>
 
 
+  {# Browser Bookmarklet & 1-Click Web Clipper #}
+  <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm space-y-4">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div>
+        <h3 class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+          <span>📎</span> Browser Extension &amp; Web Clipper
+        </h3>
+        <p class="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+          Ingest technical articles, papers, or documentation into your knowledge library directly from your browser.
+        </p>
+      </div>
+      <span class="text-[10px] font-mono uppercase px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 font-semibold border border-emerald-200 dark:border-emerald-800/60">
+        Ready to Install
+      </span>
+    </div>
+
+    <div class="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-100 dark:border-zinc-800 space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <span class="text-xs font-semibold text-zinc-800 dark:text-zinc-200">1-Click Bookmarklet Button</span>
+          <p class="text-[11px] text-zinc-500 dark:text-zinc-400">Drag this button directly to your browser's bookmarks/favorites bar:</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a href="javascript:(function(){const u=encodeURIComponent(window.location.href);const t=encodeURIComponent(document.title||'');const s=encodeURIComponent(window.getSelection?window.getSelection().toString():'');const b=window.open('{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s,'BrofessorClip','width=560,height=540,top=100,left=100,resizable=yes,scrollbars=yes');if(b){b.focus();}else{location.href='{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s;}})();"
+             draggable="true"
+             onclick="alert('Drag this button to your Bookmarks Bar to install!\n\nShortcut: Press Ctrl+Shift+B (or Cmd+Shift+B) to display your Bookmarks Bar.'); return false;"
+             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-sm cursor-grab active:cursor-grabbing transition-smooth active:scale-95 shrink-0"
+             title="Drag to Bookmarks Bar">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+            </svg>
+            📎 Clip to Brofessor
+          </a>
+
+          <button type="button"
+                  onclick="copySettingsBookmarklet()"
+                  class="px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-medium transition-smooth">
+            <span id="settings-bookmarklet-copy-text">Copy Code</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="text-[11px] text-zinc-500 dark:text-zinc-400 space-y-1 pt-1 border-t border-zinc-200/60 dark:border-zinc-800/60">
+        <p><strong>How to use:</strong></p>
+        <ol class="list-decimal list-inside space-y-0.5 ml-1">
+          <li>Highlight any key paragraph or quote on a webpage (optional).</li>
+          <li>Click <strong class="text-indigo-600 dark:text-indigo-400">Clip to Brofessor</strong> in your bookmarks bar.</li>
+          <li>A lightweight popup will verify the URL and title, chunk the article, and embed it with 384d vectors into your knowledge base.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
   {# System Runtime Diagnostic #}
   <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800/80 rounded-2xl p-6 shadow-sm space-y-4">
     <div>
@@ -325,6 +379,19 @@
 
 {% block extra_scripts %}
 <script>
+function copySettingsBookmarklet() {
+  const code = "javascript:(function(){const u=encodeURIComponent(window.location.href);const t=encodeURIComponent(document.title||'');const s=encodeURIComponent(window.getSelection?window.getSelection().toString():'');const b=window.open('{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s,'BrofessorClip','width=560,height=540,top=100,left=100,resizable=yes,scrollbars=yes');if(b){b.focus();}else{location.href='{{ request.scheme }}://{{ request.get_host }}/sources/clip/?url='+u+'&title='+t+'&selected='+s;}})();";
+  navigator.clipboard.writeText(code).then(() => {
+    const textSpan = document.getElementById('settings-bookmarklet-copy-text');
+    if (textSpan) {
+      textSpan.textContent = 'Copied!';
+      setTimeout(() => { textSpan.textContent = 'Copy Code'; }, 2000);
+    }
+  }).catch(err => {
+    prompt("Copy this bookmarklet code:", code);
+  });
+}
+
 function onGeminiPresetChange(val) {
   const input = document.getElementById('gemini_model');
   if (!input) return;

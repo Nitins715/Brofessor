@@ -14,10 +14,18 @@ class PDFExtractor(BaseExtractor):
         if not file_path_str:
             raise ValueError(f"Source '{source.name}' ({source.id}) has no file_path specified.")
 
-        # Resolve path against MEDIA_ROOT if relative
+        # Resolve path against MEDIA_ROOT, BASE_DIR, or direct relative
         file_path = Path(file_path_str)
         if not file_path.is_absolute():
-            file_path = Path(settings.MEDIA_ROOT) / file_path_str
+            candidate = Path(settings.MEDIA_ROOT) / file_path_str
+            if candidate.exists():
+                file_path = candidate
+            elif (Path(settings.BASE_DIR) / file_path_str).exists():
+                file_path = Path(settings.BASE_DIR) / file_path_str
+            elif file_path.exists():
+                file_path = file_path.resolve()
+            else:
+                file_path = candidate
 
         if not file_path.exists():
             raise FileNotFoundError(f"PDF file does not exist at resolved path: {file_path}")
