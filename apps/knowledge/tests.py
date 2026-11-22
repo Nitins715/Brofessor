@@ -1,7 +1,7 @@
 from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from apps.roadmap.models import Domain, Topic, Skill
+from apps.roadmap.models import Domain, Topic, Skill, LearningResource, SkillResourceMapping
 from apps.sources.models import Entity, Relationship
 from apps.knowledge.services.knowledge_graph import KnowledgeGraphService
 from apps.knowledge.models import CalculatedMastery, MasteryLevel
@@ -59,6 +59,19 @@ class VisualConceptGraphTests(TestCase):
             skill=self.skill_python,
             mastery_score=85.0,
             mastery_level=MasteryLevel.ADVANCED,
+        )
+
+        # Attach learning resources to skill to verify attribute access
+        self.resource = LearningResource.objects.create(
+            title="Official Python Tutorial",
+            url="https://docs.python.org/3/tutorial/",
+            resource_type=LearningResource.ResourceType.OFFICIAL_DOCS,
+            source="Python Docs",
+        )
+        SkillResourceMapping.objects.create(
+            skill=self.skill_python,
+            resource=self.resource,
+            is_primary=True,
         )
 
     def test_curriculum_graph_nodes_and_edges(self):

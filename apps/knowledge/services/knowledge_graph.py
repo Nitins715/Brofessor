@@ -303,7 +303,7 @@ class KnowledgeGraphService:
                     "title": r.title,
                     "url": r.url,
                     "resource_type": r.resource_type,
-                    "is_free": r.is_free,
+                    "source": getattr(r, "source", ""),
                 }
                 for r in skill.learning_resources.all()[:4]
             ]
