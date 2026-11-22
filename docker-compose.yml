@@ -8,7 +8,7 @@ services:
   # Primary Web Application (Django + LangGraph RAG)
   brofessor:
     build: .
-    image: brofessor:latest
+    image: nitins715/brofessor:latest
     container_name: brofessor
     restart: unless-stopped
     ports:
